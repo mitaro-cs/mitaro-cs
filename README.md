@@ -1,7 +1,7 @@
 <h1 align="center">Привет, я Omar 👋</h1>
 
 <p align="center">
-  Junior Python & Frontend Developer · люблю чистый код и аккуратный дизайн
+  Junior Python & Frontend Developer · люблю чистый код, тёмный UI и аккуратные системы
 </p>
 
 ---
@@ -9,13 +9,13 @@
 ### 👨‍💻 Обо мне
 
 - Студент-инженер в сфере IT (MTUCI)
-- Пишу на **Python** и делаю интерфейсы для веба
-- Нравится минималистичный тёмный стиль (Obsidian / финтех вайб)
-- Быстро учусь, люблю разбираться в деталях и доводить проекты до ума
+- Пишу на **Python** и делаю интерфейсы для веба (HTML, CSS, JS)
+- Работаю с макетами в Figma, люблю продумывать UX, а не только код
+- Интересуюсь инфраструктурой: личные сервисы, боты, автоматизация
 
 ---
 
-### 🛠 Технологии
+### 🛠 Стек
 
 <p align="left">
   <img src="https://img.shields.io/badge/Python-18181B?style=for-the-badge&logo=python&logoColor=F7DF1E" />
@@ -28,33 +28,33 @@
 
 ---
 
-### 📂 Несколько проектов
+### 📂 Проекты
 
-- 🤖 Telegram‑бот на Python (автоматизация рутины / учебные задачи)
-- 🌐 Небольшие frontend‑проекты (лендинги, интерфейсные эксперименты)
-- 🧪 Пет‑проекты для прокачки алгоритмов и структуры кода
+- 🤖 Telegram‑боты на Python (автоматизация задач и учебные проекты)
+- 🌐 Frontend‑проекты: лендинги и небольшие web‑приложения
+- 🧪 Пет‑проекты для прокачки алгоритмов, структур данных и архитектуры
 
 ---
 
-### 📊 GitHub статистика
+### 📊 Статистика GitHub
 
 <p align="center">
   <img 
-    src="https://github-readme-stats.vercel.app/api?username=treadways&show_icons=true&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&icon_color=facc15" 
+    src="https://github-readme-stats.vercel.app/api?username=mitaro-cs&show_icons=true&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&icon_color=facc15" 
     alt="GitHub stats" 
   />
 </p>
 
 <p align="center">
   <img 
-    src="https://github-readme-stats.vercel.app/api/top-langs/?username=treadways&layout=compact&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af" 
+    src="https://github-readme-stats.vercel.app/api/top-langs/?username=mitaro-cs&layout=compact&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&langs_count=8" 
     alt="Top languages" 
   />
 </p>
 
 ---
 
-### 📫 Как связаться
+### 📫 Контакты
 
 - Email: miri.saro@bk.ru
 - Telegram: @treadways
