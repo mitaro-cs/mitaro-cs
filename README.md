@@ -28,29 +28,6 @@
 
 ---
 
-### 📂 Выбранные репозитории
-
-<p align="center">
-  <!-- Примеры, подставь свои репы -->
-  <a href="https://github.com/mitaro-cs/Equilibrium">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=Equilibrium&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&icon_color=facc15" />
-  </a>
-  <a href="https://github.com/mitaro-cs/MentorSystem">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=MentorSystem&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&icon_color=facc15" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/mitaro-cs/Refatoros">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=Refatoros&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&icon_color=facc15" />
-  </a>
-  <a href="https://github.com/mitaro-cs/MitaroProfile">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=MitaroProfile&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&icon_color=facc15" />
-  </a>
-</p>
-
----
-
 ### 📊 Статистика и языки
 
 <p align="center">
