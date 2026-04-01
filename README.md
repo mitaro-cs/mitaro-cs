@@ -3,54 +3,39 @@
   <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=24&pause=1000&color=00F5D4&center=true&vCenter=true&width=600&lines=Hi,+I'm+Omar+|+Mitaro;Python+|+Frontend+Developer;Clean+Code+|+Minimal+UI;Building+useful+things" />
 </p>
 
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,100:020617&height=120&section=header"/>
-</p>
-
 <h1 align="center">Привет, я Omar 👋</h1>
 
 <p align="center">
-  Junior Python & Frontend Developer · MTUCI · люблю чистый код и минимализм
+  Junior Python & Frontend Developer · MTUCI
 </p>
 
 ---
 
 ### 🧭 Обо мне
 
-- Студент MTUCI (IT Engineering)  
-- Развиваюсь в Python и frontend  
+- Python & Frontend разработчик  
 - Делаю интерфейсы с упором на UX  
-- Люблю минималистичный тёмный дизайн  
-- Создаю ботов, тулзы и автоматизацию  
+- Люблю минимализм и тёмные темы  
+- Пишу ботов и автоматизацию  
 
 ---
 
-### ⚡ Сейчас изучаю
-
-- Алгоритмы и структуры данных  
-- JavaScript (углубление)  
-- Backend на Python (API, боты)  
-- UX/UI мышление  
-
----
-
-### 🧰 Стек и инструменты
+### 🧰 Стек
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=python,html,css,js,figma,git,github,vscode&theme=dark" />
+  <img src="https://skillicons.dev/icons?i=python,html,css,js,git,github,vscode&theme=dark" />
 </p>
 
 ---
 
 ### 🚀 Мои проекты
 
+👉 Пока нет закреплённых — добавь репозитории, и они появятся здесь  
+
+(Важно: замени `repo-name` на реальные названия)
+
 <p align="center">
-  <a href="https://github.com/mitaro-cs/YOUR_REPO_1">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=YOUR_REPO_1&theme=transparent&hide_border=true" />
-  </a>
-  <a href="https://github.com/mitaro-cs/YOUR_REPO_2">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=YOUR_REPO_2&theme=transparent&hide_border=true" />
-  </a>
+  <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=repo-name&theme=transparent" />
 </p>
 
 ---
@@ -58,23 +43,12 @@
 ### 📊 Статистика
 
 <p align="center">
-  <img src="https://github-readme-streak-stats.herokuapp.com?user=mitaro-cs&theme=transparent&hide_border=true"/>
+  <img src="https://github-readme-stats.vercel.app/api?username=mitaro-cs&show_icons=true" />
 </p>
 
 <p align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=mitaro-cs&show_icons=true&theme=transparent&hide_border=true" />
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=mitaro-cs&layout=compact" />
 </p>
-
-<p align="center">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=mitaro-cs&layout=compact&theme=transparent&hide_border=true" />
-</p>
-
----
-
-### 🧠 Философия
-
-> Код должен читаться как книга,  
-> а интерфейс — ощущаться как воздух.
 
 ---
 
@@ -82,15 +56,9 @@
 
 <p align="center">
   <a href="mailto:miri.saro@bk.ru">
-    <img src="https://img.shields.io/badge/Email-18181B?style=for-the-badge&logo=gmail&logoColor=white" />
+    <img src="https://img.shields.io/badge/Email-black?style=for-the-badge&logo=gmail" />
   </a>
   <a href="https://t.me/treadways">
-    <img src="https://img.shields.io/badge/Telegram-18181B?style=for-the-badge&logo=telegram&logoColor=26A5E4" />
+    <img src="https://img.shields.io/badge/Telegram-black?style=for-the-badge&logo=telegram" />
   </a>
-</p>
-
----
-
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,100:0f172a&height=100&section=footer"/>
 </p>
