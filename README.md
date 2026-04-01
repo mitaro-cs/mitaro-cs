@@ -1,6 +1,12 @@
+Вот тебе ровно так же — одним цельным куском, как ты скинул. Просто копируй и вставляй:
+
 <!-- HEADER -->
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=22&pause=1000&color=FFFFFF&center=true&vCenter=true&width=500&lines=Hi%2C+I'm+Omar+%7C+Mitaro;Junior+Python+%26+Frontend+Developer;I+love+clean+code+%26+dark+UI" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=24&pause=1000&color=00F5D4&center=true&vCenter=true&width=600&lines=Hi%2C+I'm+Omar+%7C+Mitaro;Python+%7C+Frontend+Developer;Clean+Code+%7C+Minimal+UI;Building+useful+things+⚡" />
+</p>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,100:020617&height=120&section=header"/>
 </p>
 
 <h1 align="center">Привет, я Omar 👋</h1>
@@ -13,46 +19,107 @@
 
 ### 🧭 Обо мне
 
-- Студент-инженер в сфере IT (MTUCI), прокачиваю Python и frontend.
-- Делаю веб‑интерфейсы, продумывая UX, а не только верстку.
-- Нравятся тёмные, аккуратные интерфейсы в стиле Obsidian / финтех.
-- Люблю собирать свои сервисы: боты, личные тулзы, автоматизацию.
+yaml
+name: Omar
+nickname: Mitaro
+education: MTUCI (IT Engineering)
+focus: Python + Frontend
+interests:
+  - Web Interfaces (UX > верстка)
+  - Automation & Bots
+  - Minimalist UI (Obsidian / Fintech style)
+goal: Build useful + aesthetic digital tools
 
----
 
-### ⚙️ Стек и инструменты
+⸻
+
+⚡ Сейчас прокачиваю
+	•	🧠 Алгоритмы и структуры данных
+	•	🌐 JavaScript (углубление + практика)
+	•	⚙️ Backend на Python (боты, API)
+	•	🎯 UX/UI мышление (не просто код, а продукт)
+
+⸻
+
+🧰 Стек и инструменты
 
 <p align="center">
   <img src="https://skillicons.dev/icons?i=python,html,css,js,figma,git,github,vscode&theme=dark" />
 </p>
 
----
 
-### 📊 Статистика и языки
+
+⸻
+
+🚀 Мои проекты
+
+<p align="center">
+
+
+<a href="https://github.com/mitaro-cs/YOUR_REPO_1">
+  <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=YOUR_REPO_1&theme=transparent&hide_border=true" />
+</a>
+
+
+<a href="https://github.com/mitaro-cs/YOUR_REPO_2">
+  <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=YOUR_REPO_2&theme=transparent&hide_border=true" />
+</a>
+
+
+</p>
+
+
+
+⸻
+
+📊 Статистика и языки
+
+<p align="center">
+  <img src="https://github-readme-streak-stats.herokuapp.com?user=mitaro-cs&theme=transparent&hide_border=true&stroke=ffffff&ring=00F5D4&fire=00F5D4&currStreakLabel=ffffff"/>
+</p>
+
 
 <p align="center">
   <img 
-    src="https://github-readme-stats.vercel.app/api?username=mitaro-cs&show_icons=true&include_all_commits=true&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&icon_color=facc15" 
-    alt="GitHub stats" 
+    src="https://github-readme-stats.vercel.app/api?username=mitaro-cs&show_icons=true&include_all_commits=true&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&icon_color=00F5D4" 
   />
 </p>
+
 
 <p align="center">
   <img 
     src="https://github-readme-stats.vercel.app/api/top-langs/?username=mitaro-cs&layout=compact&theme=transparent&hide_border=true&title_color=ffffff&text_color=9ca3af&langs_count=8" 
-    alt="Top languages" 
   />
 </p>
 
----
 
-### 🤝 Контакты
+
+⸻
+
+🧠 Философия
+
+Код должен читаться как книга,
+а интерфейс — ощущаться как воздух.
+
+⸻
+
+🤝 Контакты
 
 <p align="center">
   <a href="mailto:miri.saro@bk.ru">
-    <img src="https://img.shields.io/badge/Email-miri.saro@bk.ru-18181B?style=for-the-badge&logo=minutemailer&logoColor=white" />
+    <img src="https://img.shields.io/badge/Email-18181B?style=for-the-badge&logo=gmail&logoColor=white" />
   </a>
   <a href="https://t.me/treadways">
-    <img src="https://img.shields.io/badge/Telegram-@treadways-18181B?style=for-the-badge&logo=telegram&logoColor=26A5E4" />
+    <img src="https://img.shields.io/badge/Telegram-18181B?style=for-the-badge&logo=telegram&logoColor=26A5E4" />
   </a>
 </p>
+
+
+
+⸻
+
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,100:0f172a&height=100&section=footer"/>
+</p>
+
