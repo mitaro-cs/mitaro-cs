@@ -1,5 +1,3 @@
-Вот тебе ровно так же — одним цельным куском, как ты скинул. Просто копируй и вставляй:
-
 <!-- HEADER -->
 <p align="center">
   <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=24&pause=1000&color=00F5D4&center=true&vCenter=true&width=600&lines=Hi%2C+I'm+Omar+%7C+Mitaro;Python+%7C+Frontend+Developer;Clean+Code+%7C+Minimal+UI;Building+useful+things+⚡" />
