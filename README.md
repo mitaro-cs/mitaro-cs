@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=28&duration=3200&pause=900&color=22C55E&center=true&vCenter=true&width=820&lines=Omar+%2F+Mitaro;Python+Developer+with+Frontend+focus;Minimal+interfaces.+Useful+products.;Bots%2C+automation+and+clean+code." alt="Typing animation" />
+  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=28&duration=3200&pause=900&color=FFFFFF&center=true&vCenter=true&width=820&lines=Omar+%2F+Mitaro;Python+Developer+with+Frontend+focus;Minimal+interfaces.+Useful+products.;Bots%2C+automation+and+clean+code." alt="Typing animation" />
 
 </div>
 
