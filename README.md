@@ -73,8 +73,8 @@ I build clean Python solutions, simple frontend interfaces, and automation that 
 ## Featured Projects
 
 <p align="center">
-  <a href="https://github.com/mitaro-cs/mitaro-cs">
-    <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=mitaro-cs&theme=transparent&hide_border=true" alt="mitaro-cs profile repository" />
+  <a href="https://github.com/mitaro-cs/KworkingSystem)">
+    <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=KworkingSystem&theme=transparent&hide_border=true" alt="KworkingSystem" />
   </a>
   <a href="https://github.com/mitaro-cs/Mouros">
     <img src="https://github-readme-stats.vercel.app/api/pin/?username=mitaro-cs&repo=Mouros&theme=transparent&hide_border=true" alt="Mouros" />
