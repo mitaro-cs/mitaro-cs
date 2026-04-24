@@ -1,8 +1,32 @@
 <div align="center">
 
-![Banner](https://raw.githubusercontent.com/mitaro-cs/mitaro-cs/miaro/banner.svg)
+![Banner](https://raw.githubusercontent.com/mitaro-cs/mitaro-cs/main/banner.svg)
 
-<div align="center">
+</div>
+
+<style>
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .badge-glow:hover {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+  }
+</style>
+
+<br/>
+
+<!-- Gradient fade -->
+<div align="center" style="background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%); padding: 40px 0; margin: 0 -9999px; padding-left: 9999px; padding-right: 9999px;">
 
 <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=500&size=14&duration=3000&pause=800&color=888888&center=true&vCenter=true&width=700&lines=Python+%7C+Flask+%7C+Frontend+%7C+Automation+%7C+Security;self-hosted+tools+%C2%B7+dark+UIs+%C2%B7+clean+architecture;open+to+work+%26+collaboration+%F0%9F%94%A5" alt="Typing" />
 
@@ -29,6 +53,8 @@
 <div align="center">
 
 ### 👤 &nbsp; Omar · Mitaro &nbsp; · &nbsp; Python Developer &nbsp; · &nbsp; MTUCI Moscow
+
+**CS Student · Full-Stack Builder · Open to Work**
 
 </div>
 
@@ -59,13 +85,13 @@
 
 <br/>
 
-## 🛠 Stack
+## 🛠 Tech Stack
 
 <br/>
 
 <div align="center">
 
-[![Stack](https://skillicons.dev/icons?i=python,obsidian,js,html,css,linux,flask,sqlite,git,github,figma,docker&theme=dark)](https://skillicons.dev)
+[![Stack](https://skillicons.dev/icons?i=python,js,html,css,flask,sqlite,git,github,docker&theme=dark)](https://skillicons.dev)
 
 </div>
 
@@ -73,7 +99,15 @@
 
 <div align="center">
 
+![Python](https://img.shields.io/badge/Python-111?style=flat-square&logo=python&logoColor=white&labelColor=111)
+![JavaScript](https://img.shields.io/badge/JavaScript-111?style=flat-square&logo=javascript&logoColor=white&labelColor=111)
+![HTML5](https://img.shields.io/badge/HTML5-111?style=flat-square&logo=html5&logoColor=white&labelColor=111)
 ![CSS3](https://img.shields.io/badge/CSS3-111?style=flat-square&logo=css3&logoColor=white&labelColor=111)
+![Flask](https://img.shields.io/badge/Flask-111?style=flat-square&logo=flask&logoColor=white&labelColor=111)
+![SQLite](https://img.shields.io/badge/SQLite-111?style=flat-square&logo=sqlite&logoColor=white&labelColor=111)
+![Docker](https://img.shields.io/badge/Docker-111?style=flat-square&logo=docker&logoColor=white&labelColor=111)
+![Git](https://img.shields.io/badge/Git-111?style=flat-square&logo=git&logoColor=white&labelColor=111)
+![GitHub](https://img.shields.io/badge/GitHub-111?style=flat-square&logo=github&logoColor=white&labelColor=111)
 ![PWA](https://img.shields.io/badge/PWA-111?style=flat-square&logo=pwa&logoColor=white&labelColor=111)
 ![AES](https://img.shields.io/badge/AES_Encryption-111?style=flat-square&logo=letsencrypt&logoColor=white&labelColor=111)
 ![Zed](https://img.shields.io/badge/Zed_Editor-111?style=flat-square&logo=zedindustries&logoColor=white&labelColor=111)
@@ -86,7 +120,7 @@
 
 <br/>
 
-## 🚀 Projects
+## ⭐ Featured Projects
 
 <br/>
 
@@ -100,19 +134,22 @@
 **Personal encrypted vault for external drives**
 
 No cloud. Your files, your machine, your rules.
-Idea to build a private, security-first storage app with custom encryption and brute-force protection.
+
+`Status:` ![Active](https://img.shields.io/badge/Active-4ade80?style=flat-square&labelColor=111)
 
 ![AES](https://img.shields.io/badge/AES_Encryption-111?style=flat-square&logo=letsencrypt&logoColor=white)
 ![PBKDF2](https://img.shields.io/badge/PBKDF2--SHA256-111?style=flat-square&logo=hashnode&logoColor=white)
 ![Desktop](https://img.shields.io/badge/Desktop_App-111?style=flat-square&logo=apple&logoColor=white)
 
 ```
-· Custom AES file encryption
+· Custom AES-256 file encryption
 · PBKDF2-SHA256 password hashing
 · Brute-force lockout protection
 · Native app: macOS .dmg + Windows .exe
 · MIT licensed, open source
 ```
+
+[→ View on GitHub](https://github.com/mitaro-cs/VantaVault)
 
 </td>
 
@@ -123,7 +160,8 @@ Idea to build a private, security-first storage app with custom encryption and b
 **Self-hosted private cloud on your own disk**
 
 Turn any local drive into a full cloud workspace.
-Polished dark dashboard, installable PWA, Docker Compose deployment.
+
+`Status:` ![Active](https://img.shields.io/badge/Active-4ade80?style=flat-square&labelColor=111)
 
 ![PWA](https://img.shields.io/badge/PWA-111?style=flat-square&logo=pwa&logoColor=white)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-111?style=flat-square&logo=githubactions&logoColor=white)
@@ -135,6 +173,8 @@ Polished dark dashboard, installable PWA, Docker Compose deployment.
 · Installable PWA (iOS/Android/Desktop)
 · Docker + GitHub Actions CI/CD
 ```
+
+[→ View on GitHub](https://github.com/mitaro-cs/AetherCloud)
 
 </td>
 
@@ -150,8 +190,9 @@ Polished dark dashboard, installable PWA, Docker Compose deployment.
 
 **Digital campus coworking management**
 
-Full-stack Flask app for a university workspace.
-Spot booking, student check-in, Pomodoro timer, lofi music player.
+Full-stack Flask app for university workspace.
+
+`Status:` ![Maintained](https://img.shields.io/badge/Maintained-60a5fa?style=flat-square&labelColor=111)
 
 ![REST](https://img.shields.io/badge/REST_API-111?style=flat-square&logo=fastapi&logoColor=white)
 
@@ -160,8 +201,10 @@ Spot booking, student check-in, Pomodoro timer, lofi music player.
 · Student check-in by student ID
 · Pomodoro 25/5 · lofi streams
 · Session auth · profile management
-· Not a form — a real product UX
+· Real product UX, not a form
 ```
+
+[→ View on GitHub](https://github.com/mitaro-cs/KworkingSystem)
 
 </td>
 
@@ -171,18 +214,21 @@ Spot booking, student check-in, Pomodoro timer, lofi music player.
 
 **Where it all started — CS Exam prep**
 
-Structured Python practice repository from exam preparation.
-Organized into modules: basics, practice sets, test tasks, june work.
+Disciplined, version-controlled from day one.
+
+`Status:` ![Archive](https://img.shields.io/badge/Archive-6b7280?style=flat-square&labelColor=111)
 
 ![Algorithms](https://img.shields.io/badge/Algorithms-111?style=flat-square&logo=thealgorithms&logoColor=white)
 
 ```
-· Disciplined, module-by-module approach
+· Module-by-module approach
 · Version-controlled from day one
 · Clean folder structure
 · The foundation everything is built on
-· 2022 · The beginning of the journey
+· 2022 · The beginning
 ```
+
+[→ View on GitHub](https://github.com/mitaro-cs/Mouros)
 
 </td>
 
@@ -195,7 +241,28 @@ Organized into modules: basics, practice sets, test tasks, june work.
 
 <br/>
 
-## 📊 Stats
+## 📈 Experience Timeline
+
+<br/>
+
+<div align="center">
+
+| Year | Milestone | Tech |
+|:---:|:---|:---|
+| 2022 | Started CS journey · Mouros foundation | Python |
+| 2023 | Security focus · VantaVault v1 | Python, AES, PBKDF2 |
+| 2024 | Full-stack development · AetherCloud, KworkingSystem | Flask, PWA, Docker |
+| 2025 → | Open to exciting opportunities | Python, Full-Stack, Security |
+
+</div>
+
+<br/>
+
+---
+
+<br/>
+
+## 📊 GitHub Stats
 
 <br/>
 
@@ -229,21 +296,21 @@ Organized into modules: basics, practice sets, test tasks, june work.
 
 <br/>
 
-## 🤝 Soft Skills
+## 🤝 What I Bring to the Table
 
 <br/>
 
 <div align="center">
 
-| | Skill | What it means in practice |
+| | Skill | In Practice |
 |:---:|:---|:---|
-| 🚀 | **Fast Learner** | New stack, new codebase, new team — I'm in and productive fast |
-| 🤝 | **Team Player** | Worked inside real company workflows, adapt to existing processes |
-| 💬 | **Communicator** | Clear, direct, no fluff — I say what I mean and deliver |
-| 🎯 | **Ownership** | I take full responsibility for my work and follow through |
-| 🔄 | **Adaptable** | Comfortable at startup speed and in structured corporate teams |
-| 🛠️ | **Builder** | I ship things that actually work, look good, and solve real problems |
-| 🔒 | **Detail-oriented** | Architecture, UX, security — thought through from day one |
+| 🚀 | **Fast Learner** | New stack, codebase, team — I integrate quickly |
+| 🤝 | **Team Player** | Real company workflow experience · adaptable |
+| 💬 | **Communicator** | Clear, direct, no fluff · transparent |
+| 🎯 | **Ownership** | Full responsibility for work · follow through |
+| 🔄 | **Adaptable** | Startup speed OR structured corporate pace |
+| 🛠️ | **Builder** | Ships working, beautiful, production-ready code |
+| 🔒 | **Detail-oriented** | Architecture, UX, security · thought through from day one |
 
 </div>
 
@@ -253,7 +320,7 @@ Organized into modules: basics, practice sets, test tasks, june work.
 
 <br/>
 
-## 📬 Contact
+## 🔗 Let's Connect
 
 <br/>
 
@@ -268,3 +335,9 @@ Organized into modules: basics, practice sets, test tasks, june work.
 ![Profile Views](https://komarev.com/ghpvc/?username=mitaro-cs&style=flat-square&color=1a1a1a&label=profile+views)
 &nbsp;
 ![Followers](https://img.shields.io/github/followers/mitaro-cs?style=flat-square&color=1a1a1a&label=followers&logo=github&logoColor=white)
+
+<br/>
+
+**Open to collaborations, consulting, and exciting projects** 🚀
+
+</div>
