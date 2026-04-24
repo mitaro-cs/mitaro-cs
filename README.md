@@ -1,10 +1,6 @@
 <div align="center">
 
-![Banner](https://raw.githubusercontent.com/mitaro-cs/mitaro-cs/main/banner.svg)
-
-</div>
-
-<br/>
+![Banner](https://raw.githubusercontent.com/mitaro-cs/mitaro-cs/miaro/banner.svg)
 
 <div align="center">
 
