@@ -114,7 +114,6 @@
 No cloud. Your files, your machine, your rules.
 Idea to build a private, security-first storage app with custom encryption and brute-force protection.
 
-![Python](https://img.shields.io/badge/Python-111?style=flat-square&logo=python&logoColor=white)
 ![AES](https://img.shields.io/badge/AES_Encryption-111?style=flat-square&logo=letsencrypt&logoColor=white)
 ![PBKDF2](https://img.shields.io/badge/PBKDF2--SHA256-111?style=flat-square&logo=hashnode&logoColor=white)
 ![Desktop](https://img.shields.io/badge/Desktop_App-111?style=flat-square&logo=apple&logoColor=white)
@@ -138,8 +137,6 @@ Idea to build a private, security-first storage app with custom encryption and b
 Turn any local drive into a full cloud workspace.
 Polished dark dashboard, installable PWA, Docker Compose deployment.
 
-![Flask](https://img.shields.io/badge/Flask-111?style=flat-square&logo=flask&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-111?style=flat-square&logo=docker&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-111?style=flat-square&logo=pwa&logoColor=white)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-111?style=flat-square&logo=githubactions&logoColor=white)
 
@@ -168,9 +165,6 @@ Polished dark dashboard, installable PWA, Docker Compose deployment.
 Full-stack Flask app for a university workspace.
 Spot booking, student check-in, Pomodoro timer, lofi music player.
 
-![Flask](https://img.shields.io/badge/Flask-111?style=flat-square&logo=flask&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-111?style=flat-square&logo=sqlite&logoColor=white)
-![JS](https://img.shields.io/badge/Vanilla_JS-111?style=flat-square&logo=javascript&logoColor=white)
 ![REST](https://img.shields.io/badge/REST_API-111?style=flat-square&logo=fastapi&logoColor=white)
 
 ```
@@ -192,7 +186,6 @@ Spot booking, student check-in, Pomodoro timer, lofi music player.
 Structured Python practice repository from exam preparation.
 Organized into modules: basics, practice sets, test tasks, june work.
 
-![Python](https://img.shields.io/badge/Python-111?style=flat-square&logo=python&logoColor=white)
 ![Algorithms](https://img.shields.io/badge/Algorithms-111?style=flat-square&logo=thealgorithms&logoColor=white)
 
 ```
@@ -287,9 +280,3 @@ Organized into modules: basics, practice sets, test tasks, june work.
 ![Profile Views](https://komarev.com/ghpvc/?username=mitaro-cs&style=flat-square&color=1a1a1a&label=profile+views)
 &nbsp;
 ![Followers](https://img.shields.io/github/followers/mitaro-cs?style=flat-square&color=1a1a1a&label=followers&logo=github&logoColor=white)
-
-<br/><br/>
-
-![Footer](https://capsule-render.vercel.app/api?type=waving&color=111111&height=80&section=footer&reversal=false)
-
-</div>
