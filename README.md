@@ -69,7 +69,7 @@
 
 <div align="center">
 
-[![Stack](https://skillicons.dev/icons?i=python,js,html,css,flask,sqlite,git,github,docker&theme=dark)](https://skillicons.dev)
+[![Stack](https://skillicons.dev/icons?i=python,obsidian,js,html,css,linux,flask,sqlite,git,github,figma,docker&theme=dark)](https://skillicons.dev)
 
 </div>
 
@@ -77,15 +77,7 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-111?style=flat-square&logo=python&logoColor=white&labelColor=111)
-![JavaScript](https://img.shields.io/badge/JavaScript-111?style=flat-square&logo=javascript&logoColor=white&labelColor=111)
-![HTML5](https://img.shields.io/badge/HTML5-111?style=flat-square&logo=html5&logoColor=white&labelColor=111)
 ![CSS3](https://img.shields.io/badge/CSS3-111?style=flat-square&logo=css3&logoColor=white&labelColor=111)
-![Flask](https://img.shields.io/badge/Flask-111?style=flat-square&logo=flask&logoColor=white&labelColor=111)
-![SQLite](https://img.shields.io/badge/SQLite-111?style=flat-square&logo=sqlite&logoColor=white&labelColor=111)
-![Docker](https://img.shields.io/badge/Docker-111?style=flat-square&logo=docker&logoColor=white&labelColor=111)
-![Git](https://img.shields.io/badge/Git-111?style=flat-square&logo=git&logoColor=white&labelColor=111)
-![GitHub](https://img.shields.io/badge/GitHub-111?style=flat-square&logo=github&logoColor=white&labelColor=111)
 ![PWA](https://img.shields.io/badge/PWA-111?style=flat-square&logo=pwa&logoColor=white&labelColor=111)
 ![AES](https://img.shields.io/badge/AES_Encryption-111?style=flat-square&logo=letsencrypt&logoColor=white&labelColor=111)
 ![Zed](https://img.shields.io/badge/Zed_Editor-111?style=flat-square&logo=zedindustries&logoColor=white&labelColor=111)
