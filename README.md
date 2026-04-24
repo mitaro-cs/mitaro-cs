@@ -4,29 +4,9 @@
 
 </div>
 
-<style>
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .badge-glow:hover {
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
-    transform: scale(1.05);
-    transition: all 0.3s ease;
-  }
-</style>
-
 <br/>
 
-<!-- Gradient fade -->
-<div align="center" style="background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%); padding: 40px 0; margin: 0 -9999px; padding-left: 9999px; padding-right: 9999px;">
+<div align="center">
 
 <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=500&size=14&duration=3000&pause=800&color=888888&center=true&vCenter=true&width=700&lines=Python+%7C+Flask+%7C+Frontend+%7C+Automation+%7C+Security;self-hosted+tools+%C2%B7+dark+UIs+%C2%B7+clean+architecture;open+to+work+%26+collaboration+%F0%9F%94%A5" alt="Typing" />
 
@@ -124,116 +104,82 @@
 
 <br/>
 
-<table width="100%">
-<tr>
+### 🔒 VantaVault · Personal encrypted vault
 
-<td width="50%" valign="top">
+**Status:** ![Active](https://img.shields.io/badge/Active-4ade80?style=flat-square&labelColor=111) | **Repo:** [mitaro-cs/VantaVault](https://github.com/mitaro-cs/VantaVault)
 
-### 🔒 [VantaVault](https://github.com/mitaro-cs/VantaVault)
-
-**Personal encrypted vault for external drives**
-
-No cloud. Your files, your machine, your rules.
-
-`Status:` ![Active](https://img.shields.io/badge/Active-4ade80?style=flat-square&labelColor=111)
+No cloud. Your files, your machine, your rules. Custom AES-256 encryption for external drives.
 
 ![AES](https://img.shields.io/badge/AES_Encryption-111?style=flat-square&logo=letsencrypt&logoColor=white)
 ![PBKDF2](https://img.shields.io/badge/PBKDF2--SHA256-111?style=flat-square&logo=hashnode&logoColor=white)
 ![Desktop](https://img.shields.io/badge/Desktop_App-111?style=flat-square&logo=apple&logoColor=white)
 
 ```
-· Custom AES-256 file encryption
-· PBKDF2-SHA256 password hashing
-· Brute-force lockout protection
-· Native app: macOS .dmg + Windows .exe
-· MIT licensed, open source
+· Custom AES-256 file encryption with random IV
+· PBKDF2-SHA256 password hashing (100k iterations)
+· Brute-force lockout protection · encrypted metadata
+· Native macOS .dmg + Windows .exe installers
+· MIT licensed, fully open source
 ```
 
-[→ View on GitHub](https://github.com/mitaro-cs/VantaVault)
+<br/>
 
-</td>
+### ☁️ AetherCloud · Self-hosted private cloud
 
-<td width="50%" valign="top">
+**Status:** ![Active](https://img.shields.io/badge/Active-4ade80?style=flat-square&labelColor=111) | **Repo:** [mitaro-cs/AetherCloud](https://github.com/mitaro-cs/AetherCloud)
 
-### ☁️ [AetherCloud](https://github.com/mitaro-cs/AetherCloud)
-
-**Self-hosted private cloud on your own disk**
-
-Turn any local drive into a full cloud workspace.
-
-`Status:` ![Active](https://img.shields.io/badge/Active-4ade80?style=flat-square&labelColor=111)
+Turn any local drive into a full cloud workspace. Dark dashboard, nested folders, installable PWA.
 
 ![PWA](https://img.shields.io/badge/PWA-111?style=flat-square&logo=pwa&logoColor=white)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-111?style=flat-square&logo=githubactions&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-111?style=flat-square&logo=flask&logoColor=white)
 
 ```
-· Dark dashboard with nested folders
-· File uploads · storage quotas
-· Admin panel · image previews
-· Installable PWA (iOS/Android/Desktop)
-· Docker + GitHub Actions CI/CD
+· Dark dashboard with nested folder navigation
+· File uploads with storage quotas · image previews
+· Admin panel · user session management · API
+· Installable PWA (iOS · Android · Desktop)
+· Docker Compose deployment + GitHub Actions CI/CD
 ```
 
-[→ View on GitHub](https://github.com/mitaro-cs/AetherCloud)
+<br/>
 
-</td>
+### 🏢 KworkingSystem · Campus coworking management
 
-</tr>
+**Status:** ![Maintained](https://img.shields.io/badge/Maintained-60a5fa?style=flat-square&labelColor=111) | **Repo:** [mitaro-cs/KworkingSystem](https://github.com/mitaro-cs/KworkingSystem)
 
-<tr><td colspan="2"><br/></td></tr>
-
-<tr>
-
-<td width="50%" valign="top">
-
-### 🏢 [KworkingSystem](https://github.com/mitaro-cs/KworkingSystem)
-
-**Digital campus coworking management**
-
-Full-stack Flask app for university workspace.
-
-`Status:` ![Maintained](https://img.shields.io/badge/Maintained-60a5fa?style=flat-square&labelColor=111)
+Full-stack Flask app for university workspace. Spot booking, check-in, Pomodoro timer.
 
 ![REST](https://img.shields.io/badge/REST_API-111?style=flat-square&logo=fastapi&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-111?style=flat-square&logo=sqlite&logoColor=white)
+![Vanilla JS](https://img.shields.io/badge/Vanilla_JS-111?style=flat-square&logo=javascript&logoColor=white)
 
 ```
-· Spot booking with conflict detection
-· Student check-in by student ID
-· Pomodoro 25/5 · lofi streams
-· Session auth · profile management
-· Real product UX, not a form
+· Real-time spot booking with conflict detection
+· Student check-in by ID · room capacity tracking
+· Pomodoro 25/5 timer · integrated lofi streams
+· Session auth · profile management · admin panel
+· Not a form — a real product UX
 ```
 
-[→ View on GitHub](https://github.com/mitaro-cs/KworkingSystem)
+<br/>
 
-</td>
+### 📚 Mouros · Where it all started
 
-<td width="50%" valign="top">
+**Status:** ![Archive](https://img.shields.io/badge/Archive-6b7280?style=flat-square&labelColor=111) | **Repo:** [mitaro-cs/Mouros](https://github.com/mitaro-cs/Mouros)
 
-### 📚 [Mouros](https://github.com/mitaro-cs/Mouros)
-
-**Where it all started — CS Exam prep**
-
-Disciplined, version-controlled from day one.
-
-`Status:` ![Archive](https://img.shields.io/badge/Archive-6b7280?style=flat-square&labelColor=111)
+Disciplined CS exam prep repo. The foundation for everything.
 
 ![Algorithms](https://img.shields.io/badge/Algorithms-111?style=flat-square&logo=thealgorithms&logoColor=white)
+![Python](https://img.shields.io/badge/Python-111?style=flat-square&logo=python&logoColor=white)
 
 ```
-· Module-by-module approach
+· Module-by-module structured approach
 · Version-controlled from day one
-· Clean folder structure
+· Clean folder structure · organized by topic
 · The foundation everything is built on
-· 2022 · The beginning
+· 2022 · The beginning of the journey
 ```
-
-[→ View on GitHub](https://github.com/mitaro-cs/Mouros)
-
-</td>
-
-</tr>
-</table>
 
 <br/>
 
@@ -243,18 +189,12 @@ Disciplined, version-controlled from day one.
 
 ## 📈 Experience Timeline
 
-<br/>
-
-<div align="center">
-
-| Year | Milestone | Tech |
+| Year | What I Did | Tech Stack |
 |:---:|:---|:---|
-| 2022 | Started CS journey · Mouros foundation | Python |
-| 2023 | Security focus · VantaVault v1 | Python, AES, PBKDF2 |
-| 2024 | Full-stack development · AetherCloud, KworkingSystem | Flask, PWA, Docker |
-| 2025 → | Open to exciting opportunities | Python, Full-Stack, Security |
-
-</div>
+| **2022** | Started CS journey · Built Mouros foundation | Python · Algorithms |
+| **2023** | Security obsession · Built VantaVault v1 | Python · AES · PBKDF2 · Desktop Apps |
+| **2024** | Full-stack development · Shipped 2 products | Flask · PWA · Docker · CI/CD |
+| **2025** | Open to exciting opportunities · Looking for impact | Python · Full-Stack · Security |
 
 <br/>
 
@@ -263,8 +203,6 @@ Disciplined, version-controlled from day one.
 <br/>
 
 ## 📊 GitHub Stats
-
-<br/>
 
 <div align="center">
 
@@ -298,21 +236,15 @@ Disciplined, version-controlled from day one.
 
 ## 🤝 What I Bring to the Table
 
-<br/>
-
-<div align="center">
-
-| | Skill | In Practice |
-|:---:|:---|:---|
-| 🚀 | **Fast Learner** | New stack, codebase, team — I integrate quickly |
-| 🤝 | **Team Player** | Real company workflow experience · adaptable |
-| 💬 | **Communicator** | Clear, direct, no fluff · transparent |
-| 🎯 | **Ownership** | Full responsibility for work · follow through |
-| 🔄 | **Adaptable** | Startup speed OR structured corporate pace |
-| 🛠️ | **Builder** | Ships working, beautiful, production-ready code |
-| 🔒 | **Detail-oriented** | Architecture, UX, security · thought through from day one |
-
-</div>
+| Skill | What It Means |
+|:---|:---|
+| 🚀 **Fast Learner** | New stack, codebase, team — I integrate and ship fast |
+| 🤝 **Team Player** | Real company workflow experience · adapt to any process |
+| 💬 **Clear Communicator** | No fluff · transparent · direct feedback |
+| 🎯 **Full Ownership** | Take responsibility · follow through · deliver |
+| 🔄 **Adaptable** | Startup pace OR structured corporate environment |
+| 🛠️ **Builder** | Ships working, beautiful, production-ready code |
+| 🔒 **Detail-oriented** | Architecture, UX, security — thought through from day one |
 
 <br/>
 
@@ -320,9 +252,7 @@ Disciplined, version-controlled from day one.
 
 <br/>
 
-## 🔗 Let's Connect
-
-<br/>
+## 🔗 Get in Touch
 
 <div align="center">
 
@@ -336,8 +266,12 @@ Disciplined, version-controlled from day one.
 &nbsp;
 ![Followers](https://img.shields.io/github/followers/mitaro-cs?style=flat-square&color=1a1a1a&label=followers&logo=github&logoColor=white)
 
+</div>
+
 <br/>
 
-**Open to collaborations, consulting, and exciting projects** 🚀
+<div align="center">
+
+**💡 Open to collaborations, consulting, and exciting projects**
 
 </div>
