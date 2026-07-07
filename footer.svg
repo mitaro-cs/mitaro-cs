@@ -1,85 +1,34 @@
-<svg width="1200" height="260" viewBox="0 0 1200 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1200 150" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="fsky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0d1c2e"/>
-      <stop offset="100%" stop-color="#03060c"/>
-    </linearGradient>
-    <linearGradient id="faurora" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0"/>
-      <stop offset="50%" stop-color="#7dd3fc" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    <linearGradient id="footerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0f1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0b1220;stop-opacity:1" />
     </linearGradient>
   </defs>
-
-  <rect width="1200" height="260" fill="url(#fsky)"/>
-
-  <path d="M80 40 C 340 100, 620 20, 900 80 C 1050 110, 1140 70, 1200 90 L1200 140 C 1000 110, 760 150, 520 100 C 320 65, 180 110, 80 90 Z" fill="url(#faurora)">
-    <animate attributeName="opacity" values="0.7;1;0.7" dur="9s" repeatCount="indefinite"/>
-  </path>
-
-  <!-- stars -->
-  <g fill="#bfe8ff">
-    <circle cx="150" cy="40" r="1.2" opacity="0.6"><animate attributeName="opacity" values=".2;.7;.2" dur="5s" repeatCount="indefinite"/></circle>
-    <circle cx="480" cy="30" r="1.3" opacity="0.5"><animate attributeName="opacity" values=".6;.2;.6" dur="6s" repeatCount="indefinite"/></circle>
-    <circle cx="760" cy="45" r="1.2" opacity="0.6"><animate attributeName="opacity" values=".3;.8;.3" dur="4.5s" repeatCount="indefinite"/></circle>
-    <circle cx="1040" cy="32" r="1.3" opacity="0.5"><animate attributeName="opacity" values=".7;.25;.7" dur="5.5s" repeatCount="indefinite"/></circle>
+  
+  <rect width="1200" height="150" fill="url(#footerGradient)"/>
+  
+  <!-- Top accent line -->
+  <line x1="0" y1="0" x2="1200" y2="0" stroke="#7dd3fc" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Decorative elements -->
+  <circle cx="100" cy="75" r="40" fill="#7dd3fc" opacity="0.05"/>
+  <circle cx="1100" cy="75" r="50" fill="#7dd3fc" opacity="0.04"/>
+  
+  <!-- Pattern -->
+  <g opacity="0.1">
+    <line x1="0" y1="40" x2="1200" y2="40" stroke="#7dd3fc" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="0" y1="80" x2="1200" y2="80" stroke="#7dd3fc" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="0" y1="120" x2="1200" y2="120" stroke="#7dd3fc" stroke-width="1" stroke-dasharray="5,5"/>
   </g>
-
-  <!-- back ridge -->
-  <path d="M0 170 L180 110 L340 155 L520 95 L700 150 L880 105 L1040 155 L1200 120 L1200 260 L0 260 Z" fill="#0e1e30" opacity="0.8"/>
-  <path d="M520 95 L545 109 L531 112 L554 124 M880 105 L903 117 L891 120 L911 131" stroke="#3d5a78" stroke-width="2" fill="none" opacity="0.6"/>
-
-  <!-- snow ground -->
-  <path d="M0 205 C 200 190, 400 215, 600 202 C 800 190, 1000 214, 1200 200 L1200 260 L0 260 Z" fill="#101d2c"/>
-
-  <!-- pines left -->
-  <g fill="#0a1521">
-    <path d="M120 208 L138 168 L156 208 Z"/><path d="M124 190 L138 156 L152 190 Z"/><rect x="135" y="208" width="6" height="12"/>
-    <path d="M180 212 L194 180 L208 212 Z"/><path d="M183 198 L194 170 L205 198 Z"/><rect x="191" y="212" width="5" height="10"/>
-    <path d="M70 214 L82 186 L94 214 Z"/><rect x="79" y="214" width="5" height="9"/>
-  </g>
-  <!-- snow on pines -->
-  <path d="M131 178 L138 162 L145 178 M188 186 L194 174 L200 186" stroke="#31506e" stroke-width="2" fill="none" opacity="0.8"/>
-
-  <!-- cabin -->
-  <g>
-    <rect x="930" y="182" width="86" height="42" fill="#0a1624"/>
-    <path d="M922 184 L973 156 L1024 184 Z" fill="#122438"/>
-    <path d="M926 182 L973 156 L1020 182" stroke="#3d5a78" stroke-width="3" fill="none"/>
-    <rect x="944" y="196" width="14" height="14" fill="#7dd3fc" opacity="0.85">
-      <animate attributeName="opacity" values=".85;.45;.85" dur="4s" repeatCount="indefinite"/>
-    </rect>
-    <rect x="988" y="196" width="14" height="14" fill="#7dd3fc" opacity="0.6">
-      <animate attributeName="opacity" values=".5;.9;.5" dur="5s" repeatCount="indefinite"/>
-    </rect>
-    <rect x="1005" y="160" width="8" height="18" fill="#0a1624"/>
-    <!-- smoke -->
-    <circle cx="1009" cy="150" r="3" fill="#31506e" opacity="0.5">
-      <animate attributeName="cy" values="152;128" dur="6s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values=".5;0" dur="6s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="1013" cy="144" r="2.4" fill="#31506e" opacity="0.4">
-      <animate attributeName="cy" values="146;122" dur="7s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values=".4;0" dur="7s" repeatCount="indefinite"/>
-    </circle>
-  </g>
-
-  <!-- pines right -->
-  <g fill="#0a1521">
-    <path d="M1080 210 L1094 178 L1108 210 Z"/><path d="M1083 196 L1094 168 L1105 196 Z"/><rect x="1091" y="210" width="5" height="10"/>
-  </g>
-
-  <!-- falling snow -->
-  <g fill="#bfe8ff">
-    <circle cx="260" cy="70" r="1.5"><animate attributeName="cy" values="50;240" dur="11s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.6;.6;0" dur="11s" repeatCount="indefinite"/></circle>
-    <circle cx="560" cy="55" r="1.2"><animate attributeName="cy" values="40;240" dur="14s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.5;.5;0" dur="14s" repeatCount="indefinite"/></circle>
-    <circle cx="840" cy="75" r="1.6"><animate attributeName="cy" values="55;240" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.6;.6;0" dur="10s" repeatCount="indefinite"/></circle>
-    <circle cx="1150" cy="60" r="1.2"><animate attributeName="cy" values="45;240" dur="13s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.5;.5;0" dur="13s" repeatCount="indefinite"/></circle>
-  </g>
-
-  <text x="600" y="246" text-anchor="middle"
-        font-family="'SF Mono','JetBrains Mono',Menlo,Consolas,monospace"
-        font-size="11" letter-spacing="4" fill="#3d5a78">
-    ❄ COLD FOCUS · CLEAN CODE · LOCAL-FIRST ❄
-  </text>
+  
+  <!-- Center accent -->
+  <line x1="400" y1="30" x2="800" y2="30" stroke="#7dd3fc" stroke-width="1.5" opacity="0.2"/>
+  <line x1="400" y1="120" x2="800" y2="120" stroke="#7dd3fc" stroke-width="1.5" opacity="0.2"/>
+  
+  <!-- Corner details -->
+  <path d="M 20 20 L 50 20 L 50 50" stroke="#7dd3fc" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <path d="M 1180 20 L 1150 20 L 1150 50" stroke="#7dd3fc" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <path d="M 20 130 L 50 130 L 50 100" stroke="#7dd3fc" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <path d="M 1180 130 L 1150 130 L 1150 100" stroke="#7dd3fc" stroke-width="1.5" fill="none" opacity="0.3"/>
 </svg>
