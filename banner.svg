@@ -1,9 +1,9 @@
 <svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0b1220;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#0f1729;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0a0f1a;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#e8f1f9;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f0f6fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0ecf5;stop-opacity:1" />
     </linearGradient>
     <filter id="glow">
       <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
@@ -16,30 +16,35 @@
   
   <rect width="1200" height="400" fill="url(#bgGradient)"/>
   
-  <!-- Ambient shapes -->
-  <circle cx="100" cy="50" r="80" fill="#7dd3fc" opacity="0.05"/>
-  <circle cx="1100" cy="350" r="120" fill="#7dd3fc" opacity="0.08"/>
-  <path d="M 0 200 Q 300 100 600 150 T 1200 200" stroke="#7dd3fc" stroke-width="1" fill="none" opacity="0.15"/>
+  <!-- Mountain shapes -->
+  <path d="M 0 300 L 200 150 L 400 280 L 0 400 Z" fill="#e0ecf5" opacity="0.6"/>
+  <path d="M 300 350 L 500 120 L 700 300 L 300 400 Z" fill="#d4e8f7" opacity="0.5"/>
+  <path d="M 600 320 L 900 80 L 1200 250 L 1200 400 L 600 400 Z" fill="#c8e0f0" opacity="0.6"/>
   
-  <!-- Moon -->
-  <circle cx="1050" cy="80" r="35" fill="#e0e7ff"/>
-  <circle cx="1060" cy="75" r="35" fill="#0a0f1a"/>
+  <!-- Snow peaks -->
+  <path d="M 200 150 L 180 180 L 220 180 Z" fill="#ffffff" opacity="0.9"/>
+  <path d="M 500 120 L 470 160 L 530 160 Z" fill="#ffffff" opacity="0.95"/>
+  <path d="M 900 80 L 860 130 L 940 130 Z" fill="#ffffff" opacity="0.9"/>
+  
+  <!-- Accent lines -->
+  <line x1="0" y1="200" x2="1200" y2="200" stroke="#7dd3fc" stroke-width="2" opacity="0.2"/>
+  
+  <!-- Moon/Sun -->
+  <circle cx="1050" cy="80" r="35" fill="#fef3c7" opacity="0.4"/>
+  <circle cx="1050" cy="80" r="32" fill="#fde68a" opacity="0.3"/>
   
   <!-- Main text -->
-  <text x="600" y="180" font-size="72" font-weight="bold" font-family="'Courier New', monospace" text-anchor="middle" fill="#ffffff" letter-spacing="8">
+  <text x="600" y="180" font-size="72" font-weight="bold" font-family="'Courier New', monospace" text-anchor="middle" fill="#1a3a52" letter-spacing="8">
     OMAR · MITARO
   </text>
   
   <!-- Subtitle -->
-  <text x="600" y="240" font-size="18" font-family="'Courier New', monospace" text-anchor="middle" fill="#7dd3fc" letter-spacing="4">
+  <text x="600" y="240" font-size="18" font-family="'Courier New', monospace" text-anchor="middle" fill="#2d5a7b" letter-spacing="4">
     JUNIOR PYTHON & FRONTEND DEVELOPER
   </text>
   
   <!-- Description line -->
-  <text x="600" y="270" font-size="13" font-family="'Courier New', monospace" text-anchor="middle" fill="#a8d5ff" letter-spacing="2" opacity="0.8">
+  <text x="600" y="270" font-size="13" font-family="'Courier New', monospace" text-anchor="middle" fill="#3d6fa5" letter-spacing="2" opacity="0.85">
     CS STUDENT · MTUCI · CLEAN DIGITAL TOOLS · COLD MINIMAL UI
   </text>
-  
-  <!-- Accent line -->
-  <line x1="300" y1="290" x2="900" y2="290" stroke="#7dd3fc" stroke-width="1.5" opacity="0.4"/>
 </svg>
