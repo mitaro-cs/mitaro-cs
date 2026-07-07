@@ -7,7 +7,7 @@
 <h2 align="center">Салам 👋 I'm Omar · Mitaro</h2>
 
 <p align="center">
-❄️ CS student at <b>MTUCI</b> building small but complete products: private tools, web apps, automation, and cold dark interfaces. My path is engineering code, architecture, UX, and security as <b>one system</b> — local-first, reliable, and free of visual noise.
+❄️ CS student at <b>MTUCI</b> building small but complete products: private tools, web apps, automation, and cold dark interfaces. My path is engineering code, architecture, UX, and security at a deep level.
 </p>
 
 <div align="center">
@@ -53,21 +53,6 @@
 [![Instagram](https://img.shields.io/badge/Instagram-0b1220?style=for-the-badge&logo=instagram&logoColor=7dd3fc)](https://instagram.com/stere.os)
 &nbsp;
 [![GitHub](https://img.shields.io/badge/GitHub-0b1220?style=for-the-badge&logo=github&logoColor=7dd3fc)](https://github.com/mitaro-cs)
-
-<br/>
-</div>
-
-## 📊 GitHub Status
-
-<div align="center">
-<br/>
-
-<img src="./metrics.svg" width="100%" alt="metrics" />
-
-<br/>
-<br/>
-
-<img src="https://raw.githubusercontent.com/mitaro-cs/mitaro-cs/output/snake.svg" width="100%" alt="snake" />
 
 <br/>
 </div>
