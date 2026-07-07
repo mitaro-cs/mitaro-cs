@@ -4,7 +4,7 @@
 
 </div>
 
-<h2 align="center">Салам 👋 I'm Omar · Mitaro</h2>
+<h2 align="center">Hi 👋 I'm Omar · Mitaro</h2>
 
 <p align="center">
 ❄️ CS student at <b>MTUCI</b> building small but complete products: private tools, web apps, automation, and cold dark interfaces. My path is engineering code, architecture, UX, and security at a deep level.
@@ -12,9 +12,9 @@
 
 <div align="center">
 
-![Profile Views](https://komarev.com/ghpvc/?username=mitaro-cs&style=for-the-badge&color=14283f&label=PROFILE+VIEWS)
+![Profile Views](https://komarev.com/ghpvc/?username=mitaro-cs&style=for-the-badge&color=0b1220&label=PROFILE+VIEWS)
 &nbsp;
-![Followers](https://img.shields.io/github/followers/mitaro-cs?style=for-the-badge&color=14283f&labelColor=0b1220&label=FOLLOWERS&logo=github&logoColor=7dd3fc)
+![Followers](https://img.shields.io/github/followers/mitaro-cs?style=for-the-badge&color=0b1220&labelColor=0b1220&label=FOLLOWERS&logo=github&logoColor=7dd3fc)
 
 </div>
 
@@ -126,17 +126,17 @@
 <div align="center">
 <br/>
 
-![Python](https://img.shields.io/badge/PYTHON-0b1220?style=for-the-badge&logo=python)
-![Flask](https://img.shields.io/badge/FLASK-0b1220?style=for-the-badge&logo=flask&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JAVASCRIPT-0b1220?style=for-the-badge&logo=javascript)
-![HTML5](https://img.shields.io/badge/HTML5-0b1220?style=for-the-badge&logo=html5)
-![CSS3](https://img.shields.io/badge/CSS3-0b1220?style=for-the-badge&logo=css3&logoColor=1572B6)
+![Python](https://img.shields.io/badge/PYTHON-0b1220?style=for-the-badge&logo=python&logoColor=7dd3fc)
+![Flask](https://img.shields.io/badge/FLASK-0b1220?style=for-the-badge&logo=flask&logoColor=7dd3fc)
+![JavaScript](https://img.shields.io/badge/JAVASCRIPT-0b1220?style=for-the-badge&logo=javascript&logoColor=7dd3fc)
+![HTML5](https://img.shields.io/badge/HTML5-0b1220?style=for-the-badge&logo=html5&logoColor=7dd3fc)
+![CSS3](https://img.shields.io/badge/CSS3-0b1220?style=for-the-badge&logo=css3&logoColor=7dd3fc)
 
-![SQLite](https://img.shields.io/badge/SQLITE-0b1220?style=for-the-badge&logo=sqlite&logoColor=07405E)
-![Docker](https://img.shields.io/badge/DOCKER-0b1220?style=for-the-badge&logo=docker)
-![Git](https://img.shields.io/badge/GIT-0b1220?style=for-the-badge&logo=git)
-![Figma](https://img.shields.io/badge/FIGMA-0b1220?style=for-the-badge&logo=figma)
-![Zed](https://img.shields.io/badge/ZED-0b1220?style=for-the-badge&logo=zedindustries&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLITE-0b1220?style=for-the-badge&logo=sqlite&logoColor=7dd3fc)
+![Docker](https://img.shields.io/badge/DOCKER-0b1220?style=for-the-badge&logo=docker&logoColor=7dd3fc)
+![Git](https://img.shields.io/badge/GIT-0b1220?style=for-the-badge&logo=git&logoColor=7dd3fc)
+![Figma](https://img.shields.io/badge/FIGMA-0b1220?style=for-the-badge&logo=figma&logoColor=7dd3fc)
+![Zed](https://img.shields.io/badge/ZED-0b1220?style=for-the-badge&logo=zedindustries&logoColor=7dd3fc)
 
 <br/>
 </div>
