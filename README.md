@@ -42,7 +42,7 @@ Outside of code I train hand-to-hand combat. The habit of keeping a cold head un
 </div>
 
 <details>
-<summary><b>▸ How to run VantaVault</b></summary>
+<summary><b>How to run VantaVault</b></summary>
 
 ```bash
 git clone https://github.com/mitaro-cs/VantaVault.git
@@ -60,7 +60,7 @@ chmod +x main && ./main      # macOS / Linux
 </div>
 
 <details>
-<summary><b>▸ How to run AetherCloud</b></summary>
+<summary><b>How to run AetherCloud</b></summary>
 
 ```bash
 git clone https://github.com/mitaro-cs/AetherCloud.git
@@ -84,7 +84,7 @@ How it fits together: `Client / PWA` → `Flask routes and templates` → `SQLit
 </div>
 
 <details>
-<summary><b>▸ How to run Campus Coworking</b></summary>
+<summary><b>How to run Campus Coworking</b></summary>
 
 ```bash
 git clone https://github.com/mitaro-cs/KworkingSystem.git
