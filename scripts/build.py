@@ -15,6 +15,7 @@ import struct
 import sys
 from datetime import date
 
+import pixel
 from lib import BLACK, WHITE, Svg, cap_height, ink_bounds, jag, smoothstep, star_points, text_width
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -620,5 +621,7 @@ if __name__ == "__main__":
         project_card(p)
     timeline()
     reel()
+    pixel.obsidian_window(OUT, DATA["commits"])
+    sticker("obsidian", "MY OBSIDIAN DASHBOARD", dark=False, rot=1.3, seed=17)
     sticker("reel", "THE COMMIT REEL", dark=True, rot=-1.4, seed=15)
     footer()

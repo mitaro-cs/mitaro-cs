@@ -23,6 +23,9 @@ FONTS = {
     "marker": ("PermanentMarker-Regular.ttf", "Marker", "'Marker Felt', cursive"),
     "play": ("PlayfairDisplay[wght].ttf", "Play", "Georgia, serif"),
     "mono": ("JetBrainsMono[wght].ttf", "JBMono", "ui-monospace, Menlo, Consolas, monospace"),
+    "px": ("Silkscreen-Regular.ttf", "Silk", "monospace"),
+    "pxb": ("Silkscreen-Bold.ttf", "SilkB", "monospace"),
+    "ps": ("PressStart2P-Regular.ttf", "PS2P", "monospace"),
 }
 
 _cache = {}
@@ -155,6 +158,7 @@ class Svg:
     def __init__(self, w, h, title, desc=""):
         self.w, self.h, self.title, self.desc = w, h, title, desc
         self.defs, self.body, self.used = [], [], {}
+        self.extra_css = ""
         self._id = 0
 
     def uid(self, prefix="i"):
@@ -257,7 +261,7 @@ class Svg:
             fam = FONTS[key][1]
             faces.append(f"@font-face{{font-family:{fam};font-weight:{weight};"
                          f"src:url(data:font/woff2;base64,{_woff2_b64(key, weight, chars)}) format('woff2');}}")
-        style = "".join(faces) + ANIM_CSS
+        style = "".join(faces) + ANIM_CSS + self.extra_css
         desc = f"<desc>{escape(self.desc)}</desc>" if self.desc else ""
         return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" '
                 f'width="{self.w}" height="{self.h}" role="img" aria-label="{escape(self.title)}">'

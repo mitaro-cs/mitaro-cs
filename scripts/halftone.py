@@ -12,8 +12,8 @@ from PIL import Image, ImageDraw, ImageFilter
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_IN = os.path.join(HERE, "..", "tools", "src", "cutout.png")
 OUT = os.path.join(HERE, "src", "portrait-halftone.png")
-WIDTH = 660           # output width in px
-CELL = 7.2            # dot pitch
+WIDTH = 740           # output width in px
+CELL = 6.3            # dot pitch
 SS = 4                # supersampling for smooth dots
 
 
@@ -27,9 +27,9 @@ def main(src=DEFAULT_IN):
     soft = lum_img.filter(ImageFilter.GaussianBlur(3.2))
     ramp = np.clip((np.arange(h, dtype=np.float32) / h - 0.60) / 0.12, 0, 1)[:, None]
     lum = np.asarray(lum_img, np.float32) * (1 - ramp) + np.asarray(soft, np.float32) * ramp
-    lum = Image.fromarray(np.uint8(np.clip(lum, 0, 255))).filter(ImageFilter.UnsharpMask(radius=9, percent=150, threshold=2))
+    lum = Image.fromarray(np.uint8(np.clip(lum, 0, 255))).filter(ImageFilter.UnsharpMask(radius=5, percent=210, threshold=2))
     g = np.asarray(lum, dtype=np.float32) / 255.0
-    g = np.clip((g - 0.16) / 0.70, 0, 1) ** 0.95
+    g = np.clip((g - 0.15) / 0.68, 0, 1) ** 1.05
     inner = np.asarray(Image.fromarray(np.uint8(alpha > 0.5) * 255).filter(ImageFilter.MinFilter(15)), np.float32) / 255.0
     rim = np.clip((alpha > 0.5) * 1.0 - inner, 0, 1)          # thin light edge so dark hair keeps its silhouette
     g = np.maximum(g, rim * 0.42)
