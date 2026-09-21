@@ -288,6 +288,33 @@ def whoami_art():
     s.save(OUT, "whoami.svg")
 
 
+# ------------------------------------------------------------------ house rules note
+RULES = ["Working product beats endless planning.",
+         "Readable code beats clever code.",
+         "Anything that touches user data gets security from day one."]
+
+
+def rules():
+    H = 214
+    s = Svg(W, H, "House rules: " + " ".join(RULES))
+    s.g("o wob", "--a:.35deg;--d:2.2s")
+    tr = "rotate(-.6 444 107)"
+    pts = jag(22, 26, W - 56, 158, 2.2, 31, 18)
+    s.poly(pts, BLACK, transform=f"{tr} translate(8 8)")
+    s.poly(pts, WHITE, BLACK, 3, transform=tr)
+    s.add(f'<g transform="{tr}">')
+    for i, line in enumerate(RULES):
+        y = 88 + i * 34
+        s.rect(52, y - 15, 13, 13, BLACK, transform=f"rotate(45 58.5 {y - 8.5})")
+        s.text(82, y, line, "mono", 20, BLACK, 700)
+    s.rect(60, 12, 90, 22, BLACK, WHITE, 1.5, transform="rotate(-6 105 23)")
+    s.rect(W - 170, 14, 90, 22, BLACK, WHITE, 1.5, transform="rotate(7 " + str(W - 125) + " 25)")
+    s.add("</g>")
+    s.end()
+    label(s, 44, 2, "HOUSE RULES", "mono", 15, "b", -2, 12, 800, ls=2)
+    s.save(OUT, "rules.svg")
+
+
 # ------------------------------------------------------------------ contact buttons
 def button(file, brand, kind, handle, k):
     s = Svg(268, 68, f"{kind}: {handle}")
@@ -611,6 +638,7 @@ if __name__ == "__main__":
     sticker("timeline", "TIMELINE", dark=False, rot=-1.6, seed=11)
     sticker("now", "RIGHT NOW", dark=True, rot=1.2, seed=13)
     whoami_art()
+    rules()
     button("btn-telegram.svg", "telegram", "Telegram", "@treadways", 0)
     button("btn-email.svg", "gmail", "Email", "miri.saro@bk.ru", 1)
     button("btn-instagram.svg", "instagram", "Instagram", "@stere.os", 2)

@@ -30,8 +30,11 @@ Outside of code I train hand-to-hand combat. The habit of keeping a cold head un
 
 </div>
 
-> [!CAUTION]
-> Working product beats endless planning. Readable code beats clever code. Anything that touches user data gets security from day one.
+<div align="center">
+
+<img src="assets/rules.svg" width="100%" alt="House rules. Working product beats endless planning. Readable code beats clever code. Anything that touches user data gets security from day one.">
+
+</div>
 
 <div align="center">
 
