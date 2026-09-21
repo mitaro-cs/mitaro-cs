@@ -23,9 +23,6 @@ FONTS = {
     "marker": ("PermanentMarker-Regular.ttf", "Marker", "'Marker Felt', cursive"),
     "play": ("PlayfairDisplay[wght].ttf", "Play", "Georgia, serif"),
     "mono": ("JetBrainsMono[wght].ttf", "JBMono", "ui-monospace, Menlo, Consolas, monospace"),
-    "px": ("Silkscreen-Regular.ttf", "Silk", "monospace"),
-    "pxb": ("Silkscreen-Bold.ttf", "SilkB", "monospace"),
-    "ps": ("PressStart2P-Regular.ttf", "PS2P", "monospace"),
 }
 
 _cache = {}

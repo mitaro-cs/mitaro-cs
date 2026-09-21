@@ -120,33 +120,6 @@ Also in my repositories: [Mouros](https://github.com/mitaro-cs/Mouros) is my Pyt
 
 <br>
 
-<img src="assets/head-obsidian.svg" alt="My Obsidian dashboard">
-<br>
-<img src="assets/obsidian.svg" width="100%" alt="A pixel-art sketch of my Obsidian home dashboard drawn as an old Macintosh window: a title tile with the day of the year, a clock, a dot calendar, study and recent lists, posters of what I am watching, stats tiles, a pixel portrait and the plugins it runs on.">
-
-<sub>A pixel-art sketch of the layout with sample data. The real vault is private.</sub>
-
-</div>
-
-Obsidian is where everything that is not code lives: lecture notes, reading, a journal and a map of my projects. The vault is called **Equilibrium**: about 600 notes in 11 folders, versioned in Git.
-
-Its home page is a dashboard I built myself. It is a single [Datacore](https://github.com/blacksmithgu/datacore) block written in JSX that asks the vault one question and draws everything from the answer. Paths, links and labels live in one config note instead of the code, so the dashboard keeps working when I rename a folder. The look is a separate CSS snippet of about 1,400 lines with a strict black-and-white system: matte panels, thin lines, no glow. It takes its colors from the active theme, so light and dark mode both work, and there is a layout for the phone too.
-
-| Widget | What it does |
-| --- | --- |
-| **Header** | A sticker with the day of the year as a progress meter |
-| **Clock** | A live clock; only this component re-renders every second |
-| **Dot calendar** | One dot per day of the month, days with lecture notes light up, today is inverted |
-| **Study** | Every subject folder with its note count and a check mark if I wrote something this week |
-| **Recent** | The latest lecture, practice and lab notes, tagged LEC, PRA or LAB |
-| **Watching** | Posters of what I am watching with season and episode badges, loaded only when they scroll into view |
-| **Stats** | Notes, edits in the last seven days, films and series, counted straight from the vault |
-| **Links** | Quick pills to the planner, the cinema shelf and the rest of the vault |
-
-Around the dashboard: **Bases** for the film and series shelves, **Kanban**, **Calendar**, **Excalidraw** for diagrams, and a vault map note with the tag dictionary, my rules for notes and a set of ready-made queries.
-
-<div align="center">
-
 <img src="assets/head-timeline.svg" alt="Timeline">
 <br>
 <img src="assets/timeline.svg" width="100%" alt="July 2022 joined GitHub. December 2024 Mouros. February 2026 AetherCloud. April 2026 VantaVault and Campus Coworking. September 2026 Java and Python practice repos and this profile.">
