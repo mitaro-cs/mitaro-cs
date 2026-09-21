@@ -5,6 +5,15 @@
   "week": "2026-W39",
   "repos": [
     {
+      "name": "StorageSystem",
+      "created": "2026-09-21",
+      "pushed": "2026-09-21",
+      "stars": 0,
+      "langs": {},
+      "commits": 1,
+      "release": null
+    },
+    {
       "name": "mitaro-cs",
       "created": "2026-09-21",
       "pushed": "2026-09-21",
@@ -101,6 +110,11 @@
     }
   ],
   "commits": [
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-09-21T20:32:17Z",
+      "msg": "Initial commit"
+    },
     {
       "repo": "Java",
       "ts": "2026-09-08T15:30:19Z",
