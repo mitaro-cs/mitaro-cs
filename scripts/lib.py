@@ -8,6 +8,7 @@ import re
 from xml.sax.saxutils import escape
 
 from fontTools import subset
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
@@ -25,6 +26,34 @@ FONTS = {
 }
 
 _cache = {}
+
+ANIM_CSS = (
+    ".o{transform-box:fill-box;transform-origin:center}"
+    "@keyframes wob{0%{transform:rotate(calc(var(--a,1.3deg)*-1)) translate(0,0)}"
+    "34%{transform:rotate(calc(var(--a,1.3deg)*.8)) translate(.8px,-.7px)}"
+    "67%{transform:rotate(calc(var(--a,1.3deg)*-.4)) translate(-.7px,.6px)}}"
+    ".wob{animation:wob var(--d,1s) steps(1) infinite}"
+    "@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}"
+    ".bob{animation:bob 3.4s ease-in-out infinite}"
+    "@keyframes sway{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}"
+    ".sway{transform-origin:50% 0;animation:sway 5.5s ease-in-out infinite}"
+    "@keyframes pop{0%{transform:scale(.7) rotate(-7deg)}65%{transform:scale(1.07) rotate(1.2deg)}"
+    "100%{transform:scale(1) rotate(0deg)}}"
+    ".pop{animation:pop .6s cubic-bezier(.2,1.3,.4,1) both}"
+    "@keyframes grow{from{transform:scaleX(.15)}to{transform:scaleX(1)}}"
+    ".grow{transform-origin:0 50%;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}"
+    "@keyframes rise{from{transform:translateY(10px)}to{transform:translateY(0)}}"
+    ".rise{animation:rise .6s ease-out both}"
+    "@keyframes spin{to{transform:rotate(360deg)}}"
+    ".spin{animation:spin 9s linear infinite}"
+    "@keyframes draw{from{stroke-dashoffset:calc(var(--len)*.86)}to{stroke-dashoffset:0}}"
+    ".draw{stroke-dasharray:var(--len);animation:draw 1.6s ease-out both}"
+    "@keyframes marq{to{transform:translateX(var(--shift))}}"
+    ".marq{animation:marq 18s linear infinite}"
+    "@keyframes fA{0%,49.99%{opacity:1}50%,100%{opacity:0}}@keyframes fB{0%,49.99%{opacity:0}50%,100%{opacity:1}}"
+    ".fA{animation:fA .8s steps(1) infinite}.fB{animation:fB .8s steps(1) infinite}"
+    "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
+)
 
 
 def font(key, weight=400):
@@ -47,9 +76,20 @@ def text_width(key, weight, size, txt, ls=0):
     return total * size / upm + ls * len(txt)
 
 
-def cap_height(key, weight, size):
+def ink_bounds(key, weight, size, ch):
+    """Real ink box of a glyph in px, y up: (xmin, ymin, xmax, ymax). Font metrics lie, outlines do not."""
     f = font(key, weight)
-    return f["OS/2"].sCapHeight * size / f["head"].unitsPerEm
+    gs = f.getGlyphSet()
+    name = f.getBestCmap()[ord(ch)]
+    pen = BoundsPen(gs)
+    gs[name].draw(pen)
+    k = size / f["head"].unitsPerEm
+    xmin, ymin, xmax, ymax = pen.bounds
+    return xmin * k, ymin * k, xmax * k, ymax * k
+
+
+def cap_height(key, weight, size):
+    return ink_bounds(key, weight, size, "H")[3]
 
 
 def _woff2_b64(key, weight, chars):
@@ -193,10 +233,18 @@ class Svg:
         self.add(f'<path d="{icon_path(name)}" fill="{fill}" '
                  f'transform="translate({x:.1f} {y:.1f}) scale({size / 24:.4f})"/>')
 
+    def g(self, cls="", style=""):
+        self.add(f'<g class="{cls}"' + (f' style="{style}"' if style else "") + ">")
+
+    def end(self):
+        self.add("</g>")
+
     def grain(self, opacity=0.09, w=None, h=None, seed=3):
         self.defs.append(
             '<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="{seed}" stitchTiles="stitch"/>'
+            f'<feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="{seed}" stitchTiles="stitch">'
+            '<animate attributeName="seed" values="3;9;14;6;21;11" dur=".7s" calcMode="discrete" repeatCount="indefinite"/>'
+            "</feTurbulence>"
             '<feColorMatrix type="matrix" values=".33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 1 0"/>'
             "</filter>")
         self.add(f'<rect width="{w or self.w}" height="{h or self.h}" filter="url(#grain)" opacity="{opacity}"/>')
@@ -207,9 +255,7 @@ class Svg:
             fam = FONTS[key][1]
             faces.append(f"@font-face{{font-family:{fam};font-weight:{weight};"
                          f"src:url(data:font/woff2;base64,{_woff2_b64(key, weight, chars)}) format('woff2');}}")
-        style = "".join(faces) + ("@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}"
-                                  ".blink{animation:blink 1.1s steps(1) infinite}"
-                                  "@media (prefers-reduced-motion:reduce){.blink{animation:none}}")
+        style = "".join(faces) + ANIM_CSS
         desc = f"<desc>{escape(self.desc)}</desc>" if self.desc else ""
         return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" '
                 f'width="{self.w}" height="{self.h}" role="img" aria-label="{escape(self.title)}">'

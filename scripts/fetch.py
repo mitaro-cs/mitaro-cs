@@ -3,6 +3,7 @@
 
 Uses GITHUB_TOKEN / GH_TOKEN when present (Actions), else the `gh` CLI token, else anonymous.
 """
+import datetime
 import json
 import os
 import re
@@ -44,7 +45,7 @@ def get(path, want_headers=False):
 
 
 def commit_count(repo):
-    body, headers = get(f"/repos/{USER}/{repo}/commits?per_page=1", want_headers=True)
+    body, headers = get(f"/repos/{USER}/{repo}/commits?per_page=1&author={USER}", want_headers=True)
     if not body:
         return 0
     m = re.search(r'[?&]page=(\d+)>; rel="last"', headers.get("Link", ""))
@@ -71,6 +72,8 @@ def main():
         "created": user["created_at"][:10],
         "followers": user["followers"],
         "following": user["following"],
+        # changes once a week, so the workflow commits at least weekly and GitHub never marks the repo inactive
+        "week": "{}-W{:02d}".format(*datetime.date.today().isocalendar()[:2]),
         "repos": repos,
     }
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "data.json")

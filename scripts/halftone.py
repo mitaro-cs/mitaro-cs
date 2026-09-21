@@ -1,49 +1,65 @@
-"""Turns the avatar into a halftone PNG (paper-white dots on transparent), cropped to the subject."""
+"""Turns a background-free portrait (RGBA cut-out) into a halftone PNG: white dots on transparent.
+
+usage: halftone.py [cutout.png]   (the cut-out itself is made locally and is not part of the repo)
+"""
 import math
 import os
+import sys
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SCALE = 1.9           # upscale of the 499x564 source
-CELL = 7.6            # dot pitch in output px
+DEFAULT_IN = os.path.join(HERE, "..", "tools", "src", "cutout.png")
+OUT = os.path.join(HERE, "src", "portrait-halftone.png")
+WIDTH = 660           # output width in px
+CELL = 7.2            # dot pitch
 SS = 4                # supersampling for smooth dots
 
 
-def main(out=os.path.join(HERE, "src", "portrait-halftone.png")):
-    im = Image.open(os.path.join(HERE, "src", "avatar.jpg")).convert("L")
-    W, H = round(im.width * SCALE), round(im.height * SCALE)
-    im = im.resize((W, H), Image.LANCZOS)
-    im = im.filter(ImageFilter.UnsharpMask(radius=7, percent=170, threshold=2)).filter(ImageFilter.GaussianBlur(0.9))
-    g = np.asarray(im, dtype=np.float32) / 255.0
-    g = np.clip((g - 0.06) / 0.90, 0, 1) ** 1.25
-    canvas = Image.new("L", (W * SS, H * SS), 0)
+def main(src=DEFAULT_IN):
+    im = Image.open(src).convert("RGBA")
+    h = round(im.height * WIDTH / im.width)
+    im = im.resize((WIDTH, h), Image.LANCZOS)
+    alpha = np.asarray(im.split()[3], dtype=np.float32) / 255.0
+    lum_img = im.convert("RGB").convert("L")
+    # calm the plaid shirt so it does not moire against the dot grid
+    soft = lum_img.filter(ImageFilter.GaussianBlur(3.2))
+    ramp = np.clip((np.arange(h, dtype=np.float32) / h - 0.60) / 0.12, 0, 1)[:, None]
+    lum = np.asarray(lum_img, np.float32) * (1 - ramp) + np.asarray(soft, np.float32) * ramp
+    lum = Image.fromarray(np.uint8(np.clip(lum, 0, 255))).filter(ImageFilter.UnsharpMask(radius=9, percent=150, threshold=2))
+    g = np.asarray(lum, dtype=np.float32) / 255.0
+    g = np.clip((g - 0.16) / 0.70, 0, 1) ** 0.95
+    inner = np.asarray(Image.fromarray(np.uint8(alpha > 0.5) * 255).filter(ImageFilter.MinFilter(15)), np.float32) / 255.0
+    rim = np.clip((alpha > 0.5) * 1.0 - inner, 0, 1)          # thin light edge so dark hair keeps its silhouette
+    g = np.maximum(g, rim * 0.42)
+    fade = np.clip((1 - np.arange(h, dtype=np.float32) / h) / 0.30, 0, 1)[:, None]   # torso dissolves at the bottom
+    g = g * (alpha > 0.5) * (0.25 + 0.75 * fade)
+
+    canvas = Image.new("L", (WIDTH * SS, h * SS), 0)
     d = ImageDraw.Draw(canvas)
-    ca, sa = math.cos(math.radians(45)), math.sin(math.radians(45))
-    diag = int(math.hypot(W, H) / CELL) + 2
-    for i in range(-diag, diag):
-        for j in range(-diag, diag):
+    ca = sa = math.sqrt(0.5)
+    n = int(math.hypot(WIDTH, h) / CELL) + 2
+    for i in range(-n, n):
+        for j in range(-n, n):
             u, v = i * CELL, j * CELL
-            x, y = u * ca - v * sa + W / 2, u * sa + v * ca + H / 2
-            if not (0 <= x < W and 0 <= y < H):
+            x, y = u * ca - v * sa + WIDTH / 2, u * sa + v * ca + h / 2
+            if not (0 <= x < WIDTH and 0 <= y < h):
                 continue
             val = g[int(y), int(x)]
             if val < 0.05:
                 continue
             r = CELL * math.sqrt(val / math.pi) * 1.08
             d.ellipse(((x - r) * SS, (y - r) * SS, (x + r) * SS, (y + r) * SS), fill=255)
-    a = canvas.resize((W, H), Image.LANCZOS)
-    rgba = Image.new("RGBA", (W, H), (255, 255, 255, 0))
-    rgba.putalpha(a)
-    # crop to the subject (drop the empty black margins), keep the bottom edge
+    a = canvas.resize((WIDTH, h), Image.LANCZOS)
+    out = Image.new("RGBA", (WIDTH, h), (255, 255, 255, 0))
+    out.putalpha(a)
     box = a.point(lambda p: 255 if p > 40 else 0).getbbox()
-    pad = 18
-    l, t, r_, b = box
-    rgba = rgba.crop((max(0, l - pad), max(0, t - pad), min(W, r_ + pad), H))
-    rgba.save(out, optimize=True)
-    print(out, rgba.size, os.path.getsize(out) // 1024, "KB", "bbox", box)
+    pad = 14
+    out = out.crop((0, max(0, box[1] - pad), WIDTH, h))
+    out.save(OUT, optimize=True)
+    print(OUT, out.size, os.path.getsize(OUT) // 1024, "KB")
 
 
 if __name__ == "__main__":
-    main()
+    main(*sys.argv[1:2])
