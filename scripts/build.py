@@ -34,8 +34,8 @@ NOT_CODE = {"Rich Text Format"}
 
 
 # ------------------------------------------------------------------ shared drawing bits
-def halftone_field(s, x0, x1, y0, y1, pitch=10.0, slope=0.28, color=BLACK, reverse=False, power=0.9):
-    """Rotated dot grid whose dot size grows along x: a gradient made of dots."""
+def dots_path(x0, x1, y0, y1, pitch=10.0, slope=0.28, reverse=False, power=0.9):
+    """Path data of a rotated dot grid whose dot size grows along x: a gradient made of dots."""
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     ca = sa = math.sqrt(0.5)
     n = int(math.hypot(x1 - x0, y1 - y0) / pitch) + 2
@@ -53,7 +53,11 @@ def halftone_field(s, x0, x1, y0, y1, pitch=10.0, slope=0.28, color=BLACK, rever
             if r < 0.45:
                 continue
             d.append(f"M{x - r:.1f} {y:.1f}a{r:.1f} {r:.1f} 0 1 0 {2 * r:.1f} 0a{r:.1f} {r:.1f} 0 1 0 {-2 * r:.1f} 0z")
-    s.path("".join(d), fill=color)
+    return "".join(d)
+
+
+def halftone_field(s, x0, x1, y0, y1, pitch=10.0, slope=0.28, color=BLACK, reverse=False, power=0.9):
+    s.path(dots_path(x0, x1, y0, y1, pitch, slope, reverse, power), fill=color)
 
 
 def label(s, x, y, txt, key="elite", size=16, tone="b", rot=0.0, seed=1, weight=400, pad=14, ls=0, anim=True):
@@ -194,6 +198,8 @@ def banner():
     s.text(-14, 319, unit * 3, "mono", 14, WHITE, 700, ls=2.2)
     s.end()
     s.add("</g>")
+    shine = s.gradient([(0, WHITE, 0), (0.5, WHITE, 0.34), (1, WHITE, 0)], 0, 0, 1, 0)
+    s.add(f'<g class="sweep"><rect x="-260" y="-30" width="120" height="400" fill="{shine}" transform="skewX(-20)"/></g>')
     s.grain(0.10)
     s.add("</g>")
     s.rect(1.5, 1.5, W - 3, H - 3, "none", BLACK, 3, 6)
@@ -506,6 +512,65 @@ def timeline():
     s.save(OUT, "timeline.svg")
 
 
+# ------------------------------------------------------------------ commit reel
+REPO_NAMES = {"KworkingSystem": "Campus Coworking"}
+SKIP_MSG = ("Initial commit", "Merge ")
+
+
+def reel():
+    H = 240
+    s = Svg(W, H, "Commit reel: a film strip of my latest real commits")
+    allc = [c for c in DATA["commits"] if not c["msg"].startswith(SKIP_MSG)]
+    frames = allc[:30]
+    n = len(frames)
+    FW, GAP = 196, 14
+    pitch = FW + GAP                      # 210 = 7 sprocket holes of 30px, so the loop is seamless
+    total = n * pitch
+    mark = len(s.body)
+    fy = 58
+    for i, c in enumerate(frames):
+        fx = i * pitch + GAP / 2
+        inv = i % 3 == 1                                  # every third frame is "exposed": white
+        bg, ink = (WHITE, BLACK) if inv else (BLACK, WHITE)
+        for k in range(7):
+            hx = fx - GAP / 2 + 6 + k * 30
+            s.rect(hx, 34, 18, 12, WHITE, rx=3)
+            s.rect(hx, 194, 18, 12, WHITE, rx=3)
+        s.rect(fx, fy, FW, 124, bg, WHITE, 2)
+        y, m, d = c["ts"][:10].split("-")
+        s.text(fx + 12, fy + 21, f"#{len(allc) - i:03d}", "mono", 11, ink, 700, ls=1)
+        s.text(fx + FW - 12, fy + 21, f"{d} {MONTHS[int(m) - 1]} {y}", "mono", 11, ink, 700, anchor="end", ls=1)
+        s.line(fx + 12, fy + 30, fx + FW - 12, fy + 30, ink, 1.2, dash="2 4")
+        lines = wrap(c["msg"], "elite", 400, 18, FW - 26)
+        if len(lines) > 3:
+            lines = lines[:3]
+            lines[2] = lines[2][:max(1, len(lines[2]) - 3)].rstrip() + "..."
+        for j, ln in enumerate(lines):
+            s.text(fx + 12, fy + 55 + j * 21, ln, "elite", 18, ink)
+        tag = REPO_NAMES.get(c["repo"], c["repo"]).upper()
+        tw_ = text_width("mono", 700, 10.5, tag, 1.5) + 14
+        s.rect(fx + 12, fy + 104, tw_, 16, ink)
+        s.text(fx + 19, fy + 115.5, tag, "mono", 10.5, bg, 700, ls=1.5)
+    chunk = s.body[mark:]
+    del s.body[mark:]
+    s.defs.append('<g id="reelframes">' + "".join(chunk) + "</g>")
+    s.defs.append('<clipPath id="stripclip"><rect x="0" y="0" width="888" height="240"/></clipPath>')
+    s.add('<g transform="rotate(-1.2 444 120)">')
+    s.rect(-30, 24, W + 60, 192, BLACK, WHITE, 2.5)
+    s.add('<g clip-path="url(#stripclip)">')
+    s.g("marq", f"--shift:-{total}px;animation-duration:{total / 38:.0f}s")
+    s.add(f'<use href="#reelframes"/><use href="#reelframes" x="{total}"/>')
+    s.end()
+    s.add("</g>")
+    fadeL = s.gradient([(0, BLACK, 1), (1, BLACK, 0)], 0, 0, 1, 0)
+    fadeR = s.gradient([(0, BLACK, 0), (1, BLACK, 1)], 0, 0, 1, 0)
+    s.rect(-30, 26, 90, 188, fadeL)
+    s.rect(W - 60, 26, 90, 188, fadeR)
+    s.add("</g>")
+    label(s, 24, 4, f"{len(allc)} FRAMES / 1 REAL COMMIT EACH", "mono", 12, "w", -1.2, 4, 700, ls=1.5)
+    s.save(OUT, "reel.svg")
+
+
 # ------------------------------------------------------------------ footer
 def footer():
     H = 150
@@ -554,4 +619,6 @@ if __name__ == "__main__":
     for p in PROJECTS:
         project_card(p)
     timeline()
+    reel()
+    sticker("reel", "THE COMMIT REEL", dark=True, rot=-1.4, seed=15)
     footer()

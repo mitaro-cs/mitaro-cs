@@ -52,6 +52,18 @@ def commit_count(repo):
     return int(m.group(1)) if m else len(body)
 
 
+def commit_list(repo):
+    out, page = [], 1
+    while True:
+        batch = get(f"/repos/{USER}/{repo}/commits?author={USER}&per_page=100&page={page}") or []
+        for c in batch:
+            out.append({"repo": repo, "ts": c["commit"]["author"]["date"],
+                        "msg": " ".join(c["commit"]["message"].split("\n")[0].split())})
+        if len(batch) < 100:
+            return out
+        page += 1
+
+
 def main():
     user = get(f"/users/{USER}")
     repos = []
@@ -68,6 +80,8 @@ def main():
             "commits": commit_count(r["name"]),
             "release": rel["tag_name"] if rel else None,
         })
+    commits = sorted((c for r in repos if r["name"] != USER for c in commit_list(r["name"])),
+                     key=lambda c: c["ts"], reverse=True)
     data = {
         "created": user["created_at"][:10],
         "followers": user["followers"],
@@ -75,6 +89,7 @@ def main():
         # changes once a week, so the workflow commits at least weekly and GitHub never marks the repo inactive
         "week": "{}-W{:02d}".format(*datetime.date.today().isocalendar()[:2]),
         "repos": repos,
+        "commits": commits,
     }
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "data.json")
     with open(out, "w") as fh:

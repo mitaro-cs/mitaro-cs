@@ -52,6 +52,8 @@ ANIM_CSS = (
     ".marq{animation:marq 18s linear infinite}"
     "@keyframes fA{0%,49.99%{opacity:1}50%,100%{opacity:0}}@keyframes fB{0%,49.99%{opacity:0}50%,100%{opacity:1}}"
     ".fA{animation:fA .8s steps(1) infinite}.fB{animation:fB .8s steps(1) infinite}"
+    "@keyframes sweep{0%{transform:translateX(0)}42%,100%{transform:translateX(1400px)}}"
+    ".sweep{animation:sweep 9s ease-in-out infinite}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
 

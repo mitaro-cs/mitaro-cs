@@ -38,16 +38,75 @@ Outside of code I train hand-to-hand combat. The habit of keeping a cold head un
 <img src="assets/head-build.svg" alt="What I build">
 <br>
 <a href="https://github.com/mitaro-cs/VantaVault"><img src="assets/project-vantavault.svg" width="100%" alt="VantaVault. A private vault for external drives. Password access with PBKDF2-SHA256, local AES-encrypted archives, session protection, lockout after failed logins, automatic drive detection. Python, JavaScript, HTML, CSS."></a>
-<br>
+
+</div>
+
+<details>
+<summary><b>▸ How to run VantaVault</b></summary>
+
+```bash
+git clone https://github.com/mitaro-cs/VantaVault.git
+cd VantaVault
+chmod +x main && ./main      # macOS / Linux
+.\main.ps1                   # Windows (PowerShell), or open main.bat
+```
+
+</details>
+
+<div align="center">
+
 <a href="https://github.com/mitaro-cs/AetherCloud"><img src="assets/project-aethercloud.svg" width="100%" alt="AetherCloud. Turns your own disk into a private cloud with a web dashboard. Nested folders, uploads, image previews, per-user quotas, disk sync check, installable PWA, Docker Compose. Flask, SQLite."></a>
-<br>
+
+</div>
+
+<details>
+<summary><b>▸ How to run AetherCloud</b></summary>
+
+```bash
+git clone https://github.com/mitaro-cs/AetherCloud.git
+cd AetherCloud
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python AetherCloud.py        # then open http://127.0.0.1:5000
+
+# or with Docker
+cp .env.example .env && docker compose up -d
+```
+
+How it fits together: `Client / PWA` → `Flask routes and templates` → `SQLite metadata` → `local disk or a mounted volume`.
+
+</details>
+
+<div align="center">
+
 <a href="https://github.com/mitaro-cs/KworkingSystem"><img src="assets/project-coworking.svg" width="100%" alt="Campus Coworking. A booking panel for a university coworking space. Seat booking with overlap checks, check-in by student ID, profiles and themes, Pomodoro, lofi, study library, REST API. Flask, SQLite, vanilla JavaScript."></a>
 
 </div>
 
+<details>
+<summary><b>▸ How to run Campus Coworking</b></summary>
+
+```bash
+git clone https://github.com/mitaro-cs/KworkingSystem.git
+cd KworkingSystem
+./start_macos.command        # Windows: start_windows.bat
+```
+
+The start file creates a virtual environment, installs `requirements.txt`, opens the browser and serves the app on `http://127.0.0.1:5000`. Set `PORT=8000` to change the port.
+
+</details>
+
 Also in my repositories: [Mouros](https://github.com/mitaro-cs/Mouros) is my Python practice archive, and [Java](https://github.com/mitaro-cs/Java) and [Python](https://github.com/mitaro-cs/Python) hold the first steps in each language.
 
 <div align="center">
+
+<img src="assets/head-reel.svg" alt="The commit reel">
+<br>
+<img src="assets/reel.svg" width="100%" alt="A film strip where every frame is one of my real commits, newest first, with its date, its repository and its unedited message.">
+
+<sub>Every frame is a real commit from my repositories, unedited. The strip updates itself.</sub>
+
+<br>
 
 <img src="assets/head-numbers.svg" alt="By the numbers">
 <br>
