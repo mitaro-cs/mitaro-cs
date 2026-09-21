@@ -17,11 +17,6 @@ BLACK = "#000"
 WHITE = "#fff"
 
 FONTS = {
-    "anton": ("Anton-Regular.ttf", "Anton", "Impact, 'Arial Narrow Bold', sans-serif"),
-    "bebas": ("BebasNeue-Regular.ttf", "Bebas", "Impact, sans-serif"),
-    "elite": ("SpecialElite-Regular.ttf", "Elite", "'Courier New', monospace"),
-    "marker": ("PermanentMarker-Regular.ttf", "Marker", "'Marker Felt', cursive"),
-    "play": ("PlayfairDisplay[wght].ttf", "Play", "Georgia, serif"),
     "mono": ("JetBrainsMono[wght].ttf", "JBMono", "ui-monospace, Menlo, Consolas, monospace"),
 }
 

@@ -60,7 +60,7 @@ def halftone_field(s, x0, x1, y0, y1, pitch=10.0, slope=0.28, color=BLACK, rever
     s.path(dots_path(x0, x1, y0, y1, pitch, slope, reverse, power), fill=color)
 
 
-def label(s, x, y, txt, key="elite", size=16, tone="b", rot=0.0, seed=1, weight=400, pad=14, ls=0, anim=True):
+def label(s, x, y, txt, key="mono", size=16, tone="b", rot=0.0, seed=1, weight=700, pad=14, ls=0, anim=True):
     """Hand-cut text label. tone b = black tile, w = white tile."""
     tw_ = text_width(key, weight, size, txt, ls)
     h = size * 1.75
@@ -159,8 +159,8 @@ def banner():
     s.add('<g mask="url(#pm)"><use href="#pimg" class="fA"/><use href="#pimg" x="1.6" y="-1.2" class="fB"/></g>')
 
     # cut-out title: every tile sized from the real ink of its letter
-    tiles = [("M", "anton", 400, 84, "b", -4), ("I", "elite", 400, 78, "w", 3), ("T", "play", 900, 80, "b", -2),
-             ("A", "anton", 400, 82, "w", 5), ("R", "bebas", 400, 90, "b", -3), ("O", "play", 900, 78, "w", 2)]
+    tiles = [("M", "mono", 800, 80, "b", -4), ("I", "mono", 800, 76, "w", 3), ("T", "mono", 800, 80, "b", -2),
+             ("A", "mono", 800, 82, "w", 5), ("R", "mono", 800, 86, "b", -3), ("O", "mono", 800, 78, "w", 2)]
     x = 30
     for i, (ch, key, wt, cap, tone, rot) in enumerate(tiles):
         bx0, by0, bx1, by1 = ink_bounds(key, wt, 100, ch)
@@ -181,21 +181,21 @@ def banner():
         s.end()
         s.end()
         x += w_ + 5
-    label(s, 34, 178, "COMPUTER SCIENCE STUDENT @ MTUCI", "elite", 16, "b", -1.5, 5, ls=0.6)
-    label(s, 58, 216, "PYTHON  /  FLASK  /  SECURITY", "elite", 16, "w", 1.2, 6, ls=0.6)
+    label(s, 34, 178, "COMPUTER SCIENCE STUDENT @ MTUCI", "mono", 17, "b", -1.5, 5, ls=0.4)
+    label(s, 58, 218, "PYTHON  /  FLASK  /  SECURITY", "mono", 17, "w", 1.2, 6, ls=0.4)
     s.g("bob")
-    label(s, 378, 250, "hi, I'm Omar", "marker", 25, "w", -5, 8, pad=16, anim=False)
+    label(s, 372, 250, "hi, I'm Omar", "mono", 22, "w", -5, 8, pad=16, anim=False)
     for col, sw in ((BLACK, 8), (WHITE, 3)):
         s.path("M580 264C620 278 660 260 670 234", stroke=col, sw=sw)
         s.path("M652 240L671 230L679 248", stroke=col, sw=sw)
     s.end()
     # tape with a scrolling ticker
     unit = "MTUCI  ///  PYTHON  ///  FLASK  ///  SECURITY  ///  LOCAL-FIRST  ///  "
-    uw = text_width("mono", 700, 14, unit, 2.2)
+    uw = text_width("mono", 700, 15, unit, 2.2)
     s.add('<g transform="rotate(-2.6 444 314)">')
     s.rect(-30, 296, W + 60, 36, BLACK, WHITE, 2)
     s.g("marq", f"--shift:-{uw:.1f}px")
-    s.text(-14, 319, unit * 3, "mono", 14, WHITE, 700, ls=2.2)
+    s.text(-14, 320, unit * 3, "mono", 15, WHITE, 700, ls=2.2)
     s.end()
     s.add("</g>")
     shine = s.gradient([(0, WHITE, 0), (0.5, WHITE, 0.34), (1, WHITE, 0)], 0, 0, 1, 0)
@@ -215,7 +215,7 @@ def stats():
              ("STARS", str(sum(r["stars"] for r in repos))), ("FOLLOWERS", str(DATA["followers"])),
              ("CODE", f"{code_kb} KB")]
     s = Svg(W, 64, "GitHub numbers: " + ", ".join(f"{a} {b}" for a, b in items))
-    parts = [(a, b, text_width("mono", 700, 13, a, 2) + 26, text_width("anton", 400, 24, b) + 28) for a, b in items]
+    parts = [(a, b, text_width("mono", 700, 14, a, 2) + 26, text_width("mono", 800, 25, b) + 28) for a, b in items]
     total = sum(lw + vw for _, _, lw, vw in parts) + 16 * (len(parts) - 1)
     x = (W - total) / 2
     sk = 9
@@ -230,16 +230,16 @@ def stats():
         s.poly(par(x, y, lw + vw, 38, 4), BLACK)
         s.poly(par(x, y, lw, 38), BLACK, WHITE, 2)
         s.poly(par(x + lw, y, vw, 38), WHITE, BLACK, 2)
-        s.text(x + 13 + sk / 2, y + 24, a, "mono", 13, WHITE, 700, ls=2)
-        s.text(x + lw + 14 + sk / 2, y + 30, b, "anton", 24, BLACK, 400)
+        s.text(x + 13 + sk / 2, y + 24.5, a, "mono", 14, WHITE, 700, ls=2)
+        s.text(x + lw + 14 + sk / 2, y + 29, b, "mono", 25, BLACK, 800)
         s.end()
         x += lw + vw + 16
     s.save(OUT, "stats.svg")
 
 
 # ------------------------------------------------------------------ section stickers
-def sticker(name, txt, dark=False, rot=-1.6, seed=3, key="marker", size=34, alt=None):
-    tw_ = text_width(key, 400, size, txt)
+def sticker(name, txt, dark=False, rot=-1.6, seed=3, key="mono", size=32, alt=None, weight=800):
+    tw_ = text_width(key, weight, size, txt)
     w_, h_ = tw_ + 64, size * 1.85
     s = Svg(round(w_ + 44), round(h_ + 40), alt or txt)
     fill, ink, edge, sh = (BLACK, WHITE, WHITE, WHITE) if dark else (WHITE, BLACK, BLACK, BLACK)
@@ -250,7 +250,7 @@ def sticker(name, txt, dark=False, rot=-1.6, seed=3, key="marker", size=34, alt=
     s.g("o wob", f"--a:1deg;--d:{1.7 + seed % 3 * 0.25:.2f}s;animation-delay:-{seed * 0.13:.2f}s")
     s.poly(pts, sh, edge, 2.5, transform=f"{tr} translate(6 6)")
     s.poly(pts, fill, edge, 2.5, transform=tr)
-    s.text(x + w_ / 2, y + h_ / 2 + cap_height(key, 400, size) / 2, txt, key, size, ink, anchor="middle", transform=tr)
+    s.text(x + w_ / 2, y + h_ / 2 + cap_height(key, weight, size) / 2, txt, key, size, ink, weight, anchor="middle", transform=tr)
     s.g("o spin", f"animation-duration:{6 + seed % 4}s")
     s.poly(star_points(x + 4, y + 4, 19, 9, 8, 0.3), ink if dark else BLACK, edge, 2, transform=tr)
     s.end()
@@ -280,7 +280,7 @@ def whoami_art():
     s.add(f'<image href="data:image/png;base64,{PNG}" x="30" y="34" width="226" height="{ph_h:.1f}"/>')
     s.add("</g>")
     s.rect(30, 28, 226, 262, "none", BLACK, 2)
-    s.text(143, 336, "Omar, aka Mitaro", "marker", 22, BLACK, anchor="middle")
+    s.text(143, 336, "Omar, aka Mitaro", "mono", 20, BLACK, 800, anchor="middle")
     s.rect(40, 2, 62, 20, BLACK, WHITE, 1.5, transform="rotate(-10 70 12)")
     s.rect(196, 4, 62, 20, BLACK, WHITE, 1.5, transform="rotate(8 226 14)")
     s.add("</g>")
@@ -296,8 +296,8 @@ def button(file, brand, kind, handle, k):
     s.poly(pts, BLACK, transform="translate(5 5)")
     s.poly(pts, WHITE, BLACK, 2.5)
     s.icon(brand, 20, 17, 28, BLACK)
-    s.text(64, 26, kind.upper(), "mono", 11, BLACK, 700, ls=3)
-    s.text(64, 46, handle, "mono", 15, BLACK, 700)
+    s.text(64, 26, kind.upper(), "mono", 12, BLACK, 700, ls=3)
+    s.text(64, 47, handle, "mono", 16, BLACK, 700)
     s.end()
     s.save(OUT, file)
 
@@ -318,13 +318,13 @@ def numbers():
     for i, (n, lab) in enumerate(big):
         x = 40 + i * colw
         s.g("rise", f"animation-delay:{0.15 + i * 0.14:.2f}s")
-        s.text(x, 112, n, "anton", 82, tg)
-        s.text(x + 2, 142, lab, "mono", 13, WHITE, 700, ls=3)
+        s.text(x, 114, n, "mono", 80, tg, 800)
+        s.text(x + 2, 144, lab, "mono", 14, WHITE, 700, ls=3)
         s.end()
         if i:
             s.line(x - 16, 60, x - 16, 146, WHITE, 1.2, dash="2 5")
-    s.text(40, 200, "CODE BY LANGUAGE, ALL PROJECTS", "mono", 12, WHITE, 700, ls=3)
-    lang_bar(s, 40, 214, W - 92, 30, agg_langs(CODE_REPOS), pats, legend_y=278, legend_size=13, cols=3,
+    s.text(40, 200, "CODE BY LANGUAGE, ALL PROJECTS", "mono", 13, WHITE, 700, ls=3)
+    lang_bar(s, 40, 214, W - 92, 30, agg_langs(CODE_REPOS), pats, legend_y=278, legend_size=14, cols=3,
              legend_dx=(W - 92) / 3, kb=True, delay=0.7)
     s.save(OUT, "numbers.svg")
 
@@ -355,15 +355,15 @@ def stack():
         s.poly(pts, fill, WHITE, 2, transform=tr)
         s.add(f'<g transform="{tr}">')
         s.icon(ic, x + tile_w / 2 - 19, y + 20, 38, ink)
-        s.text(x + tile_w / 2, y + 87, name, "mono", 12.5, ink, 700, anchor="middle")
+        s.text(x + tile_w / 2, y + 87, name, "mono", 13.5, ink, 700, anchor="middle")
         s.add("</g>")
         s.end()
         s.end()
     ny = y0 + 2 * (tile_h + 14) + 12
     s.line(34, ny - 12, W - 46, ny - 12, WHITE, 1.2, dash="2 5")
     s.g("rise", "animation-delay:1.3s")
-    s.text(36, ny + 14, "learning now:", "marker", 19, WHITE)
-    s.text(176, ny + 13, "security basics, cleaner backend architecture, a Jarvis-style AI assistant", "elite", 15, WHITE)
+    s.text(36, ny + 14, "LEARNING NOW:", "mono", 15, WHITE, 800)
+    s.text(176, ny + 14, "security basics, cleaner backend architecture, a Jarvis-style AI assistant", "mono", 14, WHITE, 500)
     s.end()
     s.save(OUT, "stack.svg")
 
@@ -403,31 +403,31 @@ def project_card(p):
     s = Svg(W, H, f"{p['name']}: " + p["tag"], " ".join(p["feats"]))
     pats = patterns(s)
     glow_panel(s, W, H)
-    label(s, 30, 26, p["n"], "anton", 20, "w", -3, int(p["n"]), pad=12)
+    label(s, 30, 26, p["n"], "mono", 20, "w", -3, int(p["n"]), 800, pad=12)
     tg = s.gradient([(0, WHITE, 1), (1, WHITE, 0.55)], 0, 0, 0, 1)
     s.g("rise")
-    s.text(84, 56, p["name"], "anton", 44, tg)
+    s.text(84, 56, p["name"], "mono", 38, tg, 800)
     s.end()
-    s.text(32, 90, p["tag"], "elite", 15, WHITE)
+    s.text(32, 90, p["tag"], "mono", 14, WHITE, 500)
     s.line(32, 104, 540, 104, WHITE, 1.2, dash="2 5")
     for i, f in enumerate(p["feats"]):
         y = 134 + i * 34
         s.g("rise", f"animation-delay:{0.2 + i * 0.12:.2f}s")
         s.rect(32, y - 10, 9, 9, WHITE, transform=f"rotate(45 36.5 {y - 5.5})")
-        s.text(52, y, f, "mono", 13, WHITE, 500)
+        s.text(52, y, f, "mono", 14, WHITE, 500)
         s.end()
     s.line(566, 30, 566, H - 42, WHITE, 1.2, dash="2 5")
     rx = 592
     rw = W - 34 - rx - 6
-    s.text(rx, 46, "STACK", "mono", 11, WHITE, 700, ls=3)
+    s.text(rx, 46, "STACK", "mono", 12, WHITE, 700, ls=3)
     cx, cy = rx, 58
     for k, t in enumerate(p["stack"]):
-        tw_ = text_width("mono", 700, 12, t) + 20
+        tw_ = text_width("mono", 700, 13, t) + 20
         if cx + tw_ > rx + rw:
             cx, cy = rx, cy + 30
         s.g("o pop", f"animation-delay:{0.3 + k * 0.1:.2f}s")
         s.rect(cx, cy, tw_, 24, BLACK, WHITE, 1.6, 12)
-        s.text(cx + tw_ / 2, cy + 16.5, t, "mono", 12, WHITE, 700, anchor="middle")
+        s.text(cx + tw_ / 2, cy + 17, t, "mono", 13, WHITE, 700, anchor="middle")
         s.end()
         cx += tw_ + 8
     langs = sorted(r["langs"].items(), key=lambda kv: -kv[1])
@@ -435,14 +435,14 @@ def project_card(p):
     other = sum(v for k, v in langs if k not in CODE_LANGS and k not in NOT_CODE)
     if other:
         top.append(("Other", other))
-    s.text(rx, 132, "LANGUAGES", "mono", 11, WHITE, 700, ls=3)
+    s.text(rx, 132, "LANGUAGES", "mono", 12, WHITE, 700, ls=3)
     lang_bar(s, rx, 142, rw, 15, top, pats, legend_y=184, legend_size=12, cols=2, legend_dx=rw / 2, delay=0.5)
     y, m = r["created"].split("-")[0], MONTHS[int(r["created"].split("-")[1]) - 1]
     meta = [("CREATED", f"{m} {y}"), ("COMMITS", str(r["commits"])), ("STARS", str(r["stars"]))]
     for k, ((a_, b_), xx) in enumerate(zip(meta, [rx, rx + 104, rx + 188])):
         s.g("rise", f"animation-delay:{1.1 + k * 0.12:.2f}s")
-        s.text(xx, 262, a_, "mono", 10, WHITE, 700, ls=2)
-        s.text(xx, 288, b_, "anton", 22, WHITE)
+        s.text(xx, 262, a_, "mono", 11, WHITE, 700, ls=2)
+        s.text(xx, 288, b_, "mono", 20, WHITE, 800)
         s.end()
     s.save(OUT, p["file"])
 
@@ -498,16 +498,16 @@ def timeline():
         s.line(x, ly + (-17 if up else 17), x, ly + (-38 if up else 38), WHITE, 1.6, dash="2 4")
         lines = []
         for item in ev[k]:
-            lines += wrap(item, "elite", 400, 14, 176)
+            lines += wrap(item, "mono", 500, 14, 176)
         lines = lines[:4]
         if up:
             y0 = ly - 56 - (len(lines) - 1) * 18
             date_y = y0 - 28
         else:
             date_y, y0 = ly + 66, ly + 92
-        s.text(x, date_y, f"{MONTHS[int(mm) - 1]} {yy}", "marker", 21, WHITE, anchor="middle")
+        s.text(x, date_y, f"{MONTHS[int(mm) - 1]} {yy}", "mono", 19, WHITE, 800, anchor="middle")
         for j, ln in enumerate(lines):
-            s.text(x, y0 + j * 18, ln, "elite", 14, WHITE, anchor="middle")
+            s.text(x, y0 + j * 18, ln, "mono", 14, WHITE, 500, anchor="middle")
         s.end()
     s.save(OUT, "timeline.svg")
 
@@ -538,19 +538,19 @@ def reel():
             s.rect(hx, 194, 18, 12, WHITE, rx=3)
         s.rect(fx, fy, FW, 124, bg, WHITE, 2)
         y, m, d = c["ts"][:10].split("-")
-        s.text(fx + 12, fy + 21, f"#{len(allc) - i:03d}", "mono", 11, ink, 700, ls=1)
-        s.text(fx + FW - 12, fy + 21, f"{d} {MONTHS[int(m) - 1]} {y}", "mono", 11, ink, 700, anchor="end", ls=1)
+        s.text(fx + 12, fy + 21, f"#{len(allc) - i:03d}", "mono", 12, ink, 700, ls=1)
+        s.text(fx + FW - 12, fy + 21, f"{d} {MONTHS[int(m) - 1]} {y}", "mono", 12, ink, 700, anchor="end", ls=0.5)
         s.line(fx + 12, fy + 30, fx + FW - 12, fy + 30, ink, 1.2, dash="2 4")
-        lines = wrap(c["msg"], "elite", 400, 18, FW - 26)
+        lines = wrap(c["msg"], "mono", 500, 16, FW - 26)
         if len(lines) > 3:
             lines = lines[:3]
             lines[2] = lines[2][:max(1, len(lines[2]) - 3)].rstrip() + "..."
         for j, ln in enumerate(lines):
-            s.text(fx + 12, fy + 55 + j * 21, ln, "elite", 18, ink)
+            s.text(fx + 12, fy + 55 + j * 21, ln, "mono", 16, ink, 500)
         tag = REPO_NAMES.get(c["repo"], c["repo"]).upper()
-        tw_ = text_width("mono", 700, 10.5, tag, 1.5) + 14
+        tw_ = text_width("mono", 700, 11.5, tag, 1.2) + 14
         s.rect(fx + 12, fy + 104, tw_, 16, ink)
-        s.text(fx + 19, fy + 115.5, tag, "mono", 10.5, bg, 700, ls=1.5)
+        s.text(fx + 19, fy + 116, tag, "mono", 11.5, bg, 700, ls=1.2)
     chunk = s.body[mark:]
     del s.body[mark:]
     s.defs.append('<g id="reelframes">' + "".join(chunk) + "</g>")
@@ -567,7 +567,7 @@ def reel():
     s.rect(-30, 26, 90, 188, fadeL)
     s.rect(W - 60, 26, 90, 188, fadeR)
     s.add("</g>")
-    label(s, 24, 4, f"{len(allc)} FRAMES / 1 REAL COMMIT EACH", "mono", 12, "w", -1.2, 4, 700, ls=1.5)
+    label(s, 24, 4, f"{len(allc)} FRAMES / 1 REAL COMMIT EACH", "mono", 13, "w", -1.2, 4, 700, ls=1.2)
     s.save(OUT, "reel.svg")
 
 
@@ -580,19 +580,19 @@ def footer():
     s.rect(0, 0, W, H, WHITE)
     under = s.gradient([(0, BLACK, 1), (0.3, BLACK, 1), (0.65, BLACK, 0.4), (1, BLACK, 0)], 0, 0, 1, 0.15)
     s.rect(0, 0, W, H, under)
-    halftone_field(s, 250, 880, -10, H + 10, pitch=10.5, slope=0.2, reverse=True)
-    s.rect(0, 0, 290, H, BLACK)
+    halftone_field(s, 330, 880, -10, H + 10, pitch=10.5, slope=0.2, reverse=True)
+    s.rect(0, 0, 370, H, BLACK)
     s.g("o wob", "--a:.8deg;--d:1.6s")
-    s.text(34, 70, "thanks for reading.", "marker", 36, WHITE)
+    s.text(34, 70, "thanks for reading.", "mono", 28, WHITE, 800)
     s.end()
-    s.text(36, 98, "the graphics here are generated by a Python script, see /scripts", "elite", 14, WHITE)
-    label(s, W - 262, 34, "© 2026 MITARO", "mono", 15, "b", 1.6, 9, 700, ls=2)
+    s.text(36, 98, "generated by a Python script, see /scripts", "mono", 13, WHITE, 500)
+    label(s, W - 272, 34, "© 2026 MITARO", "mono", 16, "b", 1.6, 9, 700, ls=2)
     unit = "THANKS FOR READING  ///  MITARO  ///  "
-    uw = text_width("mono", 700, 12, unit, 2.4)
+    uw = text_width("mono", 700, 13, unit, 2.4)
     s.add('<g transform="rotate(-1.4 444 130)">')
     s.rect(-30, 116, W + 60, 28, BLACK, WHITE, 2)
     s.g("marq", f"--shift:-{uw:.1f}px;animation-duration:20s;animation-direction:reverse")
-    s.text(-uw, 135, unit * 4, "mono", 12, WHITE, 700, ls=2.4)
+    s.text(-uw, 136, unit * 4, "mono", 13, WHITE, 700, ls=2.4)
     s.end()
     s.add("</g>")
     s.grain(0.10)
