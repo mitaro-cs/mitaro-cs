@@ -1,0 +1,100 @@
+{
+  "created": "2022-07-13",
+  "followers": 5,
+  "following": 6,
+  "repos": [
+    {
+      "name": "mitaro-cs",
+      "created": "2026-09-21",
+      "pushed": "2026-09-21",
+      "stars": 0,
+      "langs": {},
+      "commits": 3,
+      "release": null
+    },
+    {
+      "name": "Java",
+      "created": "2026-09-08",
+      "pushed": "2026-09-08",
+      "stars": 0,
+      "langs": {
+        "Java": 378
+      },
+      "commits": 2,
+      "release": null
+    },
+    {
+      "name": "Python",
+      "created": "2026-09-08",
+      "pushed": "2026-09-08",
+      "stars": 0,
+      "langs": {},
+      "commits": 1,
+      "release": null
+    },
+    {
+      "name": "KworkingSystem",
+      "created": "2026-04-16",
+      "pushed": "2026-04-27",
+      "stars": 1,
+      "langs": {
+        "JavaScript": 40073,
+        "Python": 35897,
+        "CSS": 31574,
+        "HTML": 30678,
+        "Batchfile": 1559,
+        "Shell": 1385
+      },
+      "commits": 5,
+      "release": null
+    },
+    {
+      "name": "VantaVault",
+      "created": "2026-04-08",
+      "pushed": "2026-04-09",
+      "stars": 1,
+      "langs": {
+        "Python": 58959,
+        "JavaScript": 37374,
+        "CSS": 29499,
+        "HTML": 24652,
+        "PowerShell": 1901,
+        "Shell": 1759,
+        "Batchfile": 367
+      },
+      "commits": 16,
+      "release": null
+    },
+    {
+      "name": "AetherCloud",
+      "created": "2026-02-11",
+      "pushed": "2026-04-16",
+      "stars": 1,
+      "langs": {
+        "Python": 55657,
+        "HTML": 48295,
+        "CSS": 38099,
+        "JavaScript": 3448,
+        "Makefile": 1075,
+        "PowerShell": 961,
+        "Shell": 586,
+        "Dockerfile": 312,
+        "Batchfile": 107
+      },
+      "commits": 7,
+      "release": null
+    },
+    {
+      "name": "Mouros",
+      "created": "2024-12-23",
+      "pushed": "2025-06-08",
+      "stars": 2,
+      "langs": {
+        "Python": 115697,
+        "Rich Text Format": 64987
+      },
+      "commits": 5,
+      "release": null
+    }
+  ]
+}
