@@ -10,8 +10,6 @@
 
 </div>
 
-<img src="assets/whoami.svg" align="left" width="292" hspace="14" alt="Halftone portrait of Omar, aka Mitaro">
-
 I'm **Omar**, and online I go by **Mitaro**. I study computer science at **MTUCI** and I write mostly `Python` and `Flask`, with plain `JavaScript` on the front end.
 
 The projects below lean on one idea: **local-first**. Two of them keep your files on your own machine, and none of them needs a cloud service in the middle. That's why I reach for `SQLite` and the local disk before I reach for someone else's servers.
@@ -19,8 +17,6 @@ The projects below lean on one idea: **local-first**. Two of them keep your file
 Right now I'm getting better at backend architecture and at the security side of things: encryption, hashing, how to store a password properly. On the side I'm prototyping a personal AI assistant in the spirit of Jarvis, mostly to see how far I can push it.
 
 Outside of code I train hand-to-hand combat. The habit of keeping a cold head under pressure carries over to debugging.
-
-<br clear="left">
 
 <div align="center">
 

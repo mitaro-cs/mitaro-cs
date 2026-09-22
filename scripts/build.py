@@ -261,33 +261,6 @@ def sticker(name, txt, dark=False, rot=-1.6, seed=3, key="mono", size=32, alt=No
     s.save(OUT, f"head-{name}.svg")
 
 
-# ------------------------------------------------------------------ who am I: polaroid
-def whoami_art():
-    Wd, Hd = 292, 380
-    s = Svg(Wd, Hd, "Portrait of Omar, halftone print")
-    s.g("o sway")
-    tr = "rotate(-2.2 146 190)"
-    fr = jag(14, 12, 258, 348, 1.6, 21, 17)
-    s.poly(fr, BLACK, transform=f"{tr} translate(8 8)")
-    s.poly(fr, WHITE, BLACK, 3, transform=tr)
-    s.add(f'<g transform="{tr}">')
-    s.defs.append('<clipPath id="ph"><rect x="30" y="28" width="226" height="262"/></clipPath>')
-    s.rect(30, 28, 226, 262, BLACK)
-    s.add('<g clip-path="url(#ph)">')
-    g = s.gradient([(0, WHITE, 0.30), (1, WHITE, 0)], 0.5, 0.25, 0.9, kind="radial")
-    s.rect(30, 28, 226, 262, g)
-    ph_h = 226 * PH / PW
-    s.add(f'<image href="data:image/png;base64,{PNG}" x="30" y="34" width="226" height="{ph_h:.1f}"/>')
-    s.add("</g>")
-    s.rect(30, 28, 226, 262, "none", BLACK, 2)
-    s.text(143, 336, "Omar, aka Mitaro", "mono", 20, BLACK, 800, anchor="middle")
-    s.rect(40, 2, 62, 20, BLACK, WHITE, 1.5, transform="rotate(-10 70 12)")
-    s.rect(196, 4, 62, 20, BLACK, WHITE, 1.5, transform="rotate(8 226 14)")
-    s.add("</g>")
-    s.end()
-    s.save(OUT, "whoami.svg")
-
-
 # ------------------------------------------------------------------ house rules note
 RULES = ["Working product beats endless planning.",
          "Readable code beats clever code.",
@@ -637,7 +610,6 @@ if __name__ == "__main__":
     sticker("stack", "MY TECH STACK", dark=True, rot=1.8, seed=9)
     sticker("timeline", "TIMELINE", dark=False, rot=-1.6, seed=11)
     sticker("now", "RIGHT NOW", dark=True, rot=1.2, seed=13)
-    whoami_art()
     rules()
     button("btn-telegram.svg", "telegram", "Telegram", "@treadways", 0)
     button("btn-email.svg", "gmail", "Email", "miri.saro@bk.ru", 1)
