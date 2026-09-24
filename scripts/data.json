@@ -7,18 +7,20 @@
     {
       "name": "StorageSystem",
       "created": "2026-09-21",
-      "pushed": "2026-09-23",
+      "pushed": "2026-09-24",
       "stars": 0,
       "langs": {
-        "Java": 605402,
-        "Svelte": 322107,
-        "TypeScript": 130911,
-        "CSS": 14356,
-        "JavaScript": 3894,
-        "HTML": 2072,
-        "Makefile": 2026
+        "Java": 741473,
+        "Svelte": 360131,
+        "TypeScript": 147144,
+        "Rust": 25556,
+        "CSS": 16588,
+        "JavaScript": 5122,
+        "HTML": 3241,
+        "Shell": 2887,
+        "Makefile": 2424
       },
-      "commits": 14,
+      "commits": 17,
       "release": null
     },
     {
@@ -118,6 +120,21 @@
     }
   ],
   "commits": [
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-09-24T00:23:33Z",
+      "msg": "feat: \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u0445\u043e\u0441\u0442\u0430 \u0434\u043b\u044f macOS \u0438 Windows (Tauri) \u0438 \u0432\u044b\u043f\u0443\u0441\u043a \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u0449\u0438\u043a\u043e\u0432"
+    },
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-09-23T23:57:08Z",
+      "msg": "feat: \u0441\u0435\u0440\u0432\u0435\u0440 \u0434\u043b\u044f \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f \u0445\u043e\u0441\u0442\u0430 \u2014 \u0434\u043e\u0441\u0442\u0443\u043f \u0433\u0440\u0443\u043f\u043f\u0435, \u043a\u043e\u043f\u0438\u0438, \u0440\u0435\u0436\u0438\u043c \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f"
+    },
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-09-23T23:56:59Z",
+      "msg": "feat: \u0437\u0430\u043c\u0435\u0442\u043d\u044b\u0435 \u043d\u043e\u0432\u043e\u0441\u0442\u0438, \u0438\u043c\u0435\u043d\u0430 \u0432 \u043a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u044f\u0445, \u0442\u0435\u043b\u0435\u0444\u043e\u043d \u0431\u0435\u0437 \u043b\u0438\u0448\u043d\u0435\u0433\u043e \u043c\u0435\u043d\u044e"
+    },
     {
       "repo": "StorageSystem",
       "ts": "2026-09-23T19:15:32Z",
