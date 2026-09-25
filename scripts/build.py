@@ -29,7 +29,7 @@ W = 888
 MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 REPO = {r["name"]: r for r in DATA["repos"]}
 CODE_REPOS = [r for r in DATA["repos"] if r["name"] != "mitaro-cs"]   # the profile repo only holds the generator
-CODE_LANGS = ["Python", "JavaScript", "CSS", "HTML"]
+CODE_LANGS = ["Java", "Python", "Svelte", "TypeScript", "JavaScript", "CSS", "HTML"]
 NOT_CODE = {"Rich Text Format"}
 
 
@@ -78,7 +78,7 @@ def label(s, x, y, txt, key="mono", size=16, tone="b", rot=0.0, seed=1, weight=7
 
 
 def patterns(s):
-    """Returns fills that stay pure black and white: solid, stripes, dots, outline, hatch."""
+    """Returns fills that stay pure black and white: solid, stripes, dots, outline and other hatchings."""
     s.defs.append(
         '<pattern id="pStripe" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
         f'<rect width="7" height="7" fill="{BLACK}"/><rect width="3" height="7" fill="{WHITE}"/></pattern>'
@@ -86,9 +86,16 @@ def patterns(s):
         f'<rect width="7" height="7" fill="{BLACK}"/><circle cx="3.5" cy="3.5" r="2.1" fill="{WHITE}"/></pattern>'
         '<pattern id="pHatch" width="6" height="6" patternUnits="userSpaceOnUse">'
         f'<rect width="6" height="6" fill="{BLACK}"/><path d="M0 0L6 6M6 0L0 6" stroke="{WHITE}" stroke-width="1.2"/></pattern>'
+        '<pattern id="pHoriz" width="6" height="6" patternUnits="userSpaceOnUse">'
+        f'<rect width="6" height="6" fill="{BLACK}"/><rect width="6" height="2" fill="{WHITE}"/></pattern>'
+        '<pattern id="pCheck" width="8" height="8" patternUnits="userSpaceOnUse">'
+        f'<rect width="8" height="8" fill="{BLACK}"/><rect width="4" height="4" fill="{WHITE}"/>'
+        f'<rect x="4" y="4" width="4" height="4" fill="{WHITE}"/></pattern>'
+        '<pattern id="pVert" width="6" height="6" patternUnits="userSpaceOnUse">'
+        f'<rect width="6" height="6" fill="{BLACK}"/><rect width="2" height="6" fill="{WHITE}"/></pattern>'
     )
-    return {"Python": WHITE, "JavaScript": "url(#pStripe)", "CSS": "url(#pDot)",
-            "HTML": BLACK, "Other": "url(#pHatch)"}
+    return {"Java": WHITE, "Python": "url(#pStripe)", "Svelte": "url(#pHatch)", "TypeScript": "url(#pDot)",
+            "JavaScript": "url(#pHoriz)", "CSS": "url(#pCheck)", "HTML": BLACK, "Other": "url(#pVert)"}
 
 
 def lang_bar(s, x, y, w, h, langs, pats, legend_y=None, legend_size=13, cols=2, legend_dx=None, kb=False, delay=0.5):
@@ -115,15 +122,33 @@ def lang_bar(s, x, y, w, h, langs, pats, legend_y=None, legend_size=13, cols=2, 
         s.end()
 
 
+def bucket_langs(langs, min_pct):
+    """Groups a {language: bytes} dict into known languages plus 'Other'; tiny slices fold into 'Other'."""
+    tot = {}
+    for k, v in langs.items():
+        if k in NOT_CODE:
+            continue
+        key = k if k in CODE_LANGS else "Other"
+        tot[key] = tot.get(key, 0) + v
+    total = sum(tot.values()) or 1
+    out = {}
+    for k, v in tot.items():
+        key = k if (k != "Other" and 100 * v / total >= min_pct) else "Other"
+        out[key] = out.get(key, 0) + v
+    return sorted(out.items(), key=lambda kv: (kv[0] == "Other", -kv[1]))
+
+
 def agg_langs(repos):
     tot = {}
     for r in repos:
         for k, v in r["langs"].items():
-            if k in NOT_CODE:
-                continue
-            key = k if k in CODE_LANGS else "Other"
-            tot[key] = tot.get(key, 0) + v
-    return sorted(tot.items(), key=lambda kv: (kv[0] == "Other", -kv[1]))
+            tot[k] = tot.get(k, 0) + v
+    return bucket_langs(tot, 4)
+
+
+def code_size(kb):
+    """(value, unit) for the amount of code: megabytes once it passes 1000 KB."""
+    return (f"{kb / 1000:.1f}", "MB") if kb >= 1000 else (str(kb), "KB")
 
 
 def glow_panel(s, w, h, seed_x=0.85, seed_y=0.0, radius=4):
@@ -213,7 +238,7 @@ def stats():
     code_kb = sum(v for r in CODE_REPOS for k, v in r["langs"].items() if k not in NOT_CODE) // 1000
     items = [("REPOS", str(len(repos))), ("COMMITS", str(sum(r["commits"] for r in repos))),
              ("STARS", str(sum(r["stars"] for r in repos))), ("FOLLOWERS", str(DATA["followers"])),
-             ("CODE", f"{code_kb} KB")]
+             ("CODE", " ".join(code_size(code_kb)))]
     s = Svg(W, 64, "GitHub numbers: " + ", ".join(f"{a} {b}" for a, b in items))
     parts = [(a, b, text_width("mono", 700, 14, a, 2) + 26, text_width("mono", 800, 25, b) + 28) for a, b in items]
     total = sum(lw + vw for _, _, lw, vw in parts) + 16 * (len(parts) - 1)
@@ -304,7 +329,7 @@ def button(file, brand, kind, handle, k):
 
 # ------------------------------------------------------------------ numbers panel
 def numbers():
-    H = 330
+    H = 360
     s = Svg(W, H, "By the numbers")
     pats = patterns(s)
     glow_panel(s, W, H)
@@ -312,7 +337,7 @@ def numbers():
     years = date.today().year - int(DATA["created"][:4])
     code_kb = sum(v for r in CODE_REPOS for k, v in r["langs"].items() if k not in NOT_CODE) // 1000
     big = [(str(len(repos)), "PUBLIC REPOS"), (str(sum(r["commits"] for r in repos)), "COMMITS"),
-           (str(code_kb), "KB OF CODE"), (str(years), "YEARS ON GITHUB")]
+           (code_size(code_kb)[0], f"{code_size(code_kb)[1]} OF CODE"), (str(years), "YEARS ON GITHUB")]
     colw = (W - 80) / 4
     tg = s.gradient([(0, WHITE, 1), (1, WHITE, 0.25)], 0, 0, 0, 1)
     for i, (n, lab) in enumerate(big):
@@ -330,18 +355,21 @@ def numbers():
 
 
 # ------------------------------------------------------------------ tech stack
-STACK = [("python", "Python", 1), ("flask", "Flask", 1), ("javascript", "JavaScript", 0), ("html5", "HTML5", 0),
+STACK = [("python", "Python", 1), ("flask", "Flask", 1), ("openjdk", "Java", 1), ("springboot", "Spring", 0),
+         ("svelte", "Svelte", 0), ("typescript", "TypeScript", 0), ("javascript", "JavaScript", 0), ("html5", "HTML5", 0),
          ("css3", "CSS3", 0), ("sqlite", "SQLite", 0), ("docker", "Docker", 0), ("git", "Git", 0),
          ("github", "GitHub", 0), ("githubactions", "Actions", 0), ("gnubash", "Bash", 0), ("linux", "Linux", 0),
-         ("figma", "Figma", 0), ("obsidian", "Obsidian", 0), ("openjdk", "Java", 0), ("zedindustries", "Zed", 0)]
+         ("figma", "Figma", 0), ("obsidian", "Obsidian", 0), ("rust", "Rust", 0), ("tauri", "Tauri", 0),
+         ("zedindustries", "Zed", 0)]
 
 
 def stack():
-    H = 348
-    s = Svg(W, H, "Tech stack: " + ", ".join(n for _, n, _ in STACK))
-    glow_panel(s, W, H, seed_x=0.1)
     tile_w, tile_h, gap = 92, 104, 13
     x0, y0 = 34, 34
+    rows = (len(STACK) + 7) // 8
+    H = y0 + rows * (tile_h + 14) + 78
+    s = Svg(W, H, "Tech stack: " + ", ".join(n for _, n, _ in STACK))
+    glow_panel(s, W, H, seed_x=0.1)
     rnd = random.Random(4)
     for i, (ic, name, hot) in enumerate(STACK):
         col, row = i % 8, i // 8
@@ -359,7 +387,7 @@ def stack():
         s.add("</g>")
         s.end()
         s.end()
-    ny = y0 + 2 * (tile_h + 14) + 12
+    ny = y0 + rows * (tile_h + 14) + 12
     s.line(34, ny - 12, W - 46, ny - 12, WHITE, 1.2, dash="2 5")
     s.g("rise", "animation-delay:1.3s")
     s.text(36, ny + 14, "LEARNING NOW:", "mono", 15, WHITE, 800)
@@ -370,7 +398,15 @@ def stack():
 
 # ------------------------------------------------------------------ project cards
 PROJECTS = [
-    dict(repo="VantaVault", file="project-vantavault.svg", n="01", name="VantaVault",
+    dict(repo="StorageSystem", file="project-groupbase.svg", n="01", name="groupbase",
+         tag="A study-group app that runs on the group leader's own PC.",
+         feats=["Works offline, syncs when the host computer is back on",
+                "Files encrypted on disk, AES-256-GCM, a key per file",
+                "Sign in with a QR code, a fingerprint or Face ID",
+                "Roles, moderation, deadlines and an exam countdown",
+                "Host app for Windows and macOS, updates in one click"],
+         stack=["Java", "Spring Boot", "Svelte", "Tauri"]),
+    dict(repo="VantaVault", file="project-vantavault.svg", n="02", name="VantaVault",
          tag="A private vault for external drives. No cloud.",
          feats=["Password access, hashed locally with PBKDF2-SHA256",
                 "Local AES-encrypted archives you can restore in a click",
@@ -378,7 +414,7 @@ PROJECTS = [
                 "Finds external drives automatically",
                 "Runs on macOS and Windows, from source or as an app"],
          stack=["Python", "JavaScript", "HTML", "CSS"]),
-    dict(repo="AetherCloud", file="project-aethercloud.svg", n="02", name="AetherCloud",
+    dict(repo="AetherCloud", file="project-aethercloud.svg", n="03", name="AetherCloud",
          tag="Turns your own disk into a private cloud with a web dashboard.",
          feats=["Nested folders, file and folder upload, downloads",
                 "Image previews and generated file-type badges",
@@ -386,7 +422,7 @@ PROJECTS = [
                 "Sync check between the database and real files on disk",
                 "Installable PWA; runs on Docker Compose or gunicorn"],
          stack=["Flask", "SQLite", "PWA", "Docker"]),
-    dict(repo="KworkingSystem", file="project-coworking.svg", n="03", name="Campus Coworking",
+    dict(repo="KworkingSystem", file="project-coworking.svg", n="04", name="Campus Coworking",
          tag="A booking panel for a university coworking space.",
          feats=["Seat booking with overlap and capacity checks",
                 "Check-in by student ID and confirmation of the rules",
@@ -430,15 +466,12 @@ def project_card(p):
         s.text(cx + tw_ / 2, cy + 17, t, "mono", 13, WHITE, 700, anchor="middle")
         s.end()
         cx += tw_ + 8
-    langs = sorted(r["langs"].items(), key=lambda kv: -kv[1])
-    top = [(k, v) for k, v in langs if k in CODE_LANGS]
-    other = sum(v for k, v in langs if k not in CODE_LANGS and k not in NOT_CODE)
-    if other:
-        top.append(("Other", other))
+    top = bucket_langs(r["langs"], 3)
     s.text(rx, 132, "LANGUAGES", "mono", 12, WHITE, 700, ls=3)
     lang_bar(s, rx, 142, rw, 15, top, pats, legend_y=184, legend_size=12, cols=2, legend_dx=rw / 2, delay=0.5)
     y, m = r["created"].split("-")[0], MONTHS[int(r["created"].split("-")[1]) - 1]
-    meta = [("CREATED", f"{m} {y}"), ("COMMITS", str(r["commits"])), ("STARS", str(r["stars"]))]
+    last = ("RELEASE", r["release"]) if r.get("release") else ("STARS", str(r["stars"]))
+    meta = [("CREATED", f"{m} {y}"), ("COMMITS", str(r["commits"])), last]
     for k, ((a_, b_), xx) in enumerate(zip(meta, [rx, rx + 104, rx + 188])):
         s.g("rise", f"animation-delay:{1.1 + k * 0.12:.2f}s")
         s.text(xx, 262, a_, "mono", 11, WHITE, 700, ls=2)
@@ -450,7 +483,8 @@ def project_card(p):
 # ------------------------------------------------------------------ timeline
 LABELS = {"Mouros": "Mouros, my first Python practice", "AetherCloud": "AetherCloud",
           "VantaVault": "VantaVault", "KworkingSystem": "Campus Coworking",
-          "Java": "Java practice repo", "Python": "Python practice repo", "mitaro-cs": "This profile"}
+          "Java": "Java practice repo", "Python": "Python practice repo", "StorageSystem": "groupbase",
+          "mitaro-cs": "This profile"}
 
 
 def wrap(txt, key, weight, size, maxw):
@@ -513,7 +547,7 @@ def timeline():
 
 
 # ------------------------------------------------------------------ commit reel
-REPO_NAMES = {"KworkingSystem": "Campus Coworking"}
+REPO_NAMES = {"KworkingSystem": "Campus Coworking", "StorageSystem": "groupbase"}
 SKIP_MSG = ("Initial commit", "Merge ")
 
 
@@ -521,7 +555,13 @@ def reel():
     H = 240
     s = Svg(W, H, "Commit reel: a film strip of my latest real commits")
     allc = [c for c in DATA["commits"] if not c["msg"].startswith(SKIP_MSG)]
-    frames = allc[:30]
+    seen, frames = {}, []
+    for c in allc:                        # allc is newest first
+        if seen.get(c["repo"], 0) < 8:
+            seen[c["repo"]] = seen.get(c["repo"], 0) + 1
+            frames.append(c)
+    frames = frames[:30]
+    order = {id(c): i for i, c in enumerate(allc)}
     n = len(frames)
     FW, GAP = 196, 14
     pitch = FW + GAP                      # 210 = 7 sprocket holes of 30px, so the loop is seamless
@@ -538,7 +578,7 @@ def reel():
             s.rect(hx, 194, 18, 12, WHITE, rx=3)
         s.rect(fx, fy, FW, 124, bg, WHITE, 2)
         y, m, d = c["ts"][:10].split("-")
-        s.text(fx + 12, fy + 21, f"#{len(allc) - i:03d}", "mono", 12, ink, 700, ls=1)
+        s.text(fx + 12, fy + 21, f"#{len(allc) - order[id(c)]:03d}", "mono", 12, ink, 700, ls=1)
         s.text(fx + FW - 12, fy + 21, f"{d} {MONTHS[int(m) - 1]} {y}", "mono", 12, ink, 700, anchor="end", ls=0.5)
         s.line(fx + 12, fy + 30, fx + FW - 12, fy + 30, ink, 1.2, dash="2 4")
         lines = wrap(c["msg"], "mono", 500, 16, FW - 26)

@@ -10,9 +10,9 @@
 
 </div>
 
-I'm **Omar**, and online I go by **Mitaro**. I study computer science at **MTUCI** and I write mostly `Python` and `Flask`, with plain `JavaScript` on the front end.
+I'm **Omar**, and online I go by **Mitaro**. I study computer science at **MTUCI**. I started with `Python` and `Flask`, and lately I also write `Java` with Spring Boot and `Svelte` for bigger projects.
 
-The projects below lean on one idea: **local-first**. Two of them keep your files on your own machine, and none of them needs a cloud service in the middle. That's why I reach for `SQLite` and the local disk before I reach for someone else's servers.
+The projects below lean on one idea: **local-first**. In all four the data stays on a machine you control instead of a cloud service in the middle. That's why I reach for `SQLite` and the local disk before I reach for someone else's servers.
 
 Right now I'm getting better at backend architecture and at the security side of things: encryption, hashing, how to store a password properly. On the side I'm prototyping a personal AI assistant in the spirit of Jarvis, mostly to see how far I can push it.
 
@@ -36,6 +36,34 @@ Outside of code I train hand-to-hand combat. The habit of keeping a cold head un
 
 <img src="assets/head-build.svg" alt="What I build">
 <br>
+<a href="https://github.com/mitaro-cs/StorageSystem"><img src="assets/project-groupbase.svg" width="100%" alt="groupbase, the StorageSystem repository. A study-group app that runs on the group leader's own PC. Works offline, files encrypted on disk with AES-256-GCM, sign-in by QR code or fingerprint, roles and moderation, exam countdown, host app for Windows and macOS with one-click updates. Java, Spring Boot, Svelte, Tauri."></a>
+
+</div>
+
+<details>
+<summary><b>How to run groupbase</b></summary>
+
+Download the installer from the [latest release](https://github.com/mitaro-cs/StorageSystem/releases/latest): `windows-setup.exe` for Windows 10 and 11, `macos-apple-silicon.dmg` or `macos-intel.dmg` for a Mac.
+
+1. Install it. On macOS drag it to Applications; if the system cannot verify the developer, use System Settings → Privacy & Security → Open Anyway. On Windows choose More info → Run anyway. No admin rights needed.
+2. On the first launch enter the group name, your name and a password. You become the site admin and the group leader.
+3. Open Settings → Server → Internet, sign in to the free tunnel and press "Open access" to get a permanent link and a QR code for the group.
+
+Or build it yourself (JDK 21+ and Node.js 22+):
+
+```bash
+git clone https://github.com/mitaro-cs/StorageSystem.git groupbase
+cd groupbase
+make build
+java -jar target/groupbase.jar serve
+```
+
+How it fits together: `Tauri host app` → `Spring Boot server` → `SQLite`; every phone keeps its own copy of the data and syncs when the host computer is back on.
+
+</details>
+
+<div align="center">
+
 <a href="https://github.com/mitaro-cs/VantaVault"><img src="assets/project-vantavault.svg" width="100%" alt="VantaVault. A private vault for external drives. Password access with PBKDF2-SHA256, local AES-encrypted archives, session protection, lockout after failed logins, automatic drive detection. Python, JavaScript, HTML, CSS."></a>
 
 </div>
@@ -109,19 +137,19 @@ Also in my repositories: [Mouros](https://github.com/mitaro-cs/Mouros) is my Pyt
 
 <img src="assets/head-numbers.svg" alt="By the numbers">
 <br>
-<img src="assets/numbers.svg" width="100%" alt="Public repositories, commits, kilobytes of code and years on GitHub, plus a bar of code by language. Most of it is Python, then HTML, CSS and JavaScript.">
+<img src="assets/numbers.svg" width="100%" alt="Public repositories, commits, megabytes of code and years on GitHub, plus a bar of code by language. Most of it is Java, then Svelte, Python and TypeScript.">
 
 <br>
 
 <img src="assets/head-stack.svg" alt="My tech stack">
 <br>
-<img src="assets/stack.svg" width="100%" alt="Python, Flask, JavaScript, HTML5, CSS3, SQLite, Docker, Git, GitHub, GitHub Actions, Bash, Linux, Figma, Obsidian, Java, Zed.">
+<img src="assets/stack.svg" width="100%" alt="Python, Flask, Java, Spring, Svelte, TypeScript, JavaScript, HTML5, CSS3, SQLite, Docker, Git, GitHub, GitHub Actions, Bash, Linux, Figma, Obsidian, Rust, Tauri, Zed.">
 
 <br>
 
 <img src="assets/head-timeline.svg" alt="Timeline">
 <br>
-<img src="assets/timeline.svg" width="100%" alt="July 2022 joined GitHub. December 2024 Mouros. February 2026 AetherCloud. April 2026 VantaVault and Campus Coworking. September 2026 Java and Python practice repos and this profile.">
+<img src="assets/timeline.svg" width="100%" alt="July 2022 joined GitHub. December 2024 Mouros. February 2026 AetherCloud. April 2026 VantaVault and Campus Coworking. September 2026 Java and Python practice repos, groupbase and this profile.">
 
 <br>
 
@@ -129,7 +157,7 @@ Also in my repositories: [Mouros](https://github.com/mitaro-cs/Mouros) is my Pyt
 
 </div>
 
-- Building **Flask** backends with cleaner structure
+- Building **Java** and **Flask** backends with cleaner structure
 - Studying **security**: encryption, hashing, local-first design
 - Prototyping a personal **AI assistant**, Jarvis-style
 - Studying computer science at **MTUCI**
