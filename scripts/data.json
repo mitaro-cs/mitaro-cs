@@ -20,8 +20,8 @@
         "Shell": 4832,
         "Makefile": 3034
       },
-      "commits": 39,
-      "release": "v0.3.0"
+      "commits": 40,
+      "release": "v0.4.0"
     },
     {
       "name": "mitaro-cs",
@@ -120,6 +120,11 @@
     }
   ],
   "commits": [
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-09-24T21:34:58Z",
+      "msg": "chore: \u0432\u044b\u043f\u0443\u0441\u043a 0.4.0"
+    },
     {
       "repo": "StorageSystem",
       "ts": "2026-09-24T21:18:14Z",
