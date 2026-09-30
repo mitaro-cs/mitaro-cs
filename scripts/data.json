@@ -5,6 +5,15 @@
   "week": "2026-W40",
   "repos": [
     {
+      "name": "obsidian",
+      "created": "2026-09-30",
+      "pushed": "2026-09-30",
+      "stars": 0,
+      "langs": {},
+      "commits": 4,
+      "release": null
+    },
+    {
       "name": "StorageSystem",
       "created": "2026-09-21",
       "pushed": "2026-09-27",
@@ -120,6 +129,26 @@
     }
   ],
   "commits": [
+    {
+      "repo": "obsidian",
+      "ts": "2026-09-30T21:11:06Z",
+      "msg": "Restyle showcase after the real vault and add pricing options (#3)"
+    },
+    {
+      "repo": "obsidian",
+      "ts": "2026-09-30T21:01:06Z",
+      "msg": "Set vault price to 3 000 \u20bd (#2)"
+    },
+    {
+      "repo": "obsidian",
+      "ts": "2026-09-30T20:56:23Z",
+      "msg": "Add sales showcase README for Obsidian vault builds (#1)"
+    },
+    {
+      "repo": "obsidian",
+      "ts": "2026-09-30T20:42:52Z",
+      "msg": "Initial commit"
+    },
     {
       "repo": "StorageSystem",
       "ts": "2026-09-27T20:46:25Z",
