@@ -16,21 +16,21 @@
     {
       "name": "StorageSystem",
       "created": "2026-09-21",
-      "pushed": "2026-09-27",
+      "pushed": "2026-10-01",
       "stars": 0,
       "langs": {
-        "Java": 1354465,
-        "Svelte": 736554,
-        "TypeScript": 378470,
-        "CSS": 46851,
-        "HTML": 45894,
+        "Java": 1362414,
+        "Svelte": 741598,
+        "TypeScript": 382155,
+        "CSS": 47490,
+        "HTML": 46237,
         "Rust": 42194,
         "JavaScript": 12662,
         "Shell": 6456,
         "Makefile": 3034
       },
-      "commits": 83,
-      "release": "v0.4.12"
+      "commits": 84,
+      "release": "v0.5.0"
     },
     {
       "name": "mitaro-cs",
@@ -129,6 +129,11 @@
     }
   ],
   "commits": [
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-10-01T22:15:38Z",
+      "msg": "Merge pull request #1 from mitaro-cs/claude/funny-fermat-8u6sub"
+    },
     {
       "repo": "obsidian",
       "ts": "2026-09-30T21:11:06Z",
