@@ -10,14 +10,14 @@
       "pushed": "2026-10-02",
       "stars": 0,
       "langs": {
-        "Python": 199939,
-        "JavaScript": 37529,
-        "CSS": 23528,
+        "Python": 211395,
+        "JavaScript": 39260,
+        "CSS": 23865,
         "HTML": 3070,
         "Batchfile": 860
       },
       "commits": 1,
-      "release": "v1.6.0"
+      "release": "v1.8.0"
     },
     {
       "name": "obsidian",
