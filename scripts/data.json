@@ -5,6 +5,21 @@
   "week": "2026-W40",
   "repos": [
     {
+      "name": "Albion-Online-Fishing-Bot",
+      "created": "2026-10-01",
+      "pushed": "2026-10-02",
+      "stars": 0,
+      "langs": {
+        "Python": 199939,
+        "JavaScript": 37529,
+        "CSS": 23528,
+        "HTML": 3070,
+        "Batchfile": 860
+      },
+      "commits": 1,
+      "release": "v1.6.0"
+    },
+    {
       "name": "obsidian",
       "created": "2026-09-30",
       "pushed": "2026-09-30",
@@ -35,7 +50,7 @@
     {
       "name": "mitaro-cs",
       "created": "2026-09-21",
-      "pushed": "2026-10-01",
+      "pushed": "2026-10-02",
       "stars": 0,
       "langs": {
         "Python": 48835
@@ -143,6 +158,11 @@
       "repo": "StorageSystem",
       "ts": "2026-10-01T22:15:38Z",
       "msg": "Merge pull request #1 from mitaro-cs/claude/funny-fermat-8u6sub"
+    },
+    {
+      "repo": "Albion-Online-Fishing-Bot",
+      "ts": "2026-10-01T13:35:14Z",
+      "msg": "Initial commit"
     },
     {
       "repo": "obsidian",
