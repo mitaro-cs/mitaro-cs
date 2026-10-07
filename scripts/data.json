@@ -31,26 +31,27 @@
     {
       "name": "StorageSystem",
       "created": "2026-09-21",
-      "pushed": "2026-10-06",
+      "pushed": "2026-10-07",
       "stars": 0,
       "langs": {
-        "Java": 1586876,
-        "Svelte": 874899,
-        "TypeScript": 436409,
-        "Rust": 61802,
-        "HTML": 47354,
-        "CSS": 44922,
+        "Java": 1602643,
+        "Svelte": 898143,
+        "TypeScript": 441290,
+        "Rust": 64053,
+        "HTML": 48614,
+        "CSS": 45404,
         "JavaScript": 13697,
         "Shell": 6456,
-        "Makefile": 3034
+        "Makefile": 3034,
+        "NSIS": 1102
       },
-      "commits": 92,
-      "release": "v0.9.4"
+      "commits": 94,
+      "release": "v0.9.6"
     },
     {
       "name": "mitaro-cs",
       "created": "2026-09-21",
-      "pushed": "2026-10-06",
+      "pushed": "2026-10-07",
       "stars": 0,
       "langs": {
         "Python": 48835
@@ -144,6 +145,16 @@
     }
   ],
   "commits": [
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-10-07T11:34:21Z",
+      "msg": "Merge pull request #12 from mitaro-cs/claude/funny-fermat-8u6sub"
+    },
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-10-07T09:13:18Z",
+      "msg": "Merge pull request #11 from mitaro-cs/claude/funny-fermat-8u6sub"
+    },
     {
       "repo": "StorageSystem",
       "ts": "2026-10-06T21:18:32Z",
