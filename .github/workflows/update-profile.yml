@@ -10,7 +10,6 @@ on:
       - "scripts/*.py"
       - "scripts/fonts/**"
       - "scripts/icons/**"
-      - "scripts/src/**"
 
 permissions:
   contents: write
