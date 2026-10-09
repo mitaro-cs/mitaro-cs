@@ -34,9 +34,9 @@
       "pushed": "2026-10-09",
       "stars": 0,
       "langs": {
-        "Java": 1682702,
-        "Svelte": 939466,
-        "TypeScript": 462236,
+        "Java": 1704690,
+        "Svelte": 946742,
+        "TypeScript": 467115,
         "Rust": 64053,
         "HTML": 48614,
         "CSS": 45126,
@@ -45,8 +45,8 @@
         "Makefile": 3034,
         "NSIS": 1102
       },
-      "commits": 98,
-      "release": "v1.0.0"
+      "commits": 101,
+      "release": "v1.0.1"
     },
     {
       "name": "mitaro-cs",
@@ -145,6 +145,21 @@
     }
   ],
   "commits": [
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-10-09T20:26:08Z",
+      "msg": "Merge pull request #19 from mitaro-cs/claude/funny-fermat-8u6sub"
+    },
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-10-09T20:25:39Z",
+      "msg": "Merge pull request #18 from mitaro-cs/miaro"
+    },
+    {
+      "repo": "StorageSystem",
+      "ts": "2026-10-09T14:51:19Z",
+      "msg": "Merge pull request #17 from mitaro-cs/claude/funny-fermat-8u6sub"
+    },
     {
       "repo": "StorageSystem",
       "ts": "2026-10-09T13:03:53Z",
