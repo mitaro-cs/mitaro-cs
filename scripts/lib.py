@@ -29,28 +29,15 @@ PALETTE = [("NIGHT", NIGHT), ("SHADE", SHADE), ("BENCH", BENCH), ("LEAF", LEAF),
 FONTS = {
     "mono": ("JetBrainsMono[wght].ttf", "JBMono", "ui-monospace, Menlo, Consolas, monospace"),
     "serif": ("InstrumentSerif-Regular.ttf", "ISerif", "Georgia, 'Times New Roman', serif"),
-    "italic": ("InstrumentSerif-Italic.ttf", "ISerifIt", "Georgia, 'Times New Roman', serif"),
 }
 
 _cache = {}
 
 ANIM_CSS = (
-    "@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}"
-    ".rise{animation:rise .8s cubic-bezier(.2,.8,.2,1) both}"
-    "@keyframes fade{from{opacity:0}to{opacity:1}}"
-    ".fade{animation:fade 1.4s ease-out both}"
+    "@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}"
+    ".rise{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}"
     "@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}"
-    ".grow{transform-box:fill-box;transform-origin:0 50%;animation:grow 1.2s cubic-bezier(.2,.8,.2,1) both}"
-    "@keyframes marq{to{transform:translateX(var(--shift))}}"
-    ".marq{animation:marq 18s linear infinite}"
-    "@keyframes fA{0%,49.99%{opacity:1}50%,100%{opacity:0}}@keyframes fB{0%,49.99%{opacity:0}50%,100%{opacity:1}}"
-    ".fA{animation:fA .9s steps(1) infinite}.fB{animation:fB .9s steps(1) infinite}"
-    "@keyframes flick{0%,100%{opacity:1}7%{opacity:.86}9%{opacity:1}52%{opacity:.93}54%{opacity:1}}"
-    ".flick{animation:flick 4.2s steps(1) infinite}"
-    "@keyframes blink{0%,55%{opacity:1}56%,100%{opacity:.15}}"
-    ".blink{animation:blink 1.6s steps(1) infinite}"
-    "@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}"
-    ".draw{stroke-dasharray:var(--len);animation:draw 1.8s cubic-bezier(.4,0,.2,1) both}"
+    ".grow{transform-box:fill-box;transform-origin:0 50%;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
 
@@ -206,16 +193,6 @@ class Svg:
 
     def end(self):
         self.add("</g>")
-
-    def grain(self, opacity=0.09, w=None, h=None, seed=3):
-        self.defs.append(
-            '<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="{seed}" stitchTiles="stitch">'
-            '<animate attributeName="seed" values="3;9;14;6;21;11" dur=".7s" calcMode="discrete" repeatCount="indefinite"/>'
-            "</feTurbulence>"
-            '<feColorMatrix type="matrix" values=".33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 1 0"/>'
-            "</filter>")
-        self.add(f'<rect width="{w or self.w}" height="{h or self.h}" filter="url(#grain)" opacity="{opacity}"/>')
 
     def render(self):
         faces = []
