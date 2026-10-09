@@ -1,14 +1,11 @@
 <div align="center">
 
-<img src="assets/banner.svg" width="100%" alt="Mitaro. Computer science student at MTUCI. Python, Flask, security.">
-<br>
-<img src="assets/stats.svg" width="100%" alt="GitHub in numbers: repositories, commits, stars, followers and the amount of code written.">
-
-<br>
-
-<img src="assets/head-about.svg" alt="Who am I">
+<img src="assets/hero.svg" width="100%" alt="Mitaro. An opening film frame: the title Mitaro, a local-first story, computer science student at MTUCI, Python, Flask, Java and security, a duotone portrait and the subtitle: Hi, I'm Omar. I build software that keeps your data at home.">
+<img src="assets/slate.svg" width="100%" alt="GitHub in numbers: repositories, commits, stars, followers and the amount of code written.">
 
 </div>
+
+<img src="assets/head-about.svg" width="100%" alt="Scene 01. Who I am">
 
 I'm **Omar**, and online I go by **Mitaro**. I study computer science at **MTUCI**. I started with `Python` and `Flask`, and lately I also write `Java` with Spring Boot and `Svelte` for bigger projects.
 
@@ -20,25 +17,19 @@ Outside of code I train hand-to-hand combat. The habit of keeping a cold head un
 
 <div align="center">
 
-<a href="https://t.me/treadways"><img src="assets/btn-telegram.svg" width="240" alt="Telegram, @treadways"></a>
-<a href="mailto:miri.saro@bk.ru"><img src="assets/btn-email.svg" width="240" alt="Email, miri.saro@bk.ru"></a>
-<a href="https://instagram.com/stere.os"><img src="assets/btn-instagram.svg" width="240" alt="Instagram, @stere.os"></a>
+<a href="https://t.me/treadways"><img src="assets/btn-telegram.svg" width="260" alt="Telegram, @treadways"></a>
+<a href="mailto:miri.saro@bk.ru"><img src="assets/btn-email.svg" width="260" alt="Email, miri.saro@bk.ru"></a>
+<a href="https://instagram.com/stere.os"><img src="assets/btn-instagram.svg" width="260" alt="Instagram, @stere.os"></a>
+
+<br><br>
+
+<img src="assets/notes.svg" width="100%" alt="Director's notes. One: working product beats endless planning. Two: readable code beats clever code. Three: anything that touches user data gets security from day one.">
 
 </div>
 
-<div align="center">
+<img src="assets/head-build.svg" width="100%" alt="Scene 02. Feature presentation">
 
-<img src="assets/rules.svg" width="100%" alt="House rules. Working product beats endless planning. Readable code beats clever code. Anything that touches user data gets security from day one.">
-
-</div>
-
-<div align="center">
-
-<img src="assets/head-build.svg" alt="What I build">
-<br>
-<a href="https://github.com/mitaro-cs/KworkingSystem"><img src="assets/project-coworking.svg" width="100%" alt="Campus Coworking. A booking panel for a university coworking space. Seat booking with overlap checks, check-in by student ID, profiles and themes, Pomodoro, lofi, study library, REST API. Flask, SQLite, vanilla JavaScript."></a>
-
-</div>
+<a href="https://github.com/mitaro-cs/KworkingSystem"><img src="assets/project-coworking.svg" width="100%" alt="Feature 01, Campus Coworking. A booking panel for a university coworking space. Seat booking with overlap checks, check-in by student ID, profiles and themes, Pomodoro, lofi, study library, REST API. Flask, SQLite, vanilla JavaScript."></a>
 
 <details>
 <summary><b>How to run Campus Coworking</b></summary>
@@ -53,47 +44,33 @@ The start file creates a virtual environment, installs `requirements.txt`, opens
 
 </details>
 
-Also in my repositories: [Mouros](https://github.com/mitaro-cs/Mouros) is my Python practice archive, and [Java](https://github.com/mitaro-cs/Java) and [Python](https://github.com/mitaro-cs/Python) hold the first steps in each language.
+Also in my repositories: [groupbase](https://github.com/mitaro-cs/StorageSystem), [VantaVault](https://github.com/mitaro-cs/VantaVault) and [AetherCloud](https://github.com/mitaro-cs/AetherCloud); [Mouros](https://github.com/mitaro-cs/Mouros) is my Python practice archive, and [Java](https://github.com/mitaro-cs/Java) and [Python](https://github.com/mitaro-cs/Python) hold the first steps in each language.
 
-<div align="center">
+<img src="assets/head-stack.svg" width="100%" alt="Scene 03. The toolkit">
 
-<img src="assets/head-reel.svg" alt="The commit reel">
-<br>
+<img src="assets/stack.svg" width="100%" alt="Python, Flask, Java, Spring, Svelte, TypeScript, JavaScript, HTML5, CSS3, SQLite, Docker, Git, GitHub, GitHub Actions, Bash, Linux, Figma, Obsidian, Rust, Tauri, Zed. Learning now: security basics, cleaner backend architecture, a Jarvis-style AI assistant.">
+
+<img src="assets/head-reel.svg" width="100%" alt="Scene 04. Dailies">
+
 <img src="assets/reel.svg" width="100%" alt="A film strip where every frame is one of my real commits, newest first, with its date, its repository and its unedited message.">
 
 <sub>Every frame is a real commit from my repositories, unedited. The strip updates itself.</sub>
 
-<br>
+<img src="assets/head-numbers.svg" width="100%" alt="Scene 05. Box office">
 
-<img src="assets/head-numbers.svg" alt="By the numbers">
-<br>
-<img src="assets/numbers.svg" width="100%" alt="Public repositories, commits, megabytes of code and years on GitHub, plus a bar of code by language. Most of it is Java, then Svelte, Python and TypeScript.">
+<img src="assets/box-office.svg" width="100%" alt="Public repositories, commits, megabytes of code and years on GitHub, plus a bar of code by language. Most of it is Java, then Svelte, Python and TypeScript.">
 
-<br>
+<img src="assets/head-timeline.svg" width="100%" alt="Scene 06. Chapters">
 
-<img src="assets/head-stack.svg" alt="My tech stack">
-<br>
-<img src="assets/stack.svg" width="100%" alt="Python, Flask, Java, Spring, Svelte, TypeScript, JavaScript, HTML5, CSS3, SQLite, Docker, Git, GitHub, GitHub Actions, Bash, Linux, Figma, Obsidian, Rust, Tauri, Zed.">
+<img src="assets/chapters.svg" width="100%" alt="July 2022 joined GitHub. December 2024 Mouros. February 2026 AetherCloud. April 2026 VantaVault and Campus Coworking. September 2026 Java and Python practice repos, groupbase and this profile. October 2026 Albion-Online-Fishing-Bot.">
 
-<br>
-
-<img src="assets/head-timeline.svg" alt="Timeline">
-<br>
-<img src="assets/timeline.svg" width="100%" alt="July 2022 joined GitHub. December 2024 Mouros. February 2026 AetherCloud. April 2026 VantaVault and Campus Coworking. September 2026 Java and Python practice repos, groupbase and this profile.">
-
-<br>
-
-<img src="assets/head-now.svg" alt="Right now">
-
-</div>
+<img src="assets/head-now.svg" width="100%" alt="Scene 07. Now shooting">
 
 - Building **Java** and **Flask** backends with cleaner structure
 - Studying **security**: encryption, hashing, local-first design
 - Prototyping a personal **AI assistant**, Jarvis-style
 - Studying computer science at **MTUCI**
 
-<div align="center">
+<br>
 
-<img src="assets/footer.svg" width="100%" alt="Thanks for reading.">
-
-</div>
+<img src="assets/credits.svg" width="100%" alt="The End. Written, directed and committed by Mitaro. The colour grade: ten colours taken from the avatar with k-means, from night #0e0b0d to mist #e3eeef.">

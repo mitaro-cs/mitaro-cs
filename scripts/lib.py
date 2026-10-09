@@ -1,9 +1,7 @@
-"""Shared helpers for the profile graphics: font embedding, zine-style shapes, SVG builder."""
+"""Shared helpers for the profile graphics: the avatar palette, font embedding, SVG builder."""
 import base64
 import io
-import math
 import os
-import random
 import re
 from xml.sax.saxutils import escape
 
@@ -13,47 +11,46 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-# palette taken from the avatar: a park bench in muted film colour
-INK = "#161a18"      # deep foliage in the shade
-PAPER = "#ebe4d3"    # khaki trousers and sunlit bark
-SKY = "#a9c1cd"      # the pale blue shirt
-PEACH = "#e4a283"    # warm skin tone, the one hot accent
-SUEDE = "#80614a"    # suede chukka boots
-MOSS = "#66755c"     # the trees behind
+# Palette: every colour is a k-means cluster or region mean of the avatar's pixels
+# (a man on a park bench, muted 35mm look). Nothing outside this list is drawn.
+NIGHT = "#0e0b0d"    # deepest shadow under the bench
+SHADE = "#1a1718"    # shade between the planks
+BENCH = "#37302e"    # weathered bench wood
+WOOD = "#6c6662"     # sunlit plank grey
+STONE = "#bdaea3"    # khaki trousers
+MIST = "#e3eeef"     # highlight on the shirt
+SHIRT = "#a2bbc5"    # the pale blue shirt
+SKIN = "#e6a986"     # sunlit skin
+CLAY = "#b27660"     # skin in shadow
+LEAF = "#2f3b2c"     # the trees behind
+PALETTE = [("NIGHT", NIGHT), ("SHADE", SHADE), ("BENCH", BENCH), ("LEAF", LEAF), ("WOOD", WOOD),
+           ("CLAY", CLAY), ("SKIN", SKIN), ("STONE", STONE), ("SHIRT", SHIRT), ("MIST", MIST)]
 
 FONTS = {
     "mono": ("JetBrainsMono[wght].ttf", "JBMono", "ui-monospace, Menlo, Consolas, monospace"),
+    "serif": ("InstrumentSerif-Regular.ttf", "ISerif", "Georgia, 'Times New Roman', serif"),
+    "italic": ("InstrumentSerif-Italic.ttf", "ISerifIt", "Georgia, 'Times New Roman', serif"),
 }
 
 _cache = {}
 
 ANIM_CSS = (
-    ".o{transform-box:fill-box;transform-origin:center}"
-    "@keyframes wob{0%{transform:rotate(calc(var(--a,1.3deg)*-1)) translate(0,0)}"
-    "34%{transform:rotate(calc(var(--a,1.3deg)*.8)) translate(.8px,-.7px)}"
-    "67%{transform:rotate(calc(var(--a,1.3deg)*-.4)) translate(-.7px,.6px)}}"
-    ".wob{animation:wob var(--d,1s) steps(1) infinite}"
-    "@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}"
-    ".bob{animation:bob 3.4s ease-in-out infinite}"
-    "@keyframes sway{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}"
-    ".sway{transform-origin:50% 0;animation:sway 5.5s ease-in-out infinite}"
-    "@keyframes pop{0%{transform:scale(.7) rotate(-7deg)}65%{transform:scale(1.07) rotate(1.2deg)}"
-    "100%{transform:scale(1) rotate(0deg)}}"
-    ".pop{animation:pop .6s cubic-bezier(.2,1.3,.4,1) both}"
-    "@keyframes grow{from{transform:scaleX(.15)}to{transform:scaleX(1)}}"
-    ".grow{transform-origin:0 50%;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}"
-    "@keyframes rise{from{transform:translateY(10px)}to{transform:translateY(0)}}"
-    ".rise{animation:rise .6s ease-out both}"
-    "@keyframes spin{to{transform:rotate(360deg)}}"
-    ".spin{animation:spin 9s linear infinite}"
-    "@keyframes draw{from{stroke-dashoffset:calc(var(--len)*.86)}to{stroke-dashoffset:0}}"
-    ".draw{stroke-dasharray:var(--len);animation:draw 1.6s ease-out both}"
+    "@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}"
+    ".rise{animation:rise .8s cubic-bezier(.2,.8,.2,1) both}"
+    "@keyframes fade{from{opacity:0}to{opacity:1}}"
+    ".fade{animation:fade 1.4s ease-out both}"
+    "@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}"
+    ".grow{transform-box:fill-box;transform-origin:0 50%;animation:grow 1.2s cubic-bezier(.2,.8,.2,1) both}"
     "@keyframes marq{to{transform:translateX(var(--shift))}}"
     ".marq{animation:marq 18s linear infinite}"
     "@keyframes fA{0%,49.99%{opacity:1}50%,100%{opacity:0}}@keyframes fB{0%,49.99%{opacity:0}50%,100%{opacity:1}}"
-    ".fA{animation:fA .8s steps(1) infinite}.fB{animation:fB .8s steps(1) infinite}"
-    "@keyframes sweep{0%{transform:translateX(0)}42%,100%{transform:translateX(1400px)}}"
-    ".sweep{animation:sweep 9s ease-in-out infinite}"
+    ".fA{animation:fA .9s steps(1) infinite}.fB{animation:fB .9s steps(1) infinite}"
+    "@keyframes flick{0%,100%{opacity:1}7%{opacity:.86}9%{opacity:1}52%{opacity:.93}54%{opacity:1}}"
+    ".flick{animation:flick 4.2s steps(1) infinite}"
+    "@keyframes blink{0%,55%{opacity:1}56%,100%{opacity:.15}}"
+    ".blink{animation:blink 1.6s steps(1) infinite}"
+    "@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}"
+    ".draw{stroke-dasharray:var(--len);animation:draw 1.8s cubic-bezier(.4,0,.2,1) both}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
 
@@ -113,38 +110,6 @@ def _woff2_b64(key, weight, chars):
     return base64.b64encode(buf.getvalue()).decode()
 
 
-def smoothstep(t):
-    t = max(0.0, min(1.0, t))
-    return t * t * (3 - 2 * t)
-
-
-def jag(x, y, w, h, j=2.4, seed=1, step=15):
-    """Polygon points for a hand-cut rectangle: every edge is subdivided and jittered."""
-    r = random.Random(seed)
-    pts = []
-
-    def edge(x1, y1, x2, y2):
-        n = max(1, int(math.hypot(x2 - x1, y2 - y1) // step))
-        for i in range(n):
-            t = i / n
-            pts.append((x1 + (x2 - x1) * t + r.uniform(-j, j), y1 + (y2 - y1) * t + r.uniform(-j, j)))
-
-    edge(x, y, x + w, y)
-    edge(x + w, y, x + w, y + h)
-    edge(x + w, y + h, x, y + h)
-    edge(x, y + h, x, y)
-    return " ".join(f"{px:.1f},{py:.1f}" for px, py in pts)
-
-
-def star_points(cx, cy, r_out, r_in, n=9, rot=0):
-    pts = []
-    for i in range(n * 2):
-        r = r_out if i % 2 == 0 else r_in
-        a = math.pi * i / n + rot
-        pts.append(f"{cx + r * math.cos(a):.1f},{cy + r * math.sin(a):.1f}")
-    return " ".join(pts)
-
-
 def icon_path(name):
     """Returns the path data of a Simple Icons glyph (24x24 viewBox)."""
     svg = open(os.path.join(HERE, "icons", f"{name}.svg"), encoding="utf-8").read()
@@ -176,7 +141,7 @@ class Svg:
                              f'gradientUnits="{units}" {extra}>{st}</radialGradient>')
         return f"url(#{gid})"
 
-    def text(self, x, y, txt, key="mono", size=16, fill=PAPER, weight=400, anchor="start", ls=0,
+    def text(self, x, y, txt, key="mono", size=16, fill=MIST, weight=400, anchor="start", ls=0,
              opacity=1, transform=None, extra=""):
         self.used.setdefault((key, weight), set()).update(txt)
         _, fam, fb = FONTS[key]
@@ -224,7 +189,7 @@ class Svg:
             a += f' transform="{transform}"'
         self.add(f"<path {a} {extra}/>")
 
-    def line(self, x1, y1, x2, y2, stroke=PAPER, sw=1, opacity=1, dash=None):
+    def line(self, x1, y1, x2, y2, stroke=MIST, sw=1, opacity=1, dash=None):
         a = f'x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{stroke}" stroke-width="{sw}"'
         if opacity != 1:
             a += f' stroke-opacity="{opacity}"'
@@ -232,7 +197,7 @@ class Svg:
             a += f' stroke-dasharray="{dash}"'
         self.add(f"<line {a}/>")
 
-    def icon(self, name, x, y, size, fill=PAPER):
+    def icon(self, name, x, y, size, fill=MIST):
         self.add(f'<path d="{icon_path(name)}" fill="{fill}" '
                  f'transform="translate({x:.1f} {y:.1f}) scale({size / 24:.4f})"/>')
 

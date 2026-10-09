@@ -1,5 +1,6 @@
-Font embedded in the profile graphics, redistributed under its original license:
+Fonts embedded in the profile graphics, redistributed under their original licenses:
 
 - JetBrains Mono: SIL Open Font License 1.1
+- Instrument Serif (regular and italic): SIL Open Font License 1.1, see `OFL-InstrumentSerif.txt`
 
 Brand glyphs in `../icons` come from Simple Icons (CC0 1.0).

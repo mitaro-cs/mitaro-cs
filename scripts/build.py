@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 """Builds every SVG of the profile README into ../assets from scripts/data.json.
 
-Palette rule: the colours of the avatar only (see lib.py): foliage ink, khaki paper, shirt sky,
-skin peach, suede and moss. Depth comes from gradients, halftone dots, hatching and hard
-suede offset shadows, never from flat grey tints.
-Motion: CSS/SMIL only (stop-motion wobble, pop-in, marquee, film grain); it stops under
-prefers-reduced-motion.
+Concept: the profile is a film. The avatar is a still from one, so the page reads like one:
+an opening frame, numbered scenes with screenplay slug lines, dailies, box office, end credits.
+Palette rule: only the ten colours pulled from the avatar (lib.PALETTE), nothing else.
+Type: Instrument Serif for titles, JetBrains Mono for everything that is data.
+Motion: CSS/SMIL only (film flicker, fades, a rolling strip); it stops under prefers-reduced-motion.
 """
 import base64
 import json
 import math
 import os
-import random
 import re
 import struct
 import sys
 from datetime import date
 
-from lib import INK, MOSS, PAPER, PEACH, SKY, SUEDE, Svg, cap_height, ink_bounds, jag, smoothstep, star_points, text_width
+from lib import BENCH, CLAY, LEAF, MIST, NIGHT, PALETTE, SHADE, SHIRT, SKIN, STONE, WOOD, Svg, text_width
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(HERE, "..", "assets")
@@ -28,103 +27,16 @@ PNG = base64.b64encode(_png).decode()
 PW, PH = struct.unpack(">II", _png[16:24])
 W = 888
 
-ACCENTS = (PAPER, SKY, PEACH)   # light fills, cycled wherever several tiles sit side by side
 MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 REPO = {r["name"]: r for r in DATA["repos"]}
 CODE_REPOS = [r for r in DATA["repos"] if r["name"] != "mitaro-cs"]   # the profile repo only holds the generator
 CODE_LANGS = ["Java", "Python", "Svelte", "TypeScript", "JavaScript", "CSS", "HTML"]
 NOT_CODE = {"Rich Text Format"}
+LANG_COLOR = {"Java": SKIN, "Svelte": CLAY, "Python": SHIRT, "TypeScript": MIST, "JavaScript": STONE,
+              "CSS": WOOD, "HTML": LEAF, "Other": BENCH}
 
 
-# ------------------------------------------------------------------ shared drawing bits
-def dots_path(x0, x1, y0, y1, pitch=10.0, slope=0.28, reverse=False, power=0.9):
-    """Path data of a rotated dot grid whose dot size grows along x: a gradient made of dots."""
-    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    ca = sa = math.sqrt(0.5)
-    n = int(math.hypot(x1 - x0, y1 - y0) / pitch) + 2
-    d = []
-    for i in range(-n, n):
-        for j in range(-n, n):
-            u, v = i * pitch, j * pitch
-            x, y = cx + u * ca - v * sa, cy + u * sa + v * ca
-            if not (x0 - pitch <= x <= x1 + pitch and y0 - pitch <= y <= y1 + pitch):
-                continue
-            t = (x + slope * y - x0) / (x1 - x0)
-            t = 1 - t if reverse else t
-            t = smoothstep(t) ** power
-            r = pitch * 0.80 * t
-            if r < 0.45:
-                continue
-            d.append(f"M{x - r:.1f} {y:.1f}a{r:.1f} {r:.1f} 0 1 0 {2 * r:.1f} 0a{r:.1f} {r:.1f} 0 1 0 {-2 * r:.1f} 0z")
-    return "".join(d)
-
-
-def halftone_field(s, x0, x1, y0, y1, pitch=10.0, slope=0.28, color=INK, reverse=False, power=0.9):
-    s.path(dots_path(x0, x1, y0, y1, pitch, slope, reverse, power), fill=color)
-
-
-def label(s, x, y, txt, key="mono", size=16, tone="b", rot=0.0, seed=1, weight=700, pad=14, ls=0, anim=True):
-    """Hand-cut text label. tone b = ink tile, w = paper tile, or any light fill colour."""
-    tw_ = text_width(key, weight, size, txt, ls)
-    h = size * 1.75
-    fill, ink, edge = (INK, PAPER, PAPER) if tone == "b" else (PAPER if tone == "w" else tone, INK, INK)
-    pts = jag(x, y, tw_ + pad * 2, h, 1.6, seed, 16)
-    tr = f"rotate({rot} {x + tw_ / 2 + pad:.1f} {y + h / 2:.1f})"
-    if anim:
-        s.g("o wob", f"--a:.9deg;--d:{1.5 + seed % 4 * 0.23:.2f}s;animation-delay:-{seed * 0.37 % 1.5:.2f}s")
-    s.poly(pts, INK, transform=f"{tr} translate(4 4)")
-    s.poly(pts, fill, edge, 2, transform=tr)
-    s.text(x + pad, y + h / 2 + cap_height(key, weight, size) / 2, txt, key, size, ink, weight, ls=ls, transform=tr)
-    if anim:
-        s.end()
-    return tw_ + pad * 2
-
-
-def patterns(s):
-    """Returns language fills in the avatar palette: solids plus stripes, dots and hatchings on ink."""
-    s.defs.append(
-        '<pattern id="pStripe" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
-        f'<rect width="7" height="7" fill="{INK}"/><rect width="3" height="7" fill="{SKY}"/></pattern>'
-        '<pattern id="pDot" width="7" height="7" patternUnits="userSpaceOnUse">'
-        f'<rect width="7" height="7" fill="{INK}"/><circle cx="3.5" cy="3.5" r="2.1" fill="{PAPER}"/></pattern>'
-        '<pattern id="pHatch" width="6" height="6" patternUnits="userSpaceOnUse">'
-        f'<rect width="6" height="6" fill="{INK}"/><path d="M0 0L6 6M6 0L0 6" stroke="{PEACH}" stroke-width="1.2"/></pattern>'
-        '<pattern id="pHoriz" width="6" height="6" patternUnits="userSpaceOnUse">'
-        f'<rect width="6" height="6" fill="{INK}"/><rect width="6" height="2" fill="{PAPER}"/></pattern>'
-        '<pattern id="pCheck" width="8" height="8" patternUnits="userSpaceOnUse">'
-        f'<rect width="8" height="8" fill="{SUEDE}"/><rect width="4" height="4" fill="{PAPER}"/>'
-        f'<rect x="4" y="4" width="4" height="4" fill="{PAPER}"/></pattern>'
-        '<pattern id="pVert" width="6" height="6" patternUnits="userSpaceOnUse">'
-        f'<rect width="6" height="6" fill="{INK}"/><rect width="2" height="6" fill="{MOSS}"/></pattern>'
-    )
-    return {"Java": PEACH, "Python": "url(#pStripe)", "Svelte": "url(#pHatch)", "TypeScript": "url(#pDot)",
-            "JavaScript": "url(#pHoriz)", "CSS": "url(#pCheck)", "HTML": SKY, "Other": "url(#pVert)"}
-
-
-def lang_bar(s, x, y, w, h, langs, pats, legend_y=None, legend_size=13, cols=2, legend_dx=None, kb=False, delay=0.5):
-    items = [(k, v) for k, v in langs if k not in NOT_CODE]
-    total = sum(v for _, v in items) or 1
-    s.rect(x - 2, y - 2, w + 4, h + 4, INK, PAPER, 1.5)
-    s.g("o grow", f"animation-delay:{delay}s")
-    cx = x
-    for k, v in items:
-        seg = w * v / total
-        s.rect(cx, y, seg, h, pats.get(k, pats["Other"]), PAPER, 1.4)
-        cx += seg
-    s.end()
-    if legend_y is None:
-        return
-    dx = legend_dx or (w / cols)
-    for i, (k, v) in enumerate(items):
-        lx = x + (i % cols) * dx
-        ly = legend_y + (i // cols) * 24
-        s.g("rise", f"animation-delay:{delay + 0.5 + i * 0.08:.2f}s")
-        s.rect(lx, ly - 11, 14, 14, pats.get(k, pats["Other"]), PAPER, 1.4)
-        s.text(lx + 22, ly, f"{k} {round(100 * v / total)}%" + (f" · {v // 1000} KB" if kb else ""),
-               "mono", legend_size, PAPER, 500)
-        s.end()
-
-
+# ------------------------------------------------------------------ data helpers
 def bucket_langs(langs, min_pct):
     """Groups a {language: bytes} dict into known languages plus 'Other'; tiny slices fold into 'Other'."""
     tot = {}
@@ -154,348 +66,12 @@ def code_size(kb):
     return (f"{kb / 1000:.1f}", "MB") if kb >= 1000 else (str(kb), "KB")
 
 
-def glow_panel(s, w, h, seed_x=0.85, seed_y=0.0, radius=4):
-    """Ink card with a soft sky light-leak gradient and a hard suede offset shadow."""
-    s.rect(9, 9, w - 12, h - 12, SUEDE, INK, 2, radius)
-    s.rect(2, 2, w - 12, h - 12, INK, PAPER, 2, radius)
-    g = s.gradient([(0, SKY, 0.22), (0.5, SKY, 0.05), (1, SKY, 0)], seed_x, seed_y, 0.75, kind="radial")
-    s.rect(2, 2, w - 12, h - 12, g, rx=radius)
+def code_kb():
+    return sum(v for r in CODE_REPOS for k, v in r["langs"].items() if k not in NOT_CODE) // 1000
 
 
-# ------------------------------------------------------------------ banner
-def banner():
-    H = 340
-    s = Svg(W, H, "Mitaro. Computer science student at MTUCI, Python and Flask developer.",
-            "Collage banner in muted park colours: cut-out lettering spelling MITARO and a duotone halftone portrait.")
-    s.defs.append(f'<clipPath id="cp"><rect width="{W}" height="{H}" rx="6"/></clipPath>')
-    s.add('<g clip-path="url(#cp)">')
-    s.rect(0, 0, W, H, PAPER)
-    under = s.gradient([(0, INK, 0), (0.30, INK, 0), (0.55, INK, 0.55), (0.72, INK, 1), (1, INK, 1)],
-                       0, 0, 1, 0.12)
-    s.rect(0, 0, W, H, under)
-    halftone_field(s, 215, 600, -20, H + 20, pitch=10.5, slope=0.30)
-    s.rect(590, 0, W - 590, H, INK)
-
-    # halftone portrait as a duotone: the dots mask a khaki-to-sky gradient. Drawn twice with a 1px
-    # offset and swapped in steps: hand-printed flicker
-    pw = 388
-    ph = pw * PH / PW
-    px, py = W - pw - 16, 2
-    fade = s.gradient([(0, "#000", 0), (0.38, "#fff", 1), (1, "#fff", 1)], 0, 0, 1, 0)
-    tone = s.gradient([(0, PAPER, 1), (0.45, PAPER, 1), (0.8, SKY, 1), (1, SKY, 1)], 0, 0, 0, 1)
-    box = f'x="{px - 4}" y="{py - 4}" width="{pw + 8}" height="{ph + 8:.0f}"'
-    s.defs.append(f'<image id="pimg" href="data:image/png;base64,{PNG}" x="{px}" y="{py}" width="{pw}" height="{ph:.0f}"/>')
-    s.defs.append(f'<mask id="pm" maskUnits="userSpaceOnUse" {box}><rect {box} fill="{fade}"/></mask>')
-    for mid, off in (("pdA", ""), ("pdB", ' x="1.6" y="-1.2"')):
-        s.defs.append(f'<mask id="{mid}" maskUnits="userSpaceOnUse" {box}><use href="#pimg"{off}/></mask>')
-    s.add(f'<g mask="url(#pm)"><rect {box} fill="{tone}" mask="url(#pdA)" class="fA"/>'
-          f'<rect {box} fill="{tone}" mask="url(#pdB)" class="fB"/></g>')
-
-    # cut-out title: every tile sized from the real ink of its letter
-    tiles = [("M", "mono", 800, 80, "b", -4), ("I", "mono", 800, 76, PAPER, 3), ("T", "mono", 800, 80, "b", -2),
-             ("A", "mono", 800, 82, SKY, 5), ("R", "mono", 800, 86, "b", -3), ("O", "mono", 800, 78, PEACH, 2)]
-    x = 30
-    for i, (ch, key, wt, cap, tone, rot) in enumerate(tiles):
-        bx0, by0, bx1, by1 = ink_bounds(key, wt, 100, ch)
-        size = 100 * cap / (by1 - by0)
-        bx0, by0, bx1, by1 = ink_bounds(key, wt, size, ch)
-        w_ = max(58.0, (bx1 - bx0) + 36)
-        h_ = cap + 40 - (i % 3) * 5
-        y = 34 + (i % 2) * 5 - (i % 3) * 2
-        fill, ink, edge = (INK, PAPER, PAPER) if tone == "b" else (tone, INK, INK)
-        pts = jag(x, y, w_, h_, 2.2, 11 + i, 18)
-        cxr, cyr = x + w_ / 2, y + h_ / 2
-        tr = f"rotate({rot} {cxr:.1f} {cyr:.1f})"
-        s.g("o pop", f"animation-delay:{i * 0.11:.2f}s")
-        s.g("o wob", f"--a:1.7deg;--d:{0.85 + (i % 3) * 0.16:.2f}s;animation-delay:-{i * 0.29:.2f}s")
-        s.poly(pts, SUEDE if tone == "b" else INK, transform=f"{tr} translate(5 5)")
-        s.poly(pts, fill, edge, 2.4, transform=tr)
-        s.text(cxr - (bx0 + bx1) / 2, cyr + (by0 + by1) / 2, ch, key, size, ink, wt, transform=tr)
-        s.end()
-        s.end()
-        x += w_ + 5
-    label(s, 34, 178, "COMPUTER SCIENCE STUDENT @ MTUCI", "mono", 17, "b", -1.5, 5, ls=0.4)
-    label(s, 58, 218, "PYTHON  /  FLASK  /  SECURITY", "mono", 17, SKY, 1.2, 6, ls=0.4)
-    s.g("bob")
-    label(s, 372, 250, "hi, I'm Omar", "mono", 22, PEACH, -5, 8, pad=16, anim=False)
-    for col, sw in ((INK, 8), (PEACH, 3)):
-        s.path("M580 264C620 278 660 260 670 234", stroke=col, sw=sw)
-        s.path("M652 240L671 230L679 248", stroke=col, sw=sw)
-    s.end()
-    # tape with a scrolling ticker
-    unit = "MTUCI  ///  PYTHON  ///  FLASK  ///  SECURITY  ///  LOCAL-FIRST  ///  "
-    uw = text_width("mono", 700, 15, unit, 2.2)
-    s.add('<g transform="rotate(-2.6 444 314)">')
-    s.rect(-30, 296, W + 60, 36, SUEDE, INK, 2)
-    s.g("marq", f"--shift:-{uw:.1f}px")
-    s.text(-14, 320, unit * 3, "mono", 15, PAPER, 700, ls=2.2)
-    s.end()
-    s.add("</g>")
-    shine = s.gradient([(0, PAPER, 0), (0.5, PAPER, 0.28), (1, PAPER, 0)], 0, 0, 1, 0)
-    s.add(f'<g class="sweep"><rect x="-260" y="-30" width="120" height="400" fill="{shine}" transform="skewX(-20)"/></g>')
-    s.grain(0.10)
-    s.add("</g>")
-    s.rect(1.5, 1.5, W - 3, H - 3, "none", INK, 3, 6)
-    s.rect(9, 9, W - 18, H - 18, "none", SKY, 1, 3, opacity=0.9, extra='stroke-dasharray="2 5"')
-    s.save(OUT, "banner.svg")
-
-
-# ------------------------------------------------------------------ stats row
-def stats():
-    repos = DATA["repos"]
-    code_kb = sum(v for r in CODE_REPOS for k, v in r["langs"].items() if k not in NOT_CODE) // 1000
-    items = [("REPOS", str(len(repos))), ("COMMITS", str(sum(r["commits"] for r in repos))),
-             ("STARS", str(sum(r["stars"] for r in repos))), ("FOLLOWERS", str(DATA["followers"])),
-             ("CODE", " ".join(code_size(code_kb)))]
-    s = Svg(W, 64, "GitHub numbers: " + ", ".join(f"{a} {b}" for a, b in items))
-    parts = [(a, b, text_width("mono", 700, 14, a, 2) + 26, text_width("mono", 800, 25, b) + 28) for a, b in items]
-    total = sum(lw + vw for _, _, lw, vw in parts) + 16 * (len(parts) - 1)
-    x = (W - total) / 2
-    sk = 9
-
-    def par(x, y, w, h, off=0):
-        return (f"{x + sk + off:.1f},{y + off:.1f} {x + w + sk + off:.1f},{y + off:.1f} "
-                f"{x + w + off:.1f},{y + h + off:.1f} {x + off:.1f},{y + h + off:.1f}")
-
-    y = 10
-    for i, (a, b, lw, vw) in enumerate(parts):
-        s.g("o pop", f"animation-delay:{0.9 + i * 0.12:.2f}s")
-        s.poly(par(x, y, lw + vw, 38, 4), SUEDE)
-        s.poly(par(x, y, lw, 38), INK, PAPER, 2)
-        s.poly(par(x + lw, y, vw, 38), ACCENTS[i % 3], INK, 2)
-        s.text(x + 13 + sk / 2, y + 24.5, a, "mono", 14, PAPER, 700, ls=2)
-        s.text(x + lw + 14 + sk / 2, y + 29, b, "mono", 25, INK, 800)
-        s.end()
-        x += lw + vw + 16
-    s.save(OUT, "stats.svg")
-
-
-# ------------------------------------------------------------------ section stickers
-def sticker(name, txt, dark=False, rot=-1.6, seed=3, key="mono", size=32, alt=None, weight=800, tone=PAPER):
-    tw_ = text_width(key, weight, size, txt)
-    w_, h_ = tw_ + 64, size * 1.85
-    s = Svg(round(w_ + 44), round(h_ + 40), alt or txt)
-    fill, ink, edge, sh = (INK, PAPER, PAPER, SUEDE) if dark else (tone, INK, INK, INK)
-    x, y = 22, 20
-    pts = jag(x, y, w_, h_, 2.4, seed, 15)
-    tr = f"rotate({rot} {x + w_ / 2:.1f} {y + h_ / 2:.1f})"
-    s.g("o pop")
-    s.g("o wob", f"--a:1deg;--d:{1.7 + seed % 3 * 0.25:.2f}s;animation-delay:-{seed * 0.13:.2f}s")
-    s.poly(pts, sh, edge, 2.5, transform=f"{tr} translate(6 6)")
-    s.poly(pts, fill, edge, 2.5, transform=tr)
-    s.text(x + w_ / 2, y + h_ / 2 + cap_height(key, weight, size) / 2, txt, key, size, ink, weight, anchor="middle", transform=tr)
-    s.g("o spin", f"animation-duration:{6 + seed % 4}s")
-    s.poly(star_points(x + 4, y + 4, 19, 9, 8, 0.3), PEACH if dark else INK, edge, 2, transform=tr)
-    s.end()
-    s.rect(x + w_ - 66, y - 12, 54, 18, SKY if dark else INK, INK if dark else PAPER, 1.5,
-           transform=f"rotate(9 {x + w_ - 40} {y})")
-    s.end()
-    s.end()
-    s.save(OUT, f"head-{name}.svg")
-
-
-# ------------------------------------------------------------------ house rules note
-RULES = ["Working product beats endless planning.",
-         "Readable code beats clever code.",
-         "Anything that touches user data gets security from day one."]
-
-
-def rules():
-    H = 214
-    s = Svg(W, H, "House rules: " + " ".join(RULES))
-    s.g("o wob", "--a:.35deg;--d:2.2s")
-    tr = "rotate(-.6 444 107)"
-    pts = jag(22, 26, W - 56, 158, 2.2, 31, 18)
-    s.poly(pts, SUEDE, transform=f"{tr} translate(8 8)")
-    s.poly(pts, PAPER, INK, 3, transform=tr)
-    s.add(f'<g transform="{tr}">')
-    for i, line in enumerate(RULES):
-        y = 88 + i * 34
-        s.rect(52, y - 15, 13, 13, (SUEDE, MOSS, PEACH)[i], INK, 1.5, transform=f"rotate(45 58.5 {y - 8.5})")
-        s.text(82, y, line, "mono", 20, INK, 700)
-    s.rect(60, 12, 90, 22, SKY, INK, 1.5, opacity=0.9, transform="rotate(-6 105 23)")
-    s.rect(W - 170, 14, 90, 22, PEACH, INK, 1.5, opacity=0.9, transform="rotate(7 " + str(W - 125) + " 25)")
-    s.add("</g>")
-    s.end()
-    label(s, 44, 2, "HOUSE RULES", "mono", 15, "b", -2, 12, 800, ls=2)
-    s.save(OUT, "rules.svg")
-
-
-# ------------------------------------------------------------------ contact buttons
-def button(file, brand, kind, handle, k):
-    s = Svg(268, 68, f"{kind}: {handle}")
-    s.g("o wob", f"--a:.7deg;--d:{1.8 + k * 0.3:.1f}s;animation-delay:-{k * 0.5}s")
-    pts = jag(5, 5, 250, 52, 1.4, len(handle), 16)
-    s.poly(pts, SUEDE, transform="translate(5 5)")
-    s.poly(pts, (SKY, PAPER, PEACH)[k % 3], INK, 2.5)
-    s.icon(brand, 20, 17, 28, INK)
-    s.text(64, 26, kind.upper(), "mono", 12, INK, 700, ls=3)
-    s.text(64, 47, handle, "mono", 16, INK, 700)
-    s.end()
-    s.save(OUT, file)
-
-
-# ------------------------------------------------------------------ numbers panel
-def numbers():
-    H = 360
-    s = Svg(W, H, "By the numbers")
-    pats = patterns(s)
-    glow_panel(s, W, H)
-    repos = DATA["repos"]
-    years = date.today().year - int(DATA["created"][:4])
-    code_kb = sum(v for r in CODE_REPOS for k, v in r["langs"].items() if k not in NOT_CODE) // 1000
-    big = [(str(len(repos)), "PUBLIC REPOS"), (str(sum(r["commits"] for r in repos)), "COMMITS"),
-           (code_size(code_kb)[0], f"{code_size(code_kb)[1]} OF CODE"), (str(years), "YEARS ON GITHUB")]
-    colw = (W - 80) / 4
-    tg = s.gradient([(0, PEACH, 1), (1, PAPER, 0.35)], 0, 0, 0, 1)
-    for i, (n, lab) in enumerate(big):
-        x = 40 + i * colw
-        s.g("rise", f"animation-delay:{0.15 + i * 0.14:.2f}s")
-        s.text(x, 114, n, "mono", 80, tg, 800)
-        s.text(x + 2, 144, lab, "mono", 14, SKY, 700, ls=3)
-        s.end()
-        if i:
-            s.line(x - 16, 60, x - 16, 146, PAPER, 1.2, dash="2 5")
-    s.text(40, 200, "CODE BY LANGUAGE, ALL PROJECTS", "mono", 13, PAPER, 700, ls=3)
-    lang_bar(s, 40, 214, W - 92, 30, agg_langs(CODE_REPOS), pats, legend_y=278, legend_size=14, cols=3,
-             legend_dx=(W - 92) / 3, kb=True, delay=0.7)
-    s.save(OUT, "numbers.svg")
-
-
-# ------------------------------------------------------------------ tech stack
-STACK = [("python", "Python", 1), ("flask", "Flask", 1), ("openjdk", "Java", 1), ("springboot", "Spring", 0),
-         ("svelte", "Svelte", 0), ("typescript", "TypeScript", 0), ("javascript", "JavaScript", 0), ("html5", "HTML5", 0),
-         ("css3", "CSS3", 0), ("sqlite", "SQLite", 0), ("docker", "Docker", 0), ("git", "Git", 0),
-         ("github", "GitHub", 0), ("githubactions", "Actions", 0), ("gnubash", "Bash", 0), ("linux", "Linux", 0),
-         ("figma", "Figma", 0), ("obsidian", "Obsidian", 0), ("rust", "Rust", 0), ("tauri", "Tauri", 0),
-         ("zedindustries", "Zed", 0)]
-
-
-def stack():
-    tile_w, tile_h, gap = 92, 104, 13
-    x0, y0 = 34, 34
-    rows = (len(STACK) + 7) // 8
-    H = y0 + rows * (tile_h + 14) + 78
-    s = Svg(W, H, "Tech stack: " + ", ".join(n for _, n, _ in STACK))
-    glow_panel(s, W, H, seed_x=0.1)
-    rnd = random.Random(4)
-    for i, (ic, name, hot) in enumerate(STACK):
-        col, row = i % 8, i // 8
-        x, y = x0 + col * (tile_w + gap), y0 + row * (tile_h + 14)
-        rot = rnd.uniform(-1.6, 1.6)
-        pts = jag(x, y, tile_w, tile_h, 1.3, 40 + i, 16)
-        tr = f"rotate({rot:.2f} {x + tile_w / 2:.1f} {y + tile_h / 2:.1f})"
-        fill, ink = (SKY, INK) if hot else (INK, PAPER)
-        s.g("o pop", f"animation-delay:{0.1 + i * 0.06:.2f}s")
-        s.g("o wob", f"--a:.9deg;--d:{1.4 + (i % 5) * 0.21:.2f}s;animation-delay:-{i * 0.23:.2f}s")
-        s.poly(pts, fill, PAPER, 2, transform=tr)
-        s.add(f'<g transform="{tr}">')
-        s.icon(ic, x + tile_w / 2 - 19, y + 20, 38, ink)
-        s.text(x + tile_w / 2, y + 87, name, "mono", 13.5, ink, 700, anchor="middle")
-        s.add("</g>")
-        s.end()
-        s.end()
-    ny = y0 + rows * (tile_h + 14) + 12
-    s.line(34, ny - 12, W - 46, ny - 12, PAPER, 1.2, dash="2 5")
-    s.g("rise", "animation-delay:1.3s")
-    s.text(36, ny + 14, "LEARNING NOW:", "mono", 15, PEACH, 800)
-    s.text(176, ny + 14, "security basics, cleaner backend architecture, a Jarvis-style AI assistant", "mono", 14, PAPER, 500)
-    s.end()
-    s.save(OUT, "stack.svg")
-
-
-# ------------------------------------------------------------------ project cards
-PROJECTS = [
-    dict(repo="StorageSystem", file="project-groupbase.svg", name="groupbase",
-         tag="A study-group app that runs on the group leader's own PC.",
-         feats=["Works offline, syncs when the host computer is back on",
-                "Files encrypted on disk, AES-256-GCM, a key per file",
-                "Sign in with a QR code, a fingerprint or Face ID",
-                "Roles, moderation, deadlines and an exam countdown",
-                "Host app for Windows and macOS, updates in one click"],
-         stack=["Java", "Spring Boot", "Svelte", "Tauri"]),
-    dict(repo="VantaVault", file="project-vantavault.svg", name="VantaVault",
-         tag="A private vault for external drives. No cloud.",
-         feats=["Password access, hashed locally with PBKDF2-SHA256",
-                "Local AES-encrypted archives you can restore in a click",
-                "Session protection and a timed lockout after failed logins",
-                "Finds external drives automatically",
-                "Runs on macOS and Windows, from source or as an app"],
-         stack=["Python", "JavaScript", "HTML", "CSS"]),
-    dict(repo="AetherCloud", file="project-aethercloud.svg", name="AetherCloud",
-         tag="Turns your own disk into a private cloud with a web dashboard.",
-         feats=["Nested folders, file and folder upload, downloads",
-                "Image previews and generated file-type badges",
-                "Per-user storage quota, storage meter, recent files",
-                "Sync check between the database and real files on disk",
-                "Installable PWA; runs on Docker Compose or gunicorn"],
-         stack=["Flask", "SQLite", "PWA", "Docker"]),
-    dict(repo="KworkingSystem", file="project-coworking.svg", name="Campus Coworking",
-         tag="A booking panel for a university coworking space.",
-         feats=["Seat booking with overlap and capacity checks",
-                "Check-in by student ID and confirmation of the rules",
-                "Profiles with avatars and per-user interface themes",
-                "Pomodoro 25/5, lofi streams and a study library",
-                "REST API for spots, bookings, profile and check-in"],
-         stack=["Flask", "SQLite", "Vanilla JS", "REST"]),
-]
-
-
-SHOWCASE = ["KworkingSystem"]   # repos whose cards are built, in this order
-
-
-def project_card(p):
-    H = 318
-    r = REPO[p["repo"]]
-    s = Svg(W, H, f"{p['name']}: " + p["tag"], " ".join(p["feats"]))
-    pats = patterns(s)
-    glow_panel(s, W, H)
-    label(s, 30, 26, p["n"], "mono", 20, PEACH, -3, int(p["n"]), 800, pad=12)
-    tg = s.gradient([(0, PAPER, 1), (1, SKY, 1)], 0, 0, 0, 1)
-    s.g("rise")
-    s.text(84, 56, p["name"], "mono", 38, tg, 800)
-    s.end()
-    s.text(32, 90, p["tag"], "mono", 14, PAPER, 500)
-    s.line(32, 104, 540, 104, PAPER, 1.2, dash="2 5")
-    for i, f in enumerate(p["feats"]):
-        y = 134 + i * 34
-        s.g("rise", f"animation-delay:{0.2 + i * 0.12:.2f}s")
-        s.rect(32, y - 10, 9, 9, PEACH, transform=f"rotate(45 36.5 {y - 5.5})")
-        s.text(52, y, f, "mono", 14, PAPER, 500)
-        s.end()
-    s.line(566, 30, 566, H - 42, PAPER, 1.2, dash="2 5")
-    rx = 592
-    rw = W - 34 - rx - 6
-    s.text(rx, 46, "STACK", "mono", 12, SKY, 700, ls=3)
-    cx, cy = rx, 58
-    for k, t in enumerate(p["stack"]):
-        tw_ = text_width("mono", 700, 13, t) + 20
-        if cx + tw_ > rx + rw:
-            cx, cy = rx, cy + 30
-        s.g("o pop", f"animation-delay:{0.3 + k * 0.1:.2f}s")
-        s.rect(cx, cy, tw_, 24, INK, SKY, 1.6, 12)
-        s.text(cx + tw_ / 2, cy + 17, t, "mono", 13, PAPER, 700, anchor="middle")
-        s.end()
-        cx += tw_ + 8
-    top = bucket_langs(r["langs"], 3)
-    s.text(rx, 132, "LANGUAGES", "mono", 12, SKY, 700, ls=3)
-    lang_bar(s, rx, 142, rw, 15, top, pats, legend_y=184, legend_size=12, cols=2, legend_dx=rw / 2, delay=0.5)
-    y, m = r["created"].split("-")[0], MONTHS[int(r["created"].split("-")[1]) - 1]
-    last = ("RELEASE", r["release"]) if r.get("release") else ("STARS", str(r["stars"]))
-    meta = [("CREATED", f"{m} {y}"), ("COMMITS", str(r["commits"])), last]
-    for k, ((a_, b_), xx) in enumerate(zip(meta, [rx, rx + 104, rx + 188])):
-        s.g("rise", f"animation-delay:{1.1 + k * 0.12:.2f}s")
-        s.text(xx, 262, a_, "mono", 11, SKY, 700, ls=2)
-        s.text(xx, 288, b_, "mono", 20, PAPER, 800)
-        s.end()
-    s.save(OUT, p["file"])
-
-
-# ------------------------------------------------------------------ timeline
-LABELS = {"Mouros": "Mouros, my first Python practice", "AetherCloud": "AetherCloud",
-          "VantaVault": "VantaVault", "KworkingSystem": "Campus Coworking",
-          "Java": "Java practice repo", "Python": "Python practice repo", "StorageSystem": "groupbase",
-          "mitaro-cs": "This profile"}
+def commits():
+    return sum(r["commits"] for r in DATA["repos"])
 
 
 def wrap(txt, key, weight, size, maxw):
@@ -512,60 +88,376 @@ def wrap(txt, key, weight, size, maxw):
     return lines
 
 
-def timeline():
-    H = 330
-    s = Svg(W, H, "Timeline of my GitHub projects")
-    glow_panel(s, W, H, seed_x=0.5, seed_y=1.0)
-    ev = {}
-    y, m = DATA["created"].split("-")[:2]
-    ev[f"{y}-{m}"] = ["Joined GitHub"]
-    for r in sorted(DATA["repos"], key=lambda r: r["created"]):
-        ev.setdefault(r["created"][:7], []).append(LABELS.get(r["name"], r["name"]))
-    keys = sorted(ev)
-    n = len(keys)
-    x0, x1, ly = 92, W - 104, 172
-    total = (x1 + 48) - (x0 - 50)
-    s.add(f'<line class="draw" style="--len:{total}px" x1="{x0 - 50}" y1="{ly}" x2="{x1 + 48}" y2="{ly}" '
-          f'stroke="{PAPER}" stroke-width="3"/>')
-    s.g("o pop", "animation-delay:1.5s")
-    s.poly(f"{x1 + 46},{ly - 9} {x1 + 62},{ly} {x1 + 46},{ly + 9}", PEACH)
+# ------------------------------------------------------------------ shared drawing bits
+def kicker(s, x, y, txt, fill=WOOD, size=11, anchor="start", ls=3, weight=700):
+    """Small spaced capitals: the voice of every label, slug line and credit."""
+    s.text(x, y, txt, "mono", size, fill, weight, anchor=anchor, ls=ls)
+
+
+def card(s, h, glow=(0.88, 0.0), w=W):
+    """Opens a rounded shade card lit like the avatar: green from the trees, warm halation from the sun."""
+    cid = s.uid("c")
+    s.defs.append(f'<clipPath id="{cid}"><rect x="1" y="1" width="{w - 2}" height="{h - 2}" rx="16"/></clipPath>')
+    s.add(f'<g clip-path="url(#{cid})">')
+    s.rect(0, 0, w, h, SHADE)
+    s.rect(0, 0, w, h, s.gradient([(0, LEAF, 0.55), (1, LEAF, 0)], 1 - glow[0], 1 - glow[1], 0.9, kind="radial"))
+    s.rect(0, 0, w, h, s.gradient([(0, SKIN, 0.13), (1, SKIN, 0)], glow[0], glow[1], 0.7, kind="radial"))
+
+
+def card_end(s, h, w=W, grain=0.07):
+    s.grain(grain, w, h)
+    s.add("</g>")
+    s.rect(1, 1, w - 2, h - 2, "none", BENCH, 1.5, 16)
+
+
+def dots_path(x0, x1, y0, y1, pitch=9.0):
+    """Path data of a rotated halftone grid whose dots grow towards the bottom right."""
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    ca = sa = math.sqrt(0.5)
+    n = int(math.hypot(x1 - x0, y1 - y0) / pitch) + 2
+    d = []
+    for i in range(-n, n):
+        for j in range(-n, n):
+            u, v = i * pitch, j * pitch
+            x, y = cx + u * ca - v * sa, cy + u * sa + v * ca
+            if not (x0 <= x <= x1 and y0 <= y <= y1):
+                continue
+            t = (x - x0) / (x1 - x0) * 0.4 + (y - y0) / (y1 - y0) * 0.6
+            r = pitch * 0.42 * t * t
+            if r < 0.4:
+                continue
+            d.append(f"M{x - r:.1f} {y:.1f}a{r:.1f} {r:.1f} 0 1 0 {2 * r:.1f} 0a{r:.1f} {r:.1f} 0 1 0 {-2 * r:.1f} 0z")
+    return "".join(d)
+
+
+def lang_bar(s, x, y, w, h, langs, delay=0.4):
+    """Rounded bar of code by language, segments in palette colours with a hairline gap."""
+    items = [(k, v) for k, v in langs if k not in NOT_CODE]
+    total = sum(v for _, v in items) or 1
+    cid = s.uid("lb")
+    s.defs.append(f'<clipPath id="{cid}"><rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{h / 2}"/></clipPath>')
+    s.rect(x, y, w, h, NIGHT, rx=h / 2)
+    s.add(f'<g clip-path="url(#{cid})">')
+    s.g("grow", f"animation-delay:{delay}s")
+    cx = x
+    for k, v in items:
+        seg = w * v / total
+        s.rect(cx, y, max(0.0, seg - 2), h, LANG_COLOR.get(k, BENCH))
+        cx += seg
     s.end()
-    for i, k in enumerate(keys):
-        x = x0 + (x1 - x0) * i / (n - 1)
-        up = i % 2 == 0
-        yy, mm = k.split("-")
-        d = 0.25 + i * 0.28
-        s.g("o pop", f"animation-delay:{d:.2f}s")
-        s.g("o spin", f"animation-duration:{9 + i}s")
-        s.poly(star_points(x, ly, 15, 7, 8, i), ACCENTS[i % 3], INK, 2)
-        s.end()
-        s.end()
-        s.g("rise", f"animation-delay:{d + 0.25:.2f}s")
-        s.line(x, ly + (-17 if up else 17), x, ly + (-38 if up else 38), PAPER, 1.6, dash="2 4")
-        lines = []
-        for item in ev[k]:
-            lines += wrap(item, "mono", 500, 14, 176)
-        lines = lines[:4]
-        if up:
-            y0 = ly - 56 - (len(lines) - 1) * 18
-            date_y = y0 - 28
-        else:
-            date_y, y0 = ly + 66, ly + 92
-        s.text(x, date_y, f"{MONTHS[int(mm) - 1]} {yy}", "mono", 19, ACCENTS[i % 3], 800, anchor="middle")
-        for j, ln in enumerate(lines):
-            s.text(x, y0 + j * 18, ln, "mono", 14, PAPER, 500, anchor="middle")
-        s.end()
-    s.save(OUT, "timeline.svg")
+    s.add("</g>")
+    return items, total
 
 
-# ------------------------------------------------------------------ commit reel
+def legend(s, x, y, items, total, cols, dx, size=12, kb=False, delay=0.8):
+    for i, (k, v) in enumerate(items):
+        lx, ly = x + (i % cols) * dx, y + (i // cols) * 24
+        s.g("rise", f"animation-delay:{delay + i * 0.07:.2f}s")
+        s.add(f'<circle cx="{lx + 5}" cy="{ly - 4}" r="5" fill="{LANG_COLOR.get(k, BENCH)}" stroke="{WOOD}" '
+              f'stroke-width=".8"/>')
+        s.text(lx + 18, ly, k, "mono", size, MIST, 600)
+        s.text(lx + 18 + text_width("mono", 600, size, k + " "), ly,
+               f"{round(100 * v / total)}%" + (f" · {v // 1000} KB" if kb else ""), "mono", size, WOOD, 500)
+        s.end()
+
+
+# ------------------------------------------------------------------ opening frame
+def hero():
+    H, y0, y1 = 420, 46, 374
+    s = Svg(W, H, "Mitaro. Computer science student at MTUCI. Python, Flask, Java, security.",
+            "An opening film frame in the colours of the avatar: letterbox bars, the title Mitaro, "
+            "a duotone halftone portrait and a subtitle that says hi, I'm Omar.")
+    s.defs.append(f'<clipPath id="hc"><rect width="{W}" height="{H}" rx="16"/></clipPath>'
+                  f'<clipPath id="fc"><rect x="0" y="{y0}" width="{W}" height="{y1 - y0}"/></clipPath>')
+    s.add('<g clip-path="url(#hc)">')
+    s.rect(0, 0, W, H, NIGHT)
+
+    # the frame: park light. Trees top left, warm sun behind the head, bench brown at the bottom
+    s.add('<g clip-path="url(#fc)" class="flick">')
+    s.rect(0, y0, W, y1 - y0, s.gradient([(0, SHADE, 1), (0.6, SHADE, 1), (1, BENCH, 1)], 0, 0, 0.2, 1))
+    s.rect(0, y0, W, y1 - y0, s.gradient([(0, LEAF, 0.95), (1, LEAF, 0)], 0.12, 0.05, 0.75, kind="radial"))
+    s.rect(0, y0, W, y1 - y0, s.gradient([(0, SKIN, 0.30), (0.5, CLAY, 0.08), (1, CLAY, 0)], 0.76, 0.32, 0.5,
+                                         kind="radial"))
+
+    # duotone halftone portrait: the dots mask a skin-to-shirt gradient, so the face is warm and the
+    # shirt is blue, as in the avatar. Two copies 1px apart swap in steps: projector judder
+    pw = 352
+    ph = pw * PH / PW
+    px, py = W - pw - 26, y1 - ph + 8
+    box = f'x="{px - 4}" y="{py - 4:.0f}" width="{pw + 8}" height="{ph + 8:.0f}"'
+    fade = s.gradient([(0, "#000", 0), (0.30, "#fff", 1), (1, "#fff", 1)], 0, 0, 1, 0)
+    tone = s.gradient([(0, SKIN, 1), (0.42, SKIN, 1), (0.62, STONE, 1), (0.8, SHIRT, 1), (1, SHIRT, 1)], 0, 0, 0, 1)
+    s.defs.append(f'<image id="pimg" href="data:image/png;base64,{PNG}" x="{px}" y="{py:.0f}" width="{pw}" '
+                  f'height="{ph:.0f}"/>')
+    s.defs.append(f'<mask id="pm" maskUnits="userSpaceOnUse" {box}><rect {box} fill="{fade}"/></mask>')
+    for mid, off in (("pdA", ""), ("pdB", ' x="1.4" y="-1"')):
+        s.defs.append(f'<mask id="{mid}" maskUnits="userSpaceOnUse" {box}><use href="#pimg"{off}/></mask>')
+    s.add(f'<g mask="url(#pm)" class="fade"><rect {box} fill="{tone}" mask="url(#pdA)" class="fA"/>'
+          f'<rect {box} fill="{tone}" mask="url(#pdB)" class="fB"/></g>')
+
+    # title block
+    s.g("rise", "animation-delay:.2s")
+    kicker(s, 48, 108, "MTUCI  ·  COMPUTER SCIENCE  ·  SINCE 2022", STONE)
+    s.end()
+    s.g("rise", "animation-delay:.35s")
+    s.text(42, 232, "Mitaro", "serif", 150, MIST)
+    s.end()
+    s.g("rise", "animation-delay:.55s")
+    s.text(48, 280, "a local-first story", "italic", 34, SKIN)
+    s.end()
+    s.g("rise", "animation-delay:.75s")
+    kicker(s, 48, 326, "PYTHON  ·  FLASK  ·  JAVA  ·  SECURITY", SHIRT, 12)
+    s.end()
+
+    # viewfinder corners
+    for cx, cy, dx, dy in ((22, y0 + 18, 1, 1), (W - 22, y0 + 18, -1, 1), (22, y1 - 18, 1, -1), (W - 22, y1 - 18, -1, -1)):
+        s.path(f"M{cx} {cy + 20 * dy}V{cy}H{cx + 20 * dx}", stroke=MIST, sw=1.5, opacity=0.55)
+    s.add("</g>")
+
+    # letterbox bars: recording state, slate and the subtitle
+    s.add(f'<circle cx="40" cy="25" r="4.5" fill="{SKIN}" class="blink"/>')
+    kicker(s, 54, 29, "REC", MIST)
+    kicker(s, W / 2, 29, f"SC. 01  ·  TAKE {commits()}", WOOD, anchor="middle")
+    kicker(s, W - 40, 29, "35 MM  ·  2.39 : 1", WOOD, anchor="end")
+    s.g("fade", "animation-delay:1.1s")
+    s.text(W / 2, 405, "Hi, I'm Omar. I build software that keeps your data at home.", "italic", 21, MIST,
+           anchor="middle")
+    s.end()
+    s.grain(0.09)
+    s.add("</g>")
+    s.rect(1, 1, W - 2, H - 2, "none", BENCH, 1.5, 16)
+    s.save(OUT, "hero.svg")
+
+
+# ------------------------------------------------------------------ slate: the numbers in one row
+def slate():
+    H = 104
+    items = [("REPOS", str(len(DATA["repos"]))), ("COMMITS", str(commits())),
+             ("STARS", str(sum(r["stars"] for r in DATA["repos"]))), ("FOLLOWERS", str(DATA["followers"])),
+             ("CODE", " ".join(code_size(code_kb())))]
+    s = Svg(W, H, "GitHub in numbers: " + ", ".join(f"{a} {b}" for a, b in items))
+    card(s, H, glow=(0.5, 0.0))
+    cw = (W - 48) / len(items)
+    for i, (a, b) in enumerate(items):
+        x = 24 + i * cw + 22
+        s.g("rise", f"animation-delay:{0.1 + i * 0.1:.2f}s")
+        kicker(s, x, 40, a, SKIN if i == 1 else WOOD, 10.5)
+        s.text(x - 2, 82, b, "serif", 44, MIST)
+        s.end()
+        if i:
+            s.line(24 + i * cw, 26, 24 + i * cw, H - 26, BENCH, 1.2)
+    card_end(s, H)
+    s.save(OUT, "slate.svg")
+
+
+# ------------------------------------------------------------------ scene headings
+SCENES = [("about", "01", "Who I am", "INT. LECTURE HALL, MTUCI — DAY"),
+          ("build", "02", "Feature presentation", "EXT. CAMPUS — MORNING"),
+          ("stack", "03", "The toolkit", "INT. TERMINAL — LATE NIGHT"),
+          ("reel", "04", "Dailies", "INT. EDITING ROOM — CONTINUOUS"),
+          ("numbers", "05", "Box office", "EXT. GITHUB — ALL DAY"),
+          ("timeline", "06", "Chapters", "MONTAGE — 2022 TO NOW"),
+          ("now", "07", "Now shooting", "EXT. PARK BENCH — LATER")]
+
+
+def scene_head(name, n, title, slug):
+    H = 76
+    s = Svg(W, H, f"Scene {n}: {title}")
+    s.defs.append(f'<clipPath id="sh"><rect x="1" y="1" width="{W - 2}" height="{H - 2}" rx="14"/></clipPath>')
+    s.add('<g clip-path="url(#sh)">')
+    s.rect(0, 0, W, H, NIGHT)
+    s.rect(0, 0, W, H, s.gradient([(0, LEAF, 0.6), (1, LEAF, 0)], 0, 0.5, 0.45, kind="radial"))
+    s.add("</g>")
+    s.g("rise")
+    s.text(26, 52, n, "italic", 40, SKIN)
+    s.text(30 + text_width("italic", 400, 40, n) + 14, 52, title, "serif", 40, MIST)
+    s.end()
+    s.g("fade", "animation-delay:.3s")
+    kicker(s, W - 28, 44, slug, WOOD, 10.5, anchor="end", ls=2.4)
+    s.end()
+    s.rect(1, 1, W - 2, H - 2, "none", BENCH, 1.5, 14)
+    s.save(OUT, f"head-{name}.svg")
+
+
+# ------------------------------------------------------------------ contact tickets
+def ticket(file, brand, kind, handle, accent):
+    w, h = 280, 64
+    s = Svg(w, h, f"{kind}: {handle}")
+    s.defs.append(f'<clipPath id="tk"><rect x="1" y="1" width="{w - 2}" height="{h - 2}" rx="12"/></clipPath>')
+    s.add('<g clip-path="url(#tk)">')
+    s.rect(0, 0, w, h, SHADE)
+    s.rect(0, 0, 62, h, accent)
+    s.add("</g>")
+    s.line(62, 8, 62, h - 8, NIGHT, 2, dash="3 4")
+    s.icon(brand, 19, 20, 24, NIGHT)
+    kicker(s, 80, 27, kind.upper(), WOOD, 10.5)
+    s.text(80, 47, handle, "mono", 15, MIST, 700)
+    s.rect(1, 1, w - 2, h - 2, "none", BENCH, 1.5, 12)
+    s.save(OUT, file)
+
+
+# ------------------------------------------------------------------ director's notes
+RULES = ["Working product beats endless planning.",
+         "Readable code beats clever code.",
+         "Anything that touches user data gets security from day one."]
+
+
+def notes():
+    H = 222
+    s = Svg(W, H, "Director's notes: " + " ".join(RULES))
+    card(s, H, glow=(0.1, 1.0))
+    kicker(s, 36, 44, "DIRECTOR'S NOTES", SKIN)
+    for i, line in enumerate(RULES):
+        y = 96 + i * 44
+        s.g("rise", f"animation-delay:{0.15 + i * 0.15:.2f}s")
+        s.text(36, y, ["i.", "ii.", "iii."][i], "italic", 28, SKIN)
+        s.text(84, y, line, "serif", 29, MIST)
+        s.end()
+    card_end(s, H)
+    s.save(OUT, "notes.svg")
+
+
+# ------------------------------------------------------------------ feature: project poster card
+PROJECTS = [
+    dict(repo="StorageSystem", file="project-groupbase.svg", title=["group", "base"],
+         tag="A study-group app that runs on the group leader's own PC.",
+         feats=["Works offline, syncs when the host computer is back on",
+                "Files encrypted on disk, AES-256-GCM, a key per file",
+                "Sign in with a QR code, a fingerprint or Face ID",
+                "Roles, moderation, deadlines and an exam countdown",
+                "Host app for Windows and macOS, updates in one click"],
+         stack=["Java", "Spring Boot", "Svelte", "Tauri"]),
+    dict(repo="VantaVault", file="project-vantavault.svg", title=["Vanta", "Vault"],
+         tag="A private vault for external drives. No cloud.",
+         feats=["Password access, hashed locally with PBKDF2-SHA256",
+                "Local AES-encrypted archives you can restore in a click",
+                "Session protection and a timed lockout after failed logins",
+                "Finds external drives automatically",
+                "Runs on macOS and Windows, from source or as an app"],
+         stack=["Python", "JavaScript", "HTML", "CSS"]),
+    dict(repo="AetherCloud", file="project-aethercloud.svg", title=["Aether", "Cloud"],
+         tag="Turns your own disk into a private cloud.",
+         feats=["Nested folders, file and folder upload, downloads",
+                "Image previews and generated file-type badges",
+                "Per-user storage quota, storage meter, recent files",
+                "Sync check between the database and real files on disk",
+                "Installable PWA; runs on Docker Compose or gunicorn"],
+         stack=["Flask", "SQLite", "PWA", "Docker"]),
+    dict(repo="KworkingSystem", file="project-coworking.svg", title=["Campus", "Coworking"],
+         tag="A booking panel for a university coworking space.",
+         feats=["Seat booking with overlap and capacity checks",
+                "Check-in by student ID and confirmation of the rules",
+                "Profiles with avatars and per-user interface themes",
+                "Pomodoro 25/5, lofi streams and a study library",
+                "REST API for spots, bookings, profile and check-in"],
+         stack=["Flask", "SQLite", "Vanilla JS", "REST"]),
+]
+SHOWCASE = ["KworkingSystem"]   # repos whose cards are built, in this order
+
+
+def feature(p, n):
+    H = 404
+    r = REPO[p["repo"]]
+    name = " ".join(p["title"])
+    s = Svg(W, H, f"Feature {n:02d}, {name}: " + p["tag"], " ".join(p["feats"]))
+    card(s, H)
+
+    # the poster
+    px, py, pw, ph = 22, 22, 252, H - 44
+    s.defs.append(f'<clipPath id="pc"><rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="10"/></clipPath>')
+    s.add('<g clip-path="url(#pc)">')
+    s.rect(px, py, pw, ph, s.gradient([(0, LEAF, 1), (0.55, SHADE, 1), (1, NIGHT, 1)], 0, 0, 0, 1))
+    s.rect(px, py, pw, ph, s.gradient([(0, SKIN, 0.35), (1, SKIN, 0)], 0.9, 0.95, 0.75, kind="radial"))
+    s.path(dots_path(px, px + pw, py + ph * 0.35, py + ph), fill=SKIN, opacity=0.35)
+    s.add("</g>")
+    s.rect(px, py, pw, ph, "none", BENCH, 1.5, 10)
+    kicker(s, px + 20, py + 34, f"FEATURE {n:02d}", SKIN, 10.5)
+    s.g("rise", "animation-delay:.15s")
+    for k, word in enumerate(p["title"]):
+        s.text(px + 18, py + 104 + k * 50, word, "serif", 54, MIST)
+    s.end()
+    y_, m_ = r["created"].split("-")[:2]
+    s.text(px + 20, py + 104 + len(p["title"]) * 50 + 4, f"in theatres {MONTHS[int(m_) - 1].lower()} {y_}",
+           "italic", 20, STONE)
+    cx, cy = px + 18, py + ph - 70
+    for k, t in enumerate(p["stack"]):
+        tw_ = text_width("mono", 700, 11, t) + 18
+        if cx + tw_ > px + pw - 14:
+            cx, cy = px + 18, cy + 30
+        s.g("rise", f"animation-delay:{0.4 + k * 0.08:.2f}s")
+        s.rect(cx, cy, tw_, 22, NIGHT, STONE, 1, 11, opacity=0.9)
+        s.text(cx + tw_ / 2, cy + 15, t, "mono", 11, STONE, 700, anchor="middle")
+        s.end()
+        cx += tw_ + 6
+
+    # the synopsis
+    rx = 306
+    kicker(s, rx, 50, "SYNOPSIS", WOOD)
+    s.text(rx, 86, p["tag"], "italic", 25, MIST)
+    for i, f in enumerate(p["feats"]):
+        y = 130 + i * 30
+        s.g("rise", f"animation-delay:{0.25 + i * 0.1:.2f}s")
+        s.text(rx, y, "—", "mono", 14, SKIN, 700)
+        s.text(rx + 24, y, f, "mono", 13.5, STONE, 500)
+        s.end()
+    s.line(rx, 286, W - 34, 286, BENCH, 1.2)
+    meta = [("RELEASED", f"{MONTHS[int(m_) - 1].capitalize()} {y_}"), ("COMMITS", str(r["commits"])),
+            ("RELEASE", r["release"]) if r.get("release") else ("STARS", str(r["stars"]))]
+    x = rx
+    for k, (a_, b_) in enumerate(meta):
+        s.g("rise", f"animation-delay:{0.9 + k * 0.1:.2f}s")
+        kicker(s, x, 318, a_, WOOD, 10)
+        s.text(x, 354, b_, "serif", 32, MIST)
+        s.end()
+        x += max(text_width("serif", 400, 32, b_), text_width("mono", 700, 10, a_, 3)) + 30
+    lx = max(x + 6, rx + 290)
+    lw = W - 34 - lx
+    kicker(s, lx, 318, "LANGUAGES", WOOD, 10)
+    items, total = lang_bar(s, lx, 330, lw, 10, bucket_langs(r["langs"], 3), delay=0.6)
+    legend(s, lx, 362, items[:4], total, 2, lw / 2, size=11, delay=1.0)
+    card_end(s, H)
+    s.save(OUT, p["file"])
+
+
+# ------------------------------------------------------------------ the toolkit
+STACK = [("python", "Python", 1), ("flask", "Flask", 1), ("openjdk", "Java", 1), ("springboot", "Spring", 0),
+         ("svelte", "Svelte", 0), ("typescript", "TypeScript", 0), ("javascript", "JavaScript", 0), ("html5", "HTML5", 0),
+         ("css3", "CSS3", 0), ("sqlite", "SQLite", 0), ("docker", "Docker", 0), ("git", "Git", 0),
+         ("github", "GitHub", 0), ("githubactions", "Actions", 0), ("gnubash", "Bash", 0), ("linux", "Linux", 0),
+         ("figma", "Figma", 0), ("obsidian", "Obsidian", 0), ("rust", "Rust", 0), ("tauri", "Tauri", 0),
+         ("zedindustries", "Zed", 0)]
+
+
+def stack():
+    cols, gap, ch = 6, 10, 46
+    cw = (W - 64 - gap * (cols - 1)) / cols
+    rows = (len(STACK) + cols - 1) // cols
+    H = 32 + rows * (ch + gap) + 64
+    s = Svg(W, H, "Tech stack: " + ", ".join(n for _, n, _ in STACK))
+    card(s, H, glow=(0.1, 0.0))
+    for i, (ic, name, hot) in enumerate(STACK):
+        x, y = 32 + (i % cols) * (cw + gap), 32 + (i // cols) * (ch + gap)
+        s.g("rise", f"animation-delay:{0.05 + i * 0.035:.2f}s")
+        s.rect(x, y, cw, ch, NIGHT if hot else SHADE, SKIN if hot else BENCH, 1.3, 10, opacity=0.95)
+        s.icon(ic, x + 15, y + 13, 20, SKIN if hot else STONE)
+        s.text(x + 46, y + 28, name, "mono", 13, MIST if hot else STONE, 700 if hot else 500)
+        s.end()
+    ny = 32 + rows * (ch + gap) + 28
+    kicker(s, 34, ny, "LEARNING NOW", SKIN, 10.5)
+    s.text(150, ny, "security basics, cleaner backend architecture, a Jarvis-style AI assistant", "mono", 13,
+           STONE, 500)
+    card_end(s, H)
+    s.save(OUT, "stack.svg")
+
+
+# ------------------------------------------------------------------ dailies: the commit reel
 REPO_NAMES = {"KworkingSystem": "Campus Coworking", "StorageSystem": "groupbase"}
 SKIP_MSG = ("Initial commit", "Merge ")
 
 
 def reel():
-    H = 240
-    s = Svg(W, H, "Commit reel: a film strip of my latest real commits")
+    H = 252
+    s = Svg(W, H, "Dailies: a film strip of my latest real commits")
     allc = [c for c in DATA["commits"] if not c["msg"].startswith(SKIP_MSG)]
     seen, frames = {}, []
     for c in allc:                        # allc is newest first
@@ -574,103 +466,167 @@ def reel():
             frames.append(c)
     frames = frames[:30]
     order = {id(c): i for i, c in enumerate(allc)}
-    n = len(frames)
     FW, GAP = 196, 14
     pitch = FW + GAP                      # 210 = 7 sprocket holes of 30px, so the loop is seamless
-    total = n * pitch
+    total = len(frames) * pitch
     mark = len(s.body)
-    fy = 58
+    fy = 56
     for i, c in enumerate(frames):
         fx = i * pitch + GAP / 2
-        inv = i % 3 == 1                                  # every third frame is "exposed": sky or peach
-        bg, ink = ((SKY, PEACH)[i // 3 % 2], INK) if inv else (INK, PAPER)
+        lit = i % 4 == 1                                  # every fourth frame is overexposed: shirt or skin
+        bg, ink, sub = ((SHIRT, SKIN)[i // 4 % 2], NIGHT, BENCH) if lit else (SHADE, MIST, WOOD)
         for k in range(7):
             hx = fx - GAP / 2 + 6 + k * 30
-            s.rect(hx, 34, 18, 12, PAPER, rx=3)
-            s.rect(hx, 194, 18, 12, PAPER, rx=3)
-        s.rect(fx, fy, FW, 124, bg, PAPER, 2)
+            s.rect(hx, 34, 18, 11, WOOD, rx=3)
+            s.rect(hx, 191, 18, 11, WOOD, rx=3)
+        s.rect(fx, fy, FW, 124, bg, BENCH, 1.5, 6)
         y, m, d = c["ts"][:10].split("-")
-        s.text(fx + 12, fy + 21, f"#{len(allc) - order[id(c)]:03d}", "mono", 12, ink, 700, ls=1)
-        s.text(fx + FW - 12, fy + 21, f"{d} {MONTHS[int(m) - 1]} {y}", "mono", 12, ink, 700, anchor="end", ls=0.5)
-        s.line(fx + 12, fy + 30, fx + FW - 12, fy + 30, ink, 1.2, dash="2 4")
-        lines = wrap(c["msg"], "mono", 500, 16, FW - 26)
+        s.text(fx + 12, fy + 21, f"#{len(allc) - order[id(c)]:03d}", "mono", 11.5, sub, 700, ls=1)
+        s.text(fx + FW - 12, fy + 21, f"{d} {MONTHS[int(m) - 1]} {y}", "mono", 11.5, sub, 700, anchor="end")
+        lines = wrap(c["msg"], "mono", 500, 15, FW - 26)
         if len(lines) > 3:
             lines = lines[:3]
             lines[2] = lines[2][:max(1, len(lines[2]) - 3)].rstrip() + "..."
         for j, ln in enumerate(lines):
-            s.text(fx + 12, fy + 55 + j * 21, ln, "mono", 16, ink, 500)
+            s.text(fx + 12, fy + 50 + j * 20, ln, "mono", 15, ink, 500)
         tag = REPO_NAMES.get(c["repo"], c["repo"]).upper()
-        tw_ = text_width("mono", 700, 11.5, tag, 1.2) + 14
-        s.rect(fx + 12, fy + 104, tw_, 16, ink)
-        s.text(fx + 19, fy + 116, tag, "mono", 11.5, bg, 700, ls=1.2)
+        s.text(fx + 12, fy + 112, tag, "mono", 10.5, sub, 700, ls=1.6)
     chunk = s.body[mark:]
     del s.body[mark:]
     s.defs.append('<g id="reelframes">' + "".join(chunk) + "</g>")
-    s.defs.append('<clipPath id="stripclip"><rect x="0" y="0" width="888" height="240"/></clipPath>')
-    s.add('<g transform="rotate(-1.2 444 120)">')
-    s.rect(-30, 24, W + 60, 192, INK, SUEDE, 2.5)
-    s.add('<g clip-path="url(#stripclip)">')
-    s.g("marq", f"--shift:-{total}px;animation-duration:{total / 38:.0f}s")
+    s.defs.append(f'<clipPath id="strip"><rect x="1" y="1" width="{W - 2}" height="{H - 2}" rx="16"/></clipPath>')
+    s.add('<g clip-path="url(#strip)">')
+    s.rect(0, 0, W, H, NIGHT)
+    s.add('<g transform="translate(0 26)">')
+    s.g("marq", f"--shift:-{total}px;animation-duration:{total / 36:.0f}s")
     s.add(f'<use href="#reelframes"/><use href="#reelframes" x="{total}"/>')
     s.end()
     s.add("</g>")
-    fadeL = s.gradient([(0, INK, 1), (1, INK, 0)], 0, 0, 1, 0)
-    fadeR = s.gradient([(0, INK, 0), (1, INK, 1)], 0, 0, 1, 0)
-    s.rect(-30, 26, 90, 188, fadeL)
-    s.rect(W - 60, 26, 90, 188, fadeR)
+    s.rect(0, 0, 90, H, s.gradient([(0, NIGHT, 1), (1, NIGHT, 0)], 0, 0, 1, 0))
+    s.rect(W - 90, 0, 90, H, s.gradient([(0, NIGHT, 0), (1, NIGHT, 1)], 0, 0, 1, 0))
     s.add("</g>")
-    label(s, 24, 4, f"{len(allc)} FRAMES / 1 REAL COMMIT EACH", "mono", 13, PEACH, -1.2, 4, 700, ls=1.2)
+    s.rect(1, 1, W - 2, H - 2, "none", BENCH, 1.5, 16)
+    kicker(s, 26, 34, f"{len(allc)} TAKES  ·  ONE REAL COMMIT EACH  ·  NEWEST FIRST", SKIN, 10.5)
     s.save(OUT, "reel.svg")
 
 
-# ------------------------------------------------------------------ footer
-def footer():
-    H = 150
-    s = Svg(W, H, "Thanks for reading")
-    s.defs.append(f'<clipPath id="cp"><rect width="{W}" height="{H}" rx="6"/></clipPath>')
-    s.add('<g clip-path="url(#cp)">')
-    s.rect(0, 0, W, H, PAPER)
-    under = s.gradient([(0, INK, 1), (0.3, INK, 1), (0.65, INK, 0.4), (1, INK, 0)], 0, 0, 1, 0.15)
-    s.rect(0, 0, W, H, under)
-    halftone_field(s, 330, 880, -10, H + 10, pitch=10.5, slope=0.2, reverse=True)
-    s.rect(0, 0, 370, H, INK)
-    s.g("o wob", "--a:.8deg;--d:1.6s")
-    s.text(34, 70, "thanks for reading.", "mono", 28, PAPER, 800)
+# ------------------------------------------------------------------ box office
+def box_office():
+    H = 344
+    s = Svg(W, H, "Box office: repositories, commits, code and years on GitHub, plus code by language")
+    card(s, H, glow=(0.95, 0.1))
+    years = date.today().year - int(DATA["created"][:4])
+    val, unit = code_size(code_kb())
+    big = [(str(len(DATA["repos"])), "PUBLIC REPOS"), (str(commits()), "COMMITS"),
+           (val, f"{unit} OF CODE"), (str(years), "YEARS ON GITHUB")]
+    colw = (W - 72) / 4
+    for i, (n, lab) in enumerate(big):
+        x = 40 + i * colw
+        s.g("rise", f"animation-delay:{0.1 + i * 0.12:.2f}s")
+        s.text(x - 3, 122, n, "serif", 96, SKIN if i == 1 else MIST)
+        kicker(s, x, 152, lab, WOOD, 10.5)
+        s.end()
+        if i:
+            s.line(x - 18, 56, x - 18, 156, BENCH, 1.2)
+    kicker(s, 40, 210, "CODE BY LANGUAGE, ALL PROJECTS", STONE, 10.5)
+    items, total = lang_bar(s, 40, 226, W - 80, 16, agg_langs(CODE_REPOS), delay=0.5)
+    legend(s, 40, 280, items, total, 3, (W - 80) / 3, size=13, kb=True, delay=0.9)
+    card_end(s, H)
+    s.save(OUT, "box-office.svg")
+
+
+# ------------------------------------------------------------------ chapters: the timeline
+LABELS = {"Mouros": "Mouros, my first Python practice", "AetherCloud": "AetherCloud",
+          "VantaVault": "VantaVault", "KworkingSystem": "Campus Coworking",
+          "Java": "Java practice repo", "Python": "Python practice repo", "StorageSystem": "groupbase",
+          "mitaro-cs": "This profile"}
+
+
+def chapters():
+    H = 330
+    s = Svg(W, H, "Chapters: a timeline of my GitHub projects")
+    card(s, H, glow=(0.5, 1.0))
+    ev = {}
+    y, m = DATA["created"].split("-")[:2]
+    ev[f"{y}-{m}"] = ["Joined GitHub"]
+    for r in sorted(DATA["repos"], key=lambda r: r["created"]):
+        ev.setdefault(r["created"][:7], []).append(LABELS.get(r["name"], r["name"]))
+    keys = sorted(ev)
+    n = len(keys)
+    x0, x1, ly = 100, W - 100, 168
+    s.add(f'<line class="draw" style="--len:{W - 80}px" x1="40" y1="{ly}" x2="{W - 40}" y2="{ly}" '
+          f'stroke="{WOOD}" stroke-width="1.5"/>')
+    for i, k in enumerate(keys):
+        x = x0 + (x1 - x0) * i / max(1, n - 1)
+        up = i % 2 == 0
+        yy, mm = k.split("-")
+        accent = SKIN if i == n - 1 else (SHIRT if up else STONE)
+        s.g("rise", f"animation-delay:{0.2 + i * 0.16:.2f}s")
+        s.add(f'<circle cx="{x:.1f}" cy="{ly}" r="7" fill="{NIGHT}" stroke="{accent}" stroke-width="2"/>')
+        s.add(f'<circle cx="{x:.1f}" cy="{ly}" r="2.5" fill="{accent}"/>')
+        s.line(x, ly + (-14 if up else 14), x, ly + (-34 if up else 34), BENCH, 1.5)
+        lines = []
+        for item in ev[k]:
+            lines += wrap(item, "mono", 500, 13, 170)
+        lines = lines[:4]
+        if up:
+            y0 = ly - 50 - (len(lines) - 1) * 18
+            date_y = y0 - 30
+        else:
+            date_y, y0 = ly + 66, ly + 88
+        s.text(x, date_y, f"{MONTHS[int(mm) - 1].capitalize()} {yy}", "serif", 26, accent, anchor="middle")
+        for j, ln in enumerate(lines):
+            s.text(x, y0 + j * 18, ln, "mono", 13, STONE, 500, anchor="middle")
+        s.end()
+    card_end(s, H)
+    s.save(OUT, "chapters.svg")
+
+
+# ------------------------------------------------------------------ end credits with the colour grade
+def credits():
+    H = 330
+    s = Svg(W, H, "The end. Credits and the ten colours this profile is graded with, all taken from the avatar.")
+    s.defs.append(f'<clipPath id="ec"><rect width="{W}" height="{H}" rx="16"/></clipPath>')
+    s.add('<g clip-path="url(#ec)">')
+    s.rect(0, 0, W, H, NIGHT)
+    s.rect(0, 0, W, H, s.gradient([(0, SKIN, 0.10), (1, SKIN, 0)], 0.5, 0, 0.6, kind="radial"))
+    s.g("fade")
+    s.text(W / 2, 92, "The End", "italic", 76, MIST, anchor="middle")
     s.end()
-    s.text(36, 98, "generated by a Python script, see /scripts", "mono", 13, SKY, 500)
-    label(s, W - 272, 34, "© 2026 MITARO", "mono", 16, PEACH, 1.6, 9, 700, ls=2)
-    unit = "THANKS FOR READING  ///  MITARO  ///  "
-    uw = text_width("mono", 700, 13, unit, 2.4)
-    s.add('<g transform="rotate(-1.4 444 130)">')
-    s.rect(-30, 116, W + 60, 28, SUEDE, INK, 2)
-    s.g("marq", f"--shift:-{uw:.1f}px;animation-duration:20s;animation-direction:reverse")
-    s.text(-uw, 136, unit * 4, "mono", 13, PAPER, 700, ls=2.4)
-    s.end()
+    for i, line in enumerate(["WRITTEN, DIRECTED AND COMMITTED BY MITARO",
+                              "GENERATED BY A PYTHON SCRIPT IN /SCRIPTS, RE-SHOT EVERY SIX HOURS"]):
+        s.g("rise", f"animation-delay:{0.4 + i * 0.15:.2f}s")
+        kicker(s, W / 2, 132 + i * 22, line, STONE if i == 0 else WOOD, 11, anchor="middle")
+        s.end()
+    kicker(s, 34, 206, "COLOUR GRADE", SKIN, 10.5)
+    kicker(s, W - 34, 206, "K-MEANS ON THE AVATAR'S PIXELS", WOOD, 10.5, anchor="end")
+    sw = (W - 68) / len(PALETTE)
+    for i, (name, hexc) in enumerate(PALETTE):
+        x = 34 + i * sw
+        s.g("rise", f"animation-delay:{0.7 + i * 0.06:.2f}s")
+        s.rect(x, 220, sw - 6, 56, hexc, BENCH, 1, 6)
+        s.text(x, 296, name, "mono", 10.5, STONE, 700, ls=1.5)
+        s.text(x, 312, hexc, "mono", 10.5, WOOD, 500)
+        s.end()
+    s.grain(0.08)
     s.add("</g>")
-    s.grain(0.10)
-    s.add("</g>")
-    s.rect(1.5, 1.5, W - 3, H - 3, "none", INK, 3, 6)
-    s.save(OUT, "footer.svg")
+    s.rect(1, 1, W - 2, H - 2, "none", BENCH, 1.5, 16)
+    s.save(OUT, "credits.svg")
 
 
 if __name__ == "__main__":
-    banner()
-    stats()
-    sticker("about", "WHO AM I", dark=False, rot=-1.8, seed=3, tone=PEACH)
-    sticker("build", "WHAT I BUILD", dark=True, rot=1.4, seed=5)
-    sticker("numbers", "BY THE NUMBERS", dark=False, rot=-1.2, seed=7, tone=SKY)
-    sticker("stack", "MY TECH STACK", dark=True, rot=1.8, seed=9)
-    sticker("timeline", "TIMELINE", dark=False, rot=-1.6, seed=11, tone=PAPER)
-    sticker("now", "RIGHT NOW", dark=True, rot=1.2, seed=13)
-    rules()
-    button("btn-telegram.svg", "telegram", "Telegram", "@treadways", 0)
-    button("btn-email.svg", "gmail", "Email", "miri.saro@bk.ru", 1)
-    button("btn-instagram.svg", "instagram", "Instagram", "@stere.os", 2)
-    numbers()
-    stack()
+    hero()
+    slate()
+    for sc in SCENES:
+        scene_head(*sc)
+    ticket("btn-telegram.svg", "telegram", "Telegram", "@treadways", SHIRT)
+    ticket("btn-email.svg", "gmail", "Email", "miri.saro@bk.ru", STONE)
+    ticket("btn-instagram.svg", "instagram", "Instagram", "@stere.os", SKIN)
+    notes()
     for i, repo in enumerate(SHOWCASE, 1):
-        project_card(dict(next(p for p in PROJECTS if p["repo"] == repo), n=f"{i:02d}"))
-    timeline()
+        feature(next(p for p in PROJECTS if p["repo"] == repo), i)
+    stack()
     reel()
-    sticker("reel", "THE COMMIT REEL", dark=True, rot=-1.4, seed=15)
-    footer()
+    box_office()
+    chapters()
+    credits()
