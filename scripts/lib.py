@@ -82,7 +82,8 @@ def _woff2_b64(key, weight, chars):
     tmp = io.BytesIO()
     font(key, weight).save(tmp)
     tmp.seek(0)
-    f = TTFont(tmp)
+    f = TTFont(tmp, recalcTimestamp=False)
+    f["head"].modified = f["head"].created   # fixed timestamp: same input, same bytes, no empty bot commits
     opts = subset.Options()
     opts.flavor = "woff2"
     opts.layout_features = ["kern", "liga", "calt", "ccmp", "locl", "mark", "mkmk"]
