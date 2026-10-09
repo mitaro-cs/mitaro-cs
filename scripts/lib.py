@@ -13,8 +13,13 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BLACK = "#000"
-WHITE = "#fff"
+# palette taken from the avatar: a park bench in muted film colour
+INK = "#161a18"      # deep foliage in the shade
+PAPER = "#ebe4d3"    # khaki trousers and sunlit bark
+SKY = "#a9c1cd"      # the pale blue shirt
+PEACH = "#e4a283"    # warm skin tone, the one hot accent
+SUEDE = "#80614a"    # suede chukka boots
+MOSS = "#66755c"     # the trees behind
 
 FONTS = {
     "mono": ("JetBrainsMono[wght].ttf", "JBMono", "ui-monospace, Menlo, Consolas, monospace"),
@@ -171,7 +176,7 @@ class Svg:
                              f'gradientUnits="{units}" {extra}>{st}</radialGradient>')
         return f"url(#{gid})"
 
-    def text(self, x, y, txt, key="mono", size=16, fill=WHITE, weight=400, anchor="start", ls=0,
+    def text(self, x, y, txt, key="mono", size=16, fill=PAPER, weight=400, anchor="start", ls=0,
              opacity=1, transform=None, extra=""):
         self.used.setdefault((key, weight), set()).update(txt)
         _, fam, fb = FONTS[key]
@@ -219,7 +224,7 @@ class Svg:
             a += f' transform="{transform}"'
         self.add(f"<path {a} {extra}/>")
 
-    def line(self, x1, y1, x2, y2, stroke=WHITE, sw=1, opacity=1, dash=None):
+    def line(self, x1, y1, x2, y2, stroke=PAPER, sw=1, opacity=1, dash=None):
         a = f'x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{stroke}" stroke-width="{sw}"'
         if opacity != 1:
             a += f' stroke-opacity="{opacity}"'
@@ -227,7 +232,7 @@ class Svg:
             a += f' stroke-dasharray="{dash}"'
         self.add(f"<line {a}/>")
 
-    def icon(self, name, x, y, size, fill=WHITE):
+    def icon(self, name, x, y, size, fill=PAPER):
         self.add(f'<path d="{icon_path(name)}" fill="{fill}" '
                  f'transform="translate({x:.1f} {y:.1f}) scale({size / 24:.4f})"/>')
 

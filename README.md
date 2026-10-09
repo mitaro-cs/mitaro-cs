@@ -12,7 +12,7 @@
 
 I'm **Omar**, and online I go by **Mitaro**. I study computer science at **MTUCI**. I started with `Python` and `Flask`, and lately I also write `Java` with Spring Boot and `Svelte` for bigger projects.
 
-The projects below lean on one idea: **local-first**. In all four the data stays on a machine you control instead of a cloud service in the middle. That's why I reach for `SQLite` and the local disk before I reach for someone else's servers.
+I lean on one idea: **local-first**. The data stays on a machine you control instead of a cloud service in the middle. That's why I reach for `SQLite` and the local disk before I reach for someone else's servers.
 
 Right now I'm getting better at backend architecture and at the security side of things: encryption, hashing, how to store a password properly. On the side I'm prototyping a personal AI assistant in the spirit of Jarvis, mostly to see how far I can push it.
 
@@ -36,76 +36,6 @@ Outside of code I train hand-to-hand combat. The habit of keeping a cold head un
 
 <img src="assets/head-build.svg" alt="What I build">
 <br>
-<a href="https://github.com/mitaro-cs/StorageSystem"><img src="assets/project-groupbase.svg" width="100%" alt="groupbase, the StorageSystem repository. A study-group app that runs on the group leader's own PC. Works offline, files encrypted on disk with AES-256-GCM, sign-in by QR code or fingerprint, roles and moderation, exam countdown, host app for Windows and macOS with one-click updates. Java, Spring Boot, Svelte, Tauri."></a>
-
-</div>
-
-<details>
-<summary><b>How to run groupbase</b></summary>
-
-Download the installer from the [latest release](https://github.com/mitaro-cs/StorageSystem/releases/latest): `windows-setup.exe` for Windows 10 and 11, `macos-apple-silicon.dmg` or `macos-intel.dmg` for a Mac.
-
-1. Install it. On macOS drag it to Applications; if the system cannot verify the developer, use System Settings → Privacy & Security → Open Anyway. On Windows choose More info → Run anyway. No admin rights needed.
-2. On the first launch enter the group name, your name and a password. You become the site admin and the group leader.
-3. Open Settings → Server → Internet, sign in to the free tunnel and press "Open access" to get a permanent link and a QR code for the group.
-
-Or build it yourself (JDK 21+ and Node.js 22+):
-
-```bash
-git clone https://github.com/mitaro-cs/StorageSystem.git groupbase
-cd groupbase
-make build
-java -jar target/groupbase.jar serve
-```
-
-How it fits together: `Tauri host app` → `Spring Boot server` → `SQLite`; every phone keeps its own copy of the data and syncs when the host computer is back on.
-
-</details>
-
-<div align="center">
-
-<a href="https://github.com/mitaro-cs/VantaVault"><img src="assets/project-vantavault.svg" width="100%" alt="VantaVault. A private vault for external drives. Password access with PBKDF2-SHA256, local AES-encrypted archives, session protection, lockout after failed logins, automatic drive detection. Python, JavaScript, HTML, CSS."></a>
-
-</div>
-
-<details>
-<summary><b>How to run VantaVault</b></summary>
-
-```bash
-git clone https://github.com/mitaro-cs/VantaVault.git
-cd VantaVault
-chmod +x main && ./main      # macOS / Linux
-.\main.ps1                   # Windows (PowerShell), or open main.bat
-```
-
-</details>
-
-<div align="center">
-
-<a href="https://github.com/mitaro-cs/AetherCloud"><img src="assets/project-aethercloud.svg" width="100%" alt="AetherCloud. Turns your own disk into a private cloud with a web dashboard. Nested folders, uploads, image previews, per-user quotas, disk sync check, installable PWA, Docker Compose. Flask, SQLite."></a>
-
-</div>
-
-<details>
-<summary><b>How to run AetherCloud</b></summary>
-
-```bash
-git clone https://github.com/mitaro-cs/AetherCloud.git
-cd AetherCloud
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python AetherCloud.py        # then open http://127.0.0.1:5000
-
-# or with Docker
-cp .env.example .env && docker compose up -d
-```
-
-How it fits together: `Client / PWA` → `Flask routes and templates` → `SQLite metadata` → `local disk or a mounted volume`.
-
-</details>
-
-<div align="center">
-
 <a href="https://github.com/mitaro-cs/KworkingSystem"><img src="assets/project-coworking.svg" width="100%" alt="Campus Coworking. A booking panel for a university coworking space. Seat booking with overlap checks, check-in by student ID, profiles and themes, Pomodoro, lofi, study library, REST API. Flask, SQLite, vanilla JavaScript."></a>
 
 </div>
