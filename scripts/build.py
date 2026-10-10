@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """Builds the SVGs of the profile README into ../assets from scripts/data.json.
 
-Concept: the profile as an editorial spread with a terminal running inside it. Big type, a strict
-grid, hairline rules, a cobalt accent with a coral second, and on every page the real data is the
-object. ASCII is the second voice: a rotating ASCII globe on the cover, sync spinners in the Campus
-diagram, commands that type themselves on the Rhythm page, and language bars made of block glyphs.
-Motion carries the data: headlines lift out of their rules, numbers roll in like a split-flap
-board, sync packets run, a radar hand sweeps the 24-hour dial, and the cover runs a ticker of my
-latest commits. All motion is CSS and stops under prefers-reduced-motion; every element rests in
-its final state. Each page is rendered twice, -light.svg and -dark.svg, picked with <picture>.
+Concept: an editorial profile in sunset colours where every page has its own character and the real
+data is always the object. The cover is a poster with an ASCII sun rising over an ASCII sea; Campus
+is a dark terminal with its architecture in box-drawing characters and its git log typing itself
+out; Rhythm is a data page with a 24-hour dial and a streamgraph; Map is a night sky where the
+repositories are a constellation; Toolkit fills ASCII bars; Now types out what I am working on.
+All motion is CSS and stops under prefers-reduced-motion; every element rests in its final state.
+Each page is rendered for light and dark themes and as a single-column version for phones.
 """
 import datetime as dt
 import json
 import math
 import os
+import random
 import sys
 
 from lib import MONO, MONO_EM, Svg, mono_width, text_width
@@ -30,24 +30,21 @@ LAYOUTS = {"": (888, 40, 848, False), "-mobile": (440, 20, 420, True)}
 # the avatar's colours (a park bench, khaki trousers, a pale blue shirt, sunlit skin), tuned so every text
 # colour keeps at least 4.5:1 contrast on its background
 NIGHT_HOURS = (22, 23, 0, 1, 2, 3)
+# a warm sunset: plum night, orange sun, coral, gold, magenta and violet sky; light theme on cream paper.
+# Every text colour keeps 4.5:1 contrast or more on its background.
 THEMES = {
-    "light": dict(bg="#efebe3", ink="#1b1716", grey="#5a524b", rule="#d6cdbf", panel="#e5dfd4",
-                  accent="#3f6273",    # the pale blue shirt
-                  second="#a5552f",    # sunlit skin
-                  leaf="#4d6644",      # the trees behind
-                  clay="#b0705a",      # skin in shadow
-                  suede="#7c5a43",     # suede boots
-                  wood="#7a6c62",      # the weathered bench
-                  stone="#a89a8d"),    # khaki trousers
-    "dark": dict(bg="#141112", ink="#eef1ee", grey="#bdaea3", rule="#302a27", panel="#1e1a19",
-                 accent="#a2bbc5", second="#e6a986", leaf="#8ea67c", clay="#c98763", suede="#a8805f",
-                 wood="#9a8c80", stone="#bdaea3"),
+    "light": dict(bg="#fff5ec", ink="#2a1430", grey="#6b5263", rule="#f0d9cb", panel="#fde6d6",
+                  accent="#d4501a", second="#c8304a", gold="#9a6400", magenta="#b0307a", violet="#6a3fd0",
+                  peach="#b8612f"),
+    "dark": dict(bg="#170d1f", ink="#fff1e8", grey="#d4b9c6", rule="#36223f", panel="#22142c",
+                 accent="#ff8a3d", second="#ff5e6c", gold="#ffc65c", magenta="#ff5fae", violet="#a98bff",
+                 peach="#ffb38a"),
 }
-PALETTE = ["ink", "wood", "suede", "leaf", "accent", "stone", "clay", "second"]   # the avatar, dark to light
-LANG_TOKEN = {"Java": "accent", "Svelte": "second", "Python": "leaf", "TypeScript": "clay", "JavaScript": "stone",
-              "CSS": "suede", "HTML": "wood", "Other": "grey"}
-DAY_PARTS = [("morning", range(4, 12), "leaf"), ("day", range(12, 18), "accent"), ("evening", range(18, 22), "clay"),
-             ("night", NIGHT_HOURS, "second")]
+PALETTE = ["violet", "magenta", "second", "accent", "peach", "gold"]   # the sunset, sky to sun
+LANG_TOKEN = {"Java": "accent", "Svelte": "magenta", "Python": "gold", "TypeScript": "violet", "JavaScript": "peach",
+              "CSS": "second", "HTML": "grey", "Other": "grey"}
+DAY_PARTS = [("morning", range(4, 12), "gold"), ("day", range(12, 18), "accent"), ("evening", range(18, 22), "magenta"),
+             ("night", NIGHT_HOURS, "violet")]
 
 
 def hour_token(h):
@@ -259,93 +256,7 @@ def both(fn, name):
             fn(t).save(OUT, f"{name}-{theme}{suffix}.svg")
 
 
-# ------------------------------------------------------------------ ASCII globe
-RAMP = " .:-="
-
-
-def globe_cells(cols, rows, cw, lh):
-    """Each cell of the disc as (row, col, x, y on the unit disc)."""
-    radius = min(cols * cw, rows * lh) / 2 - 2
-    for r in range(rows):
-        for c in range(cols):
-            px = (c + 0.5 - cols / 2) * cw / radius
-            py = (r + 0.5 - rows / 2) * lh / radius
-            if px * px + py * py <= 1:
-                yield r, c, px, py, radius
-
-
-def lonlat(px, py, dx, dy, cw, lh, radius, phase=0.0):
-    x, y = px + dx * cw / radius, py + dy * lh / radius
-    z = math.sqrt(max(0.0, 1 - min(1.0, x * x + y * y)))
-    return math.degrees(math.atan2(x, z)) + phase, math.degrees(math.asin(max(-1, min(1, -y))))
-
-
-def globe_static(cols, rows, cw, lh):
-    """The parts that do not turn: shading lit from the top left, and the parallels every 30 degrees."""
-    shade = [[" "] * cols for _ in range(rows)]
-    par = [[" "] * cols for _ in range(rows)]
-    light = (-0.45, 0.5, 0.74)
-    for r, c, px, py, radius in globe_cells(cols, rows, cw, lh):
-        _, lat_t = lonlat(px, py, 0, -0.5, cw, lh, radius)
-        _, lat_b = lonlat(px, py, 0, 0.5, cw, lh, radius)
-        if math.floor(lat_b / 30) != math.floor(lat_t / 30):
-            par[r][c] = "=" if abs(lat_t + lat_b) < 20 else "-"
-            continue
-        z = math.sqrt(max(0.0, 1 - px * px - py * py))
-        lum = max(0.0, px * light[0] - py * light[1] + z * light[2])
-        shade[r][c] = RAMP[min(len(RAMP) - 1, int(lum * (len(RAMP) - 0.01)))]
-    return ["".join(row) for row in shade], ["".join(row) for row in par]
-
-
-def globe_meridians(phase, cols, rows, cw, lh):
-    out = [[" "] * cols for _ in range(rows)]
-    for r, c, px, py, radius in globe_cells(cols, rows, cw, lh):
-        lon_l, _ = lonlat(px, py, -0.5, 0, cw, lh, radius, phase)
-        lon_r, _ = lonlat(px, py, 0.5, 0, cw, lh, radius, phase)
-        if math.floor(lon_l / 30) != math.floor(lon_r / 30):
-            out[r][c] = "|"
-    return ["".join(row) for row in out]
-
-
-def ascii_globe(s, t, x, y, cols=44, rows=20, size=12, n=36, dur=3.6):
-    """An ASCII globe that turns: meridians cross-fade frame to frame over still shading and parallels,
-    and a satellite circles it on a tilted orbit, dimming when it passes behind."""
-    cw, lh = size * MONO_EM, size * 1.12
-    shade, par = globe_static(cols, rows, cw, lh)
-    radius = min(cols * cw, rows * lh) / 2
-    cx, cy = x + cols * cw / 2, y - size * 0.35 + (rows - 1) * lh / 2
-    rx, ry, tilt = radius + 26, (radius + 26) * 0.28, math.radians(-14)
-    pts = []
-    for k in range(73):
-        a = math.radians(90 + k * 5)
-        ex, ey = math.cos(a) * rx, math.sin(a) * ry
-        pts.append((cx + ex * math.cos(tilt) - ey * math.sin(tilt), cy + ex * math.sin(tilt) + ey * math.cos(tilt)))
-    orbit = "M" + " L".join(f"{px:.1f} {py:.1f}" for px, py in pts)
-    s.path(orbit, "none", t["rule"], 1.2, extra='stroke-dasharray="2 5"')
-    s.add(f'<g font-family="{MONO}" font-size="{size}" style="white-space:pre">')
-    def row(r, txt, fill, extra=""):
-        """One row of glyphs, trimmed: leading spaces become an x offset, blank rows are skipped."""
-        body = txt.strip()
-        if body:
-            lead = len(txt) - len(txt.lstrip())
-            s.add(f'<text x="{x + lead * cw:.1f}" y="{y + r * lh:.1f}" fill="{fill}" {extra}>{body}</text>')
-
-    for r in range(rows):
-        row(r, shade[r], t["wood"], 'fill-opacity=".6"')
-        row(r, par[r], t["leaf"])
-
-    def draw(i):
-        for r, txt in enumerate(globe_meridians(i / n * 30, cols, rows, cw, lh)):
-            row(r, txt, t["accent"])
-
-    s.frames(n, dur, draw, blend=True)
-    s.add("</g>")
-    s.add(f'<circle r="5" fill="{t["second"]}" class="depth" style="offset-path:path(\'{orbit}\');'
-          f'offset-rotate:0deg;animation:depth 10s linear infinite,ride 10s linear infinite"/>')
-    s.css["ride"] = "@keyframes ride{from{offset-distance:0%}to{offset-distance:100%}}"
-
-
-# ------------------------------------------------------------------ cover
+# ------------------------------------------------------------------ cover: a poster with an ASCII sunset
 def fade_edge(s, t):
     gid = s.uid("fd")
     s.defs.append(f'<linearGradient id="{gid}"><stop offset="0" stop-color="{t["bg"]}" stop-opacity="0"/>'
@@ -363,7 +274,7 @@ def ticker(s, t, y):
     line = "     ·     ".join(items) + "     ·     "
     width = text_width(14, line)
     lx = X0 + 86
-    caps(s, X0, y, "Latest", t["clay"], weight=700)
+    caps(s, X0, y, "Latest", t["magenta"], weight=700)
     cid = s.uid("tk")
     s.defs.append(f'<clipPath id="{cid}"><rect x="{lx}" y="{y - 18}" width="{X1 - lx}" height="26"/></clipPath>')
     s.add(f'<g clip-path="url(#{cid})">')
@@ -376,6 +287,63 @@ def ticker(s, t, y):
     s.rect(X1 - 40, y - 18, 40, 26, fade_edge(s, t))
 
 
+SUN_ROWS = ["gold", "gold", "gold", "peach", "peach", "accent", "accent", "second", "second", "magenta", "magenta",
+            "violet"]
+WAVES = "~ ~~  ~   ~~~ ~  ~~ ~    ~ ~~~  ~ ~   ~~ ~ ~~~   ~  ~ ~~"
+
+
+def ascii_sunset(s, t, cx, horizon, cols_w, size=12):
+    """A striped ASCII sun rising over an ASCII sea: the waves drift, the reflection shimmers."""
+    cw, lh = size * MONO_EM, size * 1.05
+    rows = len(SUN_ROWS)
+    radius = rows * lh
+    cid = s.uid("sun")
+    s.defs.append(f'<clipPath id="{cid}"><rect x="{cx - cols_w / 2 - 10:.1f}" y="{horizon - radius - 30:.1f}" '
+                  f'width="{cols_w + 20:.1f}" height="{radius + 30 - 2:.1f}"/></clipPath>')
+    s.add(f'<g clip-path="url(#{cid})" font-family="{MONO}" font-size="{size}" font-weight="700" style="white-space:pre">')
+    s.g("lift", "--dy:70px;--t:.2s;animation-duration:3.2s")
+    for r, tok in enumerate(SUN_ROWS):
+        y = horizon - radius + (r + 0.8) * lh
+        dy = horizon - y
+        half = math.sqrt(max(0.0, radius * radius - dy * dy))
+        n = int(half * 2 / cw)
+        if r >= 7 and r % 2:          # the classic stripes cut into the lower half
+            continue
+        ch = "@" if r < 3 else "#" if r < 6 else "="
+        s.add(f'<text x="{cx - n * cw / 2:.1f}" y="{y:.1f}" fill="{t[tok]}">{ch * n}</text>')
+    s.end()
+    s.add("</g>")
+    s.line(cx - cols_w / 2, horizon, cx + cols_w / 2, horizon, t["gold"], 1.5)
+
+    # the sea: rows of waves drifting at different speeds, and the sun's broken reflection
+    sea = s.uid("sea")
+    s.defs.append(f'<clipPath id="{sea}"><rect x="{cx - cols_w / 2:.1f}" y="{horizon + 2}" width="{cols_w:.1f}" '
+                  f'height="{6 * lh + 6:.1f}"/></clipPath>')
+    s.add(f'<g clip-path="url(#{sea})" font-family="{MONO}" font-size="{size}" style="white-space:pre">')
+    width = mono_width(size, WAVES)
+    for r in range(6):
+        y = horizon + (r + 1) * lh
+        shift = width if r % 2 else -width
+        start = cx - cols_w / 2 - (width if r % 2 else 0)
+        s.g("ticker", f"--shift:{shift:.0f}px;--d:{14 + r * 5}s")
+        for k in range(3):
+            s.add(f'<text x="{start + k * width:.1f}" y="{y:.1f}" fill="{t["violet"]}" '
+                  f'fill-opacity="{0.85 - r * 0.1:.2f}">{WAVES}</text>')
+        s.end()
+
+    def glitter(i):
+        for r in range(5):
+            y = horizon + (r + 1) * lh
+            n = max(2, int((radius * 1.6 - r * 18) / cw))
+            pattern = "".join("=-" [(k + i + r) % 2] if (k * 7 + i * 3 + r) % 5 else " " for k in range(n))
+            s.add(f'<text x="{cx - n * cw / 2:.1f}" y="{y:.1f}" fill="{t[("gold", "peach", "accent", "second", "magenta")[r]]}"'
+                  f' font-weight="700">{pattern}</text>')
+
+    s.frames(6, 1.2, glitter, blend=True)
+    s.add("</g>")
+    return horizon + 6 * lh
+
+
 def cover(t):
     f = facts()
     repos = DATA["repos"]
@@ -384,17 +352,17 @@ def cover(t):
     if MOBILE:
         head_y, head_size, name_y, para_y, para_w = 150, 100, 202, 236, X1 - X0
         para_end = para_y + 18.5 * 1.45 * len(wrap(deck, 18.5, para_w))
-        globe_x, globe_y = (W - 44 * 12 * MONO_EM) / 2, para_end + 30
-        y_rule = globe_y + 19 * 12 * 1.12 + 26
+        sun_cx, horizon, sun_w = W / 2, para_end + 170, X1 - X0
+        y_rule = horizon + 6 * 12 * 1.05 + 30
     else:
         head_y, head_size, name_y, para_y, para_w = 184, 124, 240, 274, 420
-        globe_x, globe_y, y_rule = 512, 84, 376
+        sun_cx, horizon, sun_w, y_rule = 680, 262, 336, 372
     fig_y = y_rule + 56
     fig_end = fig_y + (86 if MOBILE else 0) + 54
     H = fig_end + (52 if MOBILE else 80)
     s = page(t, H, "Mitaro. Omar, computer science student at MTUCI. I build local-first software: the data stays "
              "on a machine you control. Core project: Campus.",
-             "A rotating ASCII globe, the key figures and a ticker of my latest commits.")
+             "A poster: an ASCII sun rising over an ASCII sea, the key figures and a ticker of my latest commits.")
     caps(s, X0, 42, "mitaro-cs" if MOBILE else "mitaro-cs · GitHub profile", t["grey"])
     if last:
         caps(s, X1, 42, f"last commit {last.day} {MONTHS[last.month - 1]} {last.year}", t["grey"], "end")
@@ -408,7 +376,7 @@ def cover(t):
     s.text(X0, name_y, "Omar, CS student at MTUCI.", 21, t["ink"], 700)
     s.end()
     para(s, X0, para_y, deck, 18.5, t["grey"], para_w, 1.45, delay=0.75)
-    ascii_globe(s, t, globe_x, globe_y)
+    ascii_sunset(s, t, sun_cx, horizon, sun_w)
     s.line(X0, y_rule, X1, y_rule, t["rule"], 1.2)
     figures(s, t, fig_y, [(sum(r["commits"] for r in repos), "commits"), (len(repos), "public repositories"),
                           (code_size(), "of code"), ("Campus", "core project")], accent_last=True, delay=0.5,
@@ -418,91 +386,138 @@ def cover(t):
         ticker(s, t, fig_end + 32)
         return s
     caps(s, X0, fig_end + 26, "Contents", t["grey"])
-    x = X0 + 114
-    for num, name in (("01", "Campus"), ("02", "Rhythm"), ("03", "Toolkit")):
+    x = X0 + 112
+    for num, name in SECTIONS:
         caps(s, x, fig_end + 26, num, t["accent"], weight=700)
-        caps(s, x + 28, fig_end + 26, name, t["ink"], weight=700)
-        x += 28 + text_width(12.5, name.upper(), 700, 1.5) + 30
-    caps(s, X1, fig_end + 26, f"online since {DATA['created'][:4]}", t["grey"], "end")
+        caps(s, x + 26, fig_end + 26, name, t["ink"], weight=700)
+        x += 26 + text_width(12.5, name.upper(), 700, 1.5) + 24
     s.line(X0, fig_end + 40, X1, fig_end + 40, t["rule"], 1.2)
     ticker(s, t, fig_end + 66)
     return s
 
 
-# ------------------------------------------------------------------ 01 Campus
+SECTIONS = [("01", "Campus"), ("02", "Rhythm"), ("03", "Map"), ("04", "Toolkit"), ("05", "Now")]
+
+
+# ------------------------------------------------------------------ 01 Campus: a dark terminal page
 SPINNER = "|/-\\"
 CAMPUS_TEXT = ("A site and an app for one study group: homework, a schedule from an .ics file, news and files. It "
                "lives on the group leader's own computer, and every phone keeps a copy that syncs when the host is "
                "back on.")
 
 
-def diagram(s, t, bx, bw, top):
-    """How Campus works, drawn as the system it is; sync packets run from the host to every device."""
-    caps(s, bx, top, "How it works", t["grey"])
-    s.rect(bx, top + 12, bw, 84, t["panel"], t["ink"], 1.2)
-    caps(s, bx + 14, top + 36, "Host · group leader's computer", t["accent"], size=12, weight=700)
-    s.text(bx + 14, top + 62, "Spring Boot · SQLite · AES-256-GCM", 16, t["ink"], 600)
-    s.text(bx + 14, top + 84, "Windows or macOS app, one-click updates", 14, t["grey"])
-    gap = 10
-    cw = (bw - gap * 2) / 3
-    centers = [bx + cw / 2 + i * (cw + gap) for i in range(3)]
-    hb, hl, dv = top + 96, top + 122, top + 138
-    s.line(centers[1], hb, centers[1], hl, t["rule"], 1.5)
-    s.line(centers[0], hl, centers[-1], hl, t["rule"], 1.5)
-    if MOBILE:
-        s.text(centers[1] + 10, hl - 8, "HTTPS tunnel", 13.5, t["grey"])
-    else:
-        s.text(centers[1] - 18, hl - 8, "HTTPS tunnel · one link, one QR", 13.5, t["grey"], anchor="end")
-    s.circle(centers[1], hb, 12, "none", extra=f'stroke="{t["second"]}" stroke-width="1.5" opacity="0" class="ripple"')
-    for i, (name, note) in enumerate((("Phone", "own copy"), ("Phone", "works offline"), ("Laptop", "syncs later"))):
-        x = bx + i * (cw + gap)
-        tone = t[("second", "leaf", "clay")[i]]
-        s.line(centers[i], hl, centers[i], dv, t["rule"], 1.5)
-        length = (hl - hb) + abs(centers[i] - centers[1]) + (dv - hl)
-        s.path(f"M{centers[1]:.1f} {hb}V{hl}H{centers[i]:.1f}V{dv}", "none", tone, 3,
-               extra=f'class="packet" stroke-dasharray="16 {length + 40:.0f}" '
-                     f'style="--start:16;--end:-{length:.0f};--t:{i * 0.85:.2f}s"')
-        s.rect(x, dv, cw, 66, t["panel"], t["ink"], 1.2)
-        s.text(x + 12, dv + 28, name, 16, t["ink"], 600)
-        s.text(x + 12, dv + 51, note, 14, t["grey"])
-        s.add(f'<g font-family="{MONO}" font-size="17" font-weight="700" fill="{tone}">')
-        s.frames(4, 0.6 + i * 0.1,
-                 lambda k, x=x: s.add(f'<text x="{x + cw - 22:.1f}" y="{dv + 29}">{esc(SPINNER[k])}</text>'))
-        s.add("</g>")
-    return dv + 66
+def box_diagram():
+    """Campus's architecture in box-drawing characters; returns the lines and the device centre columns."""
+    w = 34
+    rows = ["┌" + "─" * (w - 2) + "┐",
+            "│" + " HOST · group leader's computer".ljust(w - 2) + "│",
+            "│" + " Spring Boot · SQLite · AES-GCM".ljust(w - 2) + "│",
+            "└" + "─" * 15 + "┬" + "─" * (w - 18) + "┘",
+            " " * 16 + "│  https tunnel",
+            " " * 5 + "┌" + "─" * 10 + "┼" + "─" * 10 + "┐"]
+    centres = [5, 16, 27]
+    names = [("phone ", " copy "), ("phone ", "local "), ("laptop", "later ")]
+
+    def line(parts):
+        out = [" "] * w
+        for col, txt in parts:
+            for k, ch in enumerate(txt):
+                out[col + k] = ch
+        return "".join(out).rstrip()
+
+    rows.append(line([(c - 3, "┌──┴───┐") for c in centres]))
+    rows.append(line([(c - 3, f"│{n}│") for c, (n, _) in zip(centres, names)]))
+    rows.append(line([(c - 3, f"│{m}│") for c, (_, m) in zip(centres, names)]))
+    rows.append(line([(c - 3, "└──────┘") for c in centres]))
+    return rows, centres
 
 
-def campus(t):
+def terminal_theme():
+    """The Campus page is a dark terminal in both themes, so it reads as its own place."""
+    return dict(THEMES["dark"], bg="#1d1026", panel="#271532", rule="#3b2546")
+
+
+def campus(_t):
+    t = terminal_theme()
+    BG_HOLDER[0] = t["bg"]
     r = core_repo()
     pin = DATA.get("pin") or {}
     items = [(pin.get(k), lab) for k, lab in (("java", "Java classes"), ("svelte", "UI components"),
                                               ("tests", "test files"), ("migrations", "migrations"),
                                               ("versions", "versions"))]
     items = [(v, lab) for v, lab in items if v] + [(r.get("release") or "—", "release")]
+    log = [c for c in DATA["commits"] if c["repo"].lower() in CORE_NAMES and not c["msg"].startswith("Merge ")][:7]
+    size = 12 if MOBILE else 14
+    cw, lh = size * MONO_EM, size * 1.22
+    rows, centres = box_diagram()
     if MOBILE:
         text_end = 158 + 18 * 1.5 * len(wrap(CAMPUS_TEXT, 18, X1 - X0))
-        top = text_end + 18
-        rule = top + 204 + 30
-        fig_y = rule + 58
-        rows = (len(items) + 2) // 3
-        end = fig_y + (rows - 1) * 86 + 48
-        H = end + 74
+        dx, dy = X0, text_end + 22
+        log_y = dy + len(rows) * lh + 40
     else:
-        top, rule, fig_y, end, H = 88, 334, 394, 444, 492
+        dx, dy = 486, 100
+        log_y = 372
+    max_chars = int((X1 - X0) / (13 * MONO_EM)) - 2
+    log_end = log_y + 26 + len(log) * 22
+    rule = log_end + 18
+    fig_y = rule + 58
+    fig_rows = (len(items) + 2) // 3 if MOBILE else 1
+    end = fig_y + (fig_rows - 1) * 86 + 48
+    H = end + (74 if MOBILE else 48)
     s = page(t, H, "01 Campus, my core project: a site and an app for one study group that lives on the group "
              "leader's own computer. " + ", ".join(f"{v} {lab}" for v, lab in items) + ".",
-             "How it works: the host computer runs the server with SQLite and encrypted files; a free HTTPS "
-             "tunnel gives the group a link; every phone and laptop keeps its own copy and works offline. "
-             "Sync packets run from the host to each device, where an ASCII spinner turns.")
+             "A dark terminal page: the architecture drawn in box characters with sync packets running from the "
+             "host to each device, and git log --graph of the latest Campus commits typing itself out.")
     head(s, t, "01", "Core project", "github.com/mitaro-cs/Campus")
     if MOBILE:
-        headline(s, X0 - 3, 120, "Campus", 72, t["ink"], -2, 0.1, glint=t["leaf"])
+        headline(s, X0 - 3, 120, "Campus", 72, t["ink"], -2, 0.1, glint=t["gold"])
         para(s, X0, 158, CAMPUS_TEXT, 18, t["ink"], X1 - X0, 1.5, delay=0.4)
-        diagram(s, t, X0, X1 - X0, top)
     else:
-        headline(s, X0 - 3, 134, "Campus", 80, t["ink"], -2.5, 0.1, glint=t["leaf"])
-        para(s, X0, 180, CAMPUS_TEXT, 18, t["ink"], 392, 1.5, delay=0.4)
-        diagram(s, t, 476, X1 - 476, top)
+        headline(s, X0 - 3, 134, "Campus", 80, t["ink"], -2.5, 0.1, glint=t["gold"])
+        para(s, X0, 180, CAMPUS_TEXT, 18, t["ink"], 410, 1.5, delay=0.4)
+
+    # the diagram, then packets riding its lines from the host to every device
+    s.add(f'<g font-family="{MONO}" font-size="{size}" style="white-space:pre">')
+    for k, ln in enumerate(rows):
+        fill = t["gold"] if k in (1,) else t["peach"] if k in (7, 8) else t["grey"]
+        if k == 4:
+            s.add(f'<text x="{dx:.1f}" y="{dy + k * lh:.1f}" xml:space="preserve"><tspan fill="{t["grey"]}">'
+                  f'{esc(ln[:17])}</tspan><tspan fill="{t["violet"]}">{esc(ln[17:])}</tspan></text>')
+        else:
+            s.add(f'<text x="{dx:.1f}" y="{dy + k * lh:.1f}" fill="{fill}" xml:space="preserve">{esc(ln)}</text>')
+    s.add("</g>")
+
+    def at(col, row):
+        return dx + (col + 0.5) * cw, dy + row * lh - size * 0.33
+
+    for i, c in enumerate(centres):
+        (x0, y0), (_, y1), (x2, _), (_, y3) = at(16, 3), at(16, 5), at(c, 5), at(c, 6)
+        route = f"M{x0:.1f} {y0:.1f}V{y1:.1f}H{x2:.1f}V{y3:.1f}"
+        length = (y1 - y0) + abs(x2 - x0) + (y3 - y1)
+        tone = t[("accent", "magenta", "gold")[i]]
+        s.path(route, "none", tone, 3, extra=f'class="packet" stroke-dasharray="12 {length + 30:.0f}" '
+                                             f'style="--start:12;--end:-{length:.0f};--t:{i * 0.85:.2f}s"')
+        sx, sy = at(c + 3, 8)
+        s.add(f'<g font-family="{MONO}" font-size="{size}" font-weight="700" fill="{tone}">')
+        s.frames(4, 0.6 + i * 0.1, lambda k, sx=sx, sy=sy: s.add(
+            f'<text x="{sx - cw / 2:.1f}" y="{sy + size * 0.33:.1f}">{esc(SPINNER[k])}</text>'))
+        s.add("</g>")
+    hx, hy = at(16, 3)
+    s.circle(hx, hy, 12, "none", extra=f'stroke="{t["accent"]}" stroke-width="1.5" opacity="0" class="ripple"')
+
+    # git log --graph of the latest Campus commits, typed out line by line
+    caps(s, X0, log_y, "$ git log --graph --oneline", t["grey"])
+    delay = 1.2
+    for k, c in enumerate(log):
+        _, m, d = c["ts"][:10].split("-")
+        graph = "* "
+        msg = c["msg"]
+        stamp = f"{int(d):>2} {MONTHS[int(m) - 1]}  "
+        room = max_chars - len(graph) - len(stamp)
+        msg = msg if len(msg) <= room else msg[:room - 1] + "…"
+        delay = mono_text(s, X0, log_y + 26 + k * 22,
+                          [(graph, t["magenta"]), (stamp, t["grey"]), (msg, t["ink"])],
+                          13, delay, steps_per_s=90, mask=t["bg"]) + 0.08
     s.line(X0, rule, X1, rule, t["rule"], 1.2)
     figures(s, t, fig_y, items, accent_last=True, delay=0.3, cols=3 if MOBILE else None)
     s.line(X0, end, X1, end, t["rule"], 1.2)
@@ -514,7 +529,7 @@ def campus(t):
     return s
 
 
-# ------------------------------------------------------------------ 02 Rhythm
+# ------------------------------------------------------------------ 02 Rhythm: a data page
 def sector(cx, cy, r0, r1, a0, a1):
     """Path of a ring sector between radii r0..r1 and angles a0..a1 (degrees, 0 at the top, clockwise)."""
     def pt(r, a):
@@ -526,7 +541,7 @@ def sector(cx, cy, r0, r1, a0, a1):
 
 
 def dial(s, t, f, cx, cy, caption_x, caption_y, r0=44, r1=126):
-    """Commits by hour on a 24-hour dial, night hours in the second colour, a radar hand sweeping round."""
+    """Commits by hour on a 24-hour dial coloured by part of the day, a radar hand sweeping round."""
     caps(s, caption_x, caption_y, "Commits by hour", t["grey"])
     s.add(f'<circle cx="{cx}" cy="{cy}" r="{r1 + 4}" fill="none" stroke="{t["rule"]}" stroke-width="1.2"/>')
     s.add(f'<circle cx="{cx}" cy="{cy}" r="{r0 - 6}" fill="none" stroke="{t["rule"]}" stroke-width="1.2"/>')
@@ -544,46 +559,107 @@ def dial(s, t, f, cx, cy, caption_x, caption_y, r0=44, r1=126):
                600, "middle")
     s.text(cx, cy, f"{f['peak']:02d}:00", 17, t["ink"], 700, "middle")
     s.text(cx, cy + 17, "peak", 12, t["grey"], anchor="middle")
-    gid = s.uid("sw")
-    s.defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="{t["second"]}" '
-                  f'stop-opacity="0"/><stop offset="1" stop-color="{t["second"]}" stop-opacity=".25"/></linearGradient>')
     lx = cx - 170
     for name, _, tok in DAY_PARTS:
         s.circle(lx + 5, cy + r1 + 50, 5, t[tok])
         s.text(lx + 16, cy + r1 + 55, name, 13.5, t["grey"])
         lx += 16 + text_width(13.5, name) + 22
+    gid = s.uid("sw")
+    s.defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="{t["second"]}" '
+                  f'stop-opacity="0"/><stop offset="1" stop-color="{t["second"]}" stop-opacity=".25"/></linearGradient>')
     s.add(f'<g class="sweep" style="transform-origin:{cx}px {cy}px">'
           f'<path d="{sector(cx, cy, r0 - 6, r1 + 4, -40, 0)}" fill="url(#{gid})"/>'
           f'<line x1="{cx}" y1="{cy - r0 + 6}" x2="{cx}" y2="{cy - r1 - 4}" stroke="{t["second"]}" stroke-width="2"/>'
           "</g>")
 
 
+def smooth_path(pts):
+    """A smooth curve through the points (Catmull-Rom as cubic Béziers)."""
+    d = f"M{pts[0][0]:.1f} {pts[0][1]:.1f}"
+    for i in range(len(pts) - 1):
+        p0, p1, p2, p3 = pts[max(0, i - 1)], pts[i], pts[i + 1], pts[min(len(pts) - 1, i + 2)]
+        c1 = (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6)
+        c2 = (p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)
+        d += f"C{c1[0]:.1f} {c1[1]:.1f} {c2[0]:.1f} {c2[1]:.1f} {p2[0]:.1f} {p2[1]:.1f}"
+    return d
+
+
+STREAM_TOKENS = ["accent", "magenta", "violet", "gold", "peach"]
+
+
+def streamgraph(s, t, top, height, days=42):
+    """Commits per day over the last six weeks, by repository, as a streamgraph revealed left to right."""
+    today = dt.datetime.now(MSK).date()
+    start = today - dt.timedelta(days=days - 1)
+    per = {}
+    for c in DATA["commits"]:
+        d = dt.datetime.fromisoformat(c["ts"].replace("Z", "+00:00")).astimezone(MSK).date()
+        if d >= start:
+            name = REPO_NAMES.get(c["repo"].lower(), c["repo"])
+            per.setdefault(name, [0] * days)[(d - start).days] += 1
+    ranked = sorted(per.items(), key=lambda kv: -sum(kv[1]))
+    layers = ranked[:4]
+    if len(ranked) > 4:
+        layers.append(("other", [sum(v[i] for _, v in ranked[4:]) for i in range(days)]))
+    caps(s, X0, top - 16, "Commits per day, last six weeks, by repository", t["grey"])
+    if not layers:
+        return top + height
+    # a gentle blur over neighbouring days, so the streams flow
+    kernel = (1, 2, 3, 2, 1)
+    soft = [(n, [sum(kernel[j] * v[min(days - 1, max(0, i + j - 2))] for j in range(5)) / 9 for i in range(days)])
+            for n, v in layers]
+    totals = [sum(v[i] for _, v in soft) for i in range(days)]
+    k = (height - 10) / (max(totals) or 1)
+    xs = [X0 + (X1 - X0) * i / (days - 1) for i in range(days)]
+    mid = top + height / 2
+    base = [mid - totals[i] * k / 2 for i in range(days)]
+    labels = []
+    for li, (name, vals) in enumerate(soft):
+        upper = [(xs[i], base[i]) for i in range(days)]
+        lower = [(xs[i], base[i] + vals[i] * k) for i in range(days)]
+        s.path(smooth_path(upper) + "L" + smooth_path(lower[::-1])[1:] + "Z", t[STREAM_TOKENS[li % len(STREAM_TOKENS)]],
+               opacity=0.94)
+        best = max(range(days), key=lambda i: vals[i])
+        labels.append((name, xs[best], base[best] + vals[best] * k / 2, vals[best] * k, li))
+        base = [base[i] + vals[i] * k for i in range(days)]
+    for name, x, y, thick, li in labels:
+        if thick >= 16:
+            anchor = "end" if x > X1 - 60 else "start" if x < X0 + 60 else "middle"
+            s.text(x, y + 4.5, name, 12.5, t["bg"], 700, anchor)
+    legend_x, legend_y = X0, top + height + 18
+    for li, (name, _) in enumerate(soft):
+        name = name if len(name) <= 14 else name[:13] + "…"
+        step = 16 + text_width(13, name) + 18
+        if legend_x + step - 18 > (X1 if MOBILE else X1 - 170):
+            legend_x, legend_y = X0, legend_y + 22
+        s.circle(legend_x + 5, legend_y, 5, t[STREAM_TOKENS[li % len(STREAM_TOKENS)]])
+        s.text(legend_x + 16, legend_y + 5, name, 13, t["grey"])
+        legend_x += step
+    s.rect(X1 + 2, top - 4, X1 - X0 + 8, height + 8, t["bg"],
+           extra=f'class="type" style="--dx:-{X1 - X0 + 6}px;--t:.6s;--d:2.4s;'
+                 f'animation-timing-function:cubic-bezier(.4,0,.2,1)"')
+    if not MOBILE:
+        caps(s, X1, top + height + 22, f"{start.day} {MONTHS[start.month - 1]} — {today.day} {MONTHS[today.month - 1]}",
+             t["grey"], "end", size=11.5)
+    return top + height + 22
+
+
 def rhythm(t):
     f = facts()
-    today = dt.datetime.now(MSK).date()
-    weeks = 26
-    start = today - dt.timedelta(days=today.weekday() + 7 * (weeks - 1))
-    shown = {d: n for d, n in f["per_day"].items() if d >= start}
-    size = 12.5 if MOBILE else 14
-    hour_cmd = (["git log --date=format:%H --format=%ad \\", "  | sort | uniq -c | sort -rn | head -1"] if MOBILE
-                else ["git log --date=format:%H --format=%ad | sort | uniq -c | sort -rn | head -1"])
-    commands = [(["git log --since='26 weeks' --oneline | wc -l"], f"{sum(shown.values())}"),
-                (hour_cmd, f"{f['hours'][f['peak']]:>4} {f['peak']:02d}")]
-    term_h = 30 + sum(22 * len(c) + 28 for c, _ in commands) + 26
     if MOBILE:
-        table_y, dial_cy, f_y = 270, 606, 852
+        table_y, dial_cy, st_top = 270, 606, 840
     else:
-        table_y, dial_cy, f_y = 300, 236, 500
-    ty = f_y + 128
-    H = ty + term_h + 24
+        table_y, dial_cy, st_top = 300, 236, 500
+    st_h = 130 if MOBILE else 160
+    H = st_top + st_h + (80 if MOBILE else 56)
     s = page(t, H, f"02 Rhythm: {f['night']}% of my commits land after 22:00 Moscow time. Peak hour "
              f"{f['peak']:02d}:00, longest streak {f['streak']} days, busiest day {f['weekday']}.",
-             "A 24-hour dial of commits by hour with a sweeping hand, a strip of commits per day over the last "
-             "26 weeks, and two git commands that type themselves out with their real answers.")
+             "A 24-hour dial of commits by hour coloured by morning, day, evening and night with a sweeping hand, "
+             "and a streamgraph of commits per week by repository over the last 26 weeks.")
     head(s, t, "02", "Rhythm", "Moscow time · last 26 weeks")
     tw = X1 - X0 if MOBILE else 360
-    headline(s, X0 - 6, 166 if MOBILE else 184, f"{f['night']}%", 112 if MOBILE else 124, t["second"], -5, 0.1,
-             glint=t["clay"])
+    headline(s, X0 - 6, 166 if MOBILE else 184, f"{f['night']}%", 112 if MOBILE else 124, t["violet"], -5, 0.1,
+             glint=t["magenta"])
     para(s, X0, 210 if MOBILE else 232, "of my commits land after 22:00.", 21, t["ink"], tw, 1.4, 700, delay=0.5)
     rows = [("Peak hour", f"{f['peak']:02d}:00"), ("Longest streak", f"{f['streak']} days"),
             ("Busiest day", f["weekday"]), ("Active days", str(len(f["per_day"])))]
@@ -599,53 +675,64 @@ def rhythm(t):
         dial(s, t, f, W / 2, dial_cy, X0, dial_cy - 166)
     else:
         dial(s, t, f, 680, dial_cy, 476, 96)
-
-    caps(s, X0, f_y - 16, "Commits per day", t["grey"])
-    gap = 4
-    cell = (X1 - X0 - gap * (weeks - 1)) / weeks
-    peak_day = max(shown, key=shown.get) if shown else None
-    for w in range(weeks):
-        s.g("fade", f"--t:{0.4 + w * 0.035:.2f}s")
-        s.g("wave", f"--t:{2 + w * 0.09:.2f}s")
-        for d in range(7):
-            day = start + dt.timedelta(days=7 * w + d)
-            if day > today:
-                continue
-            n = f["per_day"].get(day, 0)
-            x, y = X0 + w * (cell + gap), f_y + d * 11
-            if day == peak_day:
-                s.rect(x, y, cell, 8, t["second"])
-            elif n:
-                s.rect(x, y, cell, 8, t["leaf"], opacity=(0.35, 0.6, 0.8, 1)[(n >= 3) + (n >= 6) + (n >= 10)])
-            else:
-                s.rect(x, y, cell, 8, t["rule"])
-        s.end()
-        s.end()
-    if peak_day:
-        caps(s, X1, f_y - 16, f"busiest: {shown[peak_day]} on {peak_day.day} {MONTHS[peak_day.month - 1]}",
-             t["second"], "end")
-    caps(s, X0, f_y + 98, MONTHS[start.month - 1], t["grey"], size=11.5)
-    caps(s, X1, f_y + 98, MONTHS[today.month - 1], t["grey"], "end", size=11.5)
-
-    # a terminal: two real questions, typed out, with their answers
-    s.rect(X0, ty, X1 - X0, term_h, t["panel"], rx=6)
-    y, delay = ty + 30, 1.0
-    for cmd, answer in commands:
-        for k, ln in enumerate(cmd):
-            prompt = "$ " if k == 0 else "  "
-            delay = mono_text(s, X0 + 16, y, [(prompt, t["second"]), (ln, t["ink"])], size, delay, mask=t["panel"])
-            y += 22
-        s.g("fade", f"--t:{delay + 0.25:.2f}s")
-        mono_text(s, X0 + 16, y, [(answer, t["accent"])], size)
-        s.end()
-        y += 28
-        delay += 0.6
-    mono_text(s, X0 + 16, y, [("$ ", t["second"])], size)
-    s.rect(X0 + 16 + mono_width(size, "$ "), y - size + 2, size * MONO_EM, size, t["ink"], extra='class="blink"')
+    streamgraph(s, t, st_top, st_h)
     return s
 
 
-# ------------------------------------------------------------------ 03 Toolkit
+# ------------------------------------------------------------------ 03 Map: repositories as a constellation
+def sky_theme():
+    return dict(THEMES["dark"], bg="#120a1a", rule="#2e1d38")
+
+
+def star_map(_t):
+    t = sky_theme()
+    BG_HOLDER[0] = t["bg"]
+    repos = sorted(DATA["repos"], key=lambda r: r["created"])
+    H = 470 if MOBILE else 430
+    s = page(t, H, "03 Map: my repositories as a constellation, in the order I made them; the higher and larger "
+             "the star, the more commits. " + ", ".join(f"{REPO_NAMES.get(r['name'].lower(), r['name'])} "
+                                                       f"{r['commits']}" for r in repos) + ".",
+             "Stars twinkle and a line draws itself through them from the first repository to the newest.")
+    rnd = random.Random(42)
+    for _ in range(90 if MOBILE else 160):
+        s.circle(rnd.uniform(0, W), rnd.uniform(56, H - 40), rnd.choice((0.6, 0.8, 1.1)), t["grey"],
+                 round(rnd.uniform(0.15, 0.6), 2))
+    head(s, t, "03", "Map", "in the order I made them")
+    left, right, top, bottom = X0 + 30, X1 - 30, 110, H - 92
+    top_c = max(r["commits"] for r in repos) or 1
+    pts = []
+    for i, r in enumerate(repos):
+        x = left + (right - left) * i / max(1, len(repos) - 1)
+        y = bottom - (bottom - top) * math.log1p(r["commits"]) / math.log1p(top_c)
+        pts.append((x, y, r))
+    line = "M" + " L".join(f"{x:.1f} {y:.1f}" for x, y, _ in pts)
+    length = sum(math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) for i in range(len(pts) - 1))
+    s.path(line, "none", t["violet"], 1.4, opacity=0.8,
+           extra=f'class="draw" stroke-dasharray="{length:.0f}" style="--len:{length:.0f};--t:.4s"')
+    for i, (x, y, r) in enumerate(pts):
+        langs = {k: v for k, v in r["langs"].items() if k != "Rich Text Format"}
+        main = max(langs, key=langs.get) if langs else "Other"
+        tone = t[LANG_TOKEN.get(main if main in CODE_LANGS else "Other", "grey")]
+        rad = 3 + math.sqrt(r["commits"]) * (0.9 if MOBILE else 1.2)
+        s.circle(x, y, rad * 2.6, tone, 0.18, extra=f'class="pulse" style="--t:{i * 0.37:.2f}s"')
+        s.circle(x, y, rad, tone)
+        name = REPO_NAMES.get(r["name"].lower(), r["name"])
+        limit = 9 if MOBILE else 14
+        if len(name) > limit:
+            name = name[:limit - 1] + "…"
+        up = i % 2 == 0
+        ly = y - rad - 10 if up else y + rad + 20
+        s.g("fade", f"--t:{0.6 + i * 0.12:.2f}s")
+        s.text(x, ly, name, 12.5 if MOBILE else 13.5, t["ink"], 600, "middle")
+        s.end()
+        _, m = r["created"].split("-")[:2]
+        s.text(x, H - 52, f"{MONTHS[int(m) - 1]}", 11.5, t["grey"], anchor="middle")
+        s.text(x, H - 36, f"{r['commits']}", 11.5, tone, 700, "middle")
+    s.line(X0, H - 70, X1, H - 70, t["rule"], 1)
+    return s
+
+
+# ------------------------------------------------------------------ 04 Toolkit
 TOOLKIT = [("Languages", ["Java", "Python", "TypeScript", "JavaScript", "Rust", "SQL"]),
            ("Frameworks", ["Spring Boot", "Svelte", "Flask", "Tauri"]),
            ("Tools", ["SQLite", "Docker", "Git and Actions", "Linux", "Figma", "Zed"])]
@@ -661,11 +748,10 @@ def toolkit(t):
         H = y0 + sum(40 + 26 * len(b) + 14 for b in blocks) + 20
     else:
         H = y0 + 260
-    s = page(t, H, "03 Toolkit. Code by language: " + ", ".join(f"{k} {round(100 * v / total)}%" for k, v in langs)
+    s = page(t, H, "04 Toolkit. Code by language: " + ", ".join(f"{k} {round(100 * v / total)}%" for k, v in langs)
              + ". " + " ".join(f"{a}: {', '.join(b)}." for a, b in TOOLKIT),
              "Language shares drawn as ASCII bars of block glyphs that fill in, then what I use.")
-    head(s, t, "03", "Toolkit", f"{code_size()} of code in {len(CODE_REPOS)} repositories")
-    # ASCII bars: a full block for the share, a light shade for the rest; each line fills left to right
+    head(s, t, "04", "Toolkit", f"{code_size()} of code in {len(CODE_REPOS)} repositories")
     for i, (k, v) in enumerate(langs):
         n = round(cells * v / total)
         pct = f"{round(100 * v / total):>3}%"
@@ -676,7 +762,7 @@ def toolkit(t):
     if MOBILE:
         y = y0 + 34
         for i, ((title, _), lines) in enumerate(zip(TOOLKIT, blocks)):
-            caps(s, X0, y, title, t["grey"])
+            caps(s, X0, y, title, t[("accent", "magenta", "violet")[i]], weight=700)
             s.g("fade", f"--t:{0.6 + i * 0.15:.2f}s")
             for j, ln in enumerate(lines):
                 s.text(X0, y + 30 + j * 26, ln, 17, t["ink"])
@@ -686,7 +772,7 @@ def toolkit(t):
     cw = (X1 - X0) / len(TOOLKIT)
     for i, (title, items) in enumerate(TOOLKIT):
         x = X0 + i * cw + (16 if i else 0)
-        caps(s, x, y0 + 34, title, t["grey"])
+        caps(s, x, y0 + 34, title, t[("accent", "magenta", "violet")[i]], weight=700)
         for j, item in enumerate(items):
             s.g("fade", f"--t:{0.6 + i * 0.15 + j * 0.06:.2f}s")
             s.text(x, y0 + 68 + j * 27, item, 17, t["ink"])
@@ -696,8 +782,66 @@ def toolkit(t):
     return s
 
 
+# ------------------------------------------------------------------ 05 Now
+NOW = [("building", "accent", "Java and Flask backends with a cleaner structure"),
+       ("studying", "magenta", "security: encryption, hashing, local-first design"),
+       ("prototype", "violet", "a personal AI assistant, Jarvis-style"),
+       ("student", "gold", "computer science at MTUCI")]
+
+
+def now(t):
+    size = 13 if MOBILE else 15
+    cw = size * MONO_EM
+    tag_w = 12
+    room = int((X1 - X0 - 36) / cw) - tag_w
+    lines = []
+    for tag, tok, txt in NOW:
+        parts = [txt] if len(txt) <= room else wrap_mono(txt, room)
+        lines.append((tag, tok, parts))
+    rows = 1 + sum(len(p) for _, _, p in lines) + 1
+    box_top = 66
+    H = box_top + 30 + rows * (size + 11) + 30
+    s = page(t, H, "05 Now: " + "; ".join(f"{tag} {txt}" for tag, _, txt in NOW) + ".",
+             "A terminal that types out what I am working on now, with a spinner on the current build.")
+    head(s, t, "05", "Now", "updated by hand")
+    s.rect(X0, box_top, X1 - X0, H - box_top - 22, t["panel"], rx=8)
+    x, y = X0 + 18, box_top + 32
+    lh = size + 11
+    delay = mono_text(s, x, y, [("$ ", t["second"]), ("now --verbose", t["ink"])], size, 0.4,
+                      mask=t["panel"]) + 0.2
+    y += lh
+    for k, (tag, tok, parts) in enumerate(lines):
+        for j, part in enumerate(parts):
+            label = f"[{tag:<9}] " if j == 0 else " " * tag_w
+            delay = mono_text(s, x, y, [(label, t[tok]), (part, t["ink"])], size, delay, steps_per_s=70,
+                              mask=t["panel"]) + 0.05
+            if k == 0 and j == 0:
+                sx = x + mono_width(size, label + part) + cw
+                s.add(f'<g font-family="{MONO}" font-size="{size}" font-weight="700" fill="{t[tok]}">')
+                s.frames(4, 0.6, lambda q, sx=sx, y=y: s.add(f'<text x="{sx:.1f}" y="{y:.1f}">{esc(SPINNER[q])}</text>'))
+                s.add("</g>")
+            y += lh
+    mono_text(s, x, y, [("$ ", t["second"])], size)
+    s.rect(x + mono_width(size, "$ "), y - size + 2, cw, size, t["ink"], extra='class="blink"')
+    return s
+
+
+def wrap_mono(txt, room):
+    lines, cur = [], ""
+    for wd in txt.split():
+        t = (cur + " " + wd).strip()
+        if len(t) <= room or not cur:
+            cur = t
+        else:
+            lines.append(cur)
+            cur = wd
+    return lines + [cur]
+
+
 if __name__ == "__main__":
     both(cover, "cover")
     both(campus, "campus")
     both(rhythm, "rhythm")
+    both(star_map, "map")
     both(toolkit, "toolkit")
+    both(now, "now")

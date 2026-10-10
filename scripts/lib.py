@@ -18,7 +18,9 @@ METRICS = json.load(open(os.path.join(HERE, "metrics.json"), encoding="utf-8"))
 # its final state, so a viewer without motion sees the finished page.
 CSS = (
     "text{font-variant-numeric:tabular-nums}"
-    ".lift,.roll,.fade,.wide,.grow,.packet,.pulse,.type,.shine,.wave,.ripple{animation-delay:var(--t,0s)}"
+    ".lift,.roll,.fade,.wide,.grow,.packet,.pulse,.type,.shine,.wave,.ripple,.draw{animation-delay:var(--t,0s)}"
+    "@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}"
+    ".draw{animation:draw 2.4s cubic-bezier(.4,0,.2,1) both}"
     "@keyframes lift{from{transform:translateY(var(--dy))}to{transform:none}}"
     ".lift{animation:lift 1s cubic-bezier(.2,.8,.2,1) both}"
     "@keyframes roll{from{transform:translateY(var(--from))}to{transform:none}}"
