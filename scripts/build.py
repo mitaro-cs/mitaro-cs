@@ -29,16 +29,34 @@ LAYOUTS = {"": (888, 40, 848, False), "-mobile": (440, 20, 420, True)}
 
 # the avatar's colours (a park bench, khaki trousers, a pale blue shirt, sunlit skin), tuned so every text
 # colour keeps at least 4.5:1 contrast on its background
+NIGHT_HOURS = (22, 23, 0, 1, 2, 3)
 THEMES = {
-    "light": dict(bg="#efebe3", ink="#1b1716", grey="#5a524b", rule="#d6cdbf", accent="#3f6273",
-                  second="#a5552f", panel="#e5dfd4"),
-    "dark": dict(bg="#141112", ink="#eef1ee", grey="#bdaea3", rule="#302a27", accent="#a2bbc5",
-                 second="#e6a986", panel="#1e1a19"),
+    "light": dict(bg="#efebe3", ink="#1b1716", grey="#5a524b", rule="#d6cdbf", panel="#e5dfd4",
+                  accent="#3f6273",    # the pale blue shirt
+                  second="#a5552f",    # sunlit skin
+                  leaf="#4d6644",      # the trees behind
+                  clay="#b0705a",      # skin in shadow
+                  suede="#7c5a43",     # suede boots
+                  wood="#7a6c62",      # the weathered bench
+                  stone="#a89a8d"),    # khaki trousers
+    "dark": dict(bg="#141112", ink="#eef1ee", grey="#bdaea3", rule="#302a27", panel="#1e1a19",
+                 accent="#a2bbc5", second="#e6a986", leaf="#8ea67c", clay="#c98763", suede="#a8805f",
+                 wood="#9a8c80", stone="#bdaea3"),
 }
+PALETTE = ["ink", "wood", "suede", "leaf", "accent", "stone", "clay", "second"]   # the avatar, dark to light
+LANG_TOKEN = {"Java": "accent", "Svelte": "second", "Python": "leaf", "TypeScript": "clay", "JavaScript": "stone",
+              "CSS": "suede", "HTML": "wood", "Other": "grey"}
+DAY_PARTS = [("morning", range(4, 12), "leaf"), ("day", range(12, 18), "accent"), ("evening", range(18, 22), "clay"),
+             ("night", NIGHT_HOURS, "second")]
+
+
+def hour_token(h):
+    return next(tok for _, hours, tok in DAY_PARTS if h in hours)
+
+
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 MSK = dt.timezone(dt.timedelta(hours=3))
-NIGHT_HOURS = (22, 23, 0, 1, 2, 3)
 CORE_NAMES = ("campus", "storagesystem")   # Campus was called StorageSystem before the rename
 CODE_REPOS = [r for r in DATA["repos"] if r["name"] != "mitaro-cs"]   # the profile repo only holds the generator
 CODE_LANGS = ["Java", "Python", "Svelte", "TypeScript", "JavaScript", "CSS", "HTML"]
@@ -130,14 +148,27 @@ def head(s, t, num, label, right=""):
         caps(s, X1, 42, right, t["grey"], "end")
 
 
-def headline(s, x, baseline, txt, size, fill, ls, delay=0.0):
-    """A big word that lifts out of the line it stands on."""
+def headline(s, x, baseline, txt, size, fill, ls, delay=0.0, glint=None):
+    """A big word that lifts out of the line it stands on; with glint, a band of colour sweeps across it."""
     cid = s.uid("hl")
     s.defs.append(f'<clipPath id="{cid}"><rect x="0" y="{baseline - size}" width="{W}" height="{size * 1.12:.0f}"/>'
                   "</clipPath>")
     s.add(f'<g clip-path="url(#{cid})">')
     s.g("lift", f"--dy:{size:.0f}px;--t:{delay}s")
     s.text(x, baseline, txt, size, fill, 700, ls=ls)
+    if glint:
+        mid, gid = s.uid("gm"), s.uid("gg")
+        band = size * 1.4
+        s.defs.append(f'<linearGradient id="{gid}"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
+                      f'<stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>'
+                      f"</linearGradient>"
+                      f'<mask id="{mid}" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{baseline + size}">'
+                      f'<rect x="{W + 40}" y="{baseline - size}" width="{band:.0f}" height="{size * 1.2:.0f}" '
+                      f'fill="url(#{gid})" transform="skewX(-18)" class="shine" '
+                      f'style="--from:-{W + band + 80:.0f}px;--to:0px;--t:{delay + 1.6:.1f}s"/></mask>')
+        s.add(f'<g mask="url(#{mid})">')
+        s.text(x, baseline, txt, size, glint, 700, ls=ls)
+        s.add("</g>")
     s.end()
     s.add("</g>")
 
@@ -229,61 +260,89 @@ def both(fn, name):
 
 
 # ------------------------------------------------------------------ ASCII globe
-RAMP = " .:-=+*"
+RAMP = " .:-="
 
 
-def globe_rows(phase, cols, rows, cw, lh):
-    """One frame of an ASCII globe: (grid, shade) strings per row; meridians every 30 degrees."""
+def globe_cells(cols, rows, cw, lh):
+    """Each cell of the disc as (row, col, x, y on the unit disc)."""
     radius = min(cols * cw, rows * lh) / 2 - 2
-    light = (-0.45, 0.5, 0.74)
-    out = []
     for r in range(rows):
-        grid_row, shade_row = [], []
         for c in range(cols):
             px = (c + 0.5 - cols / 2) * cw / radius
             py = (r + 0.5 - rows / 2) * lh / radius
-            if px * px + py * py > 1:
-                grid_row.append(" ")
-                shade_row.append(" ")
-                continue
-
-            def lonlat(dx, dy):
-                x, y = px + dx * cw / radius, py + dy * lh / radius
-                rr = min(1.0, x * x + y * y)
-                z = math.sqrt(1 - rr)
-                return math.degrees(math.atan2(x, z)) + phase, math.degrees(math.asin(max(-1, min(1, -y))))
-
-            (lon_l, _), (lon_r, _) = lonlat(-0.5, 0), lonlat(0.5, 0)
-            (_, lat_t), (_, lat_b) = lonlat(0, -0.5), lonlat(0, 0.5)
-            on_m = math.floor(lon_l / 30) != math.floor(lon_r / 30)
-            on_p = math.floor(lat_b / 30) != math.floor(lat_t / 30)
-            z = math.sqrt(max(0.0, 1 - px * px - py * py))
-            lum = max(0.0, px * light[0] + -py * light[1] + z * light[2])
-            if on_m and on_p:
-                grid_row.append("+")
-            elif on_m:
-                grid_row.append("|")
-            elif on_p:
-                grid_row.append("=" if abs(lat_t + lat_b) < 20 else "-")
-            else:
-                grid_row.append(" ")
-            shade_row.append(" " if grid_row[-1] != " " else RAMP[min(len(RAMP) - 1, int(lum * (len(RAMP) - 0.01)))])
-        out.append(("".join(grid_row), "".join(shade_row)))
-    return out
+            if px * px + py * py <= 1:
+                yield r, c, px, py, radius
 
 
-def ascii_globe(s, t, x, y, cols=44, rows=20, size=12, n=16, dur=4.8):
+def lonlat(px, py, dx, dy, cw, lh, radius, phase=0.0):
+    x, y = px + dx * cw / radius, py + dy * lh / radius
+    z = math.sqrt(max(0.0, 1 - min(1.0, x * x + y * y)))
+    return math.degrees(math.atan2(x, z)) + phase, math.degrees(math.asin(max(-1, min(1, -y))))
+
+
+def globe_static(cols, rows, cw, lh):
+    """The parts that do not turn: shading lit from the top left, and the parallels every 30 degrees."""
+    shade = [[" "] * cols for _ in range(rows)]
+    par = [[" "] * cols for _ in range(rows)]
+    light = (-0.45, 0.5, 0.74)
+    for r, c, px, py, radius in globe_cells(cols, rows, cw, lh):
+        _, lat_t = lonlat(px, py, 0, -0.5, cw, lh, radius)
+        _, lat_b = lonlat(px, py, 0, 0.5, cw, lh, radius)
+        if math.floor(lat_b / 30) != math.floor(lat_t / 30):
+            par[r][c] = "=" if abs(lat_t + lat_b) < 20 else "-"
+            continue
+        z = math.sqrt(max(0.0, 1 - px * px - py * py))
+        lum = max(0.0, px * light[0] - py * light[1] + z * light[2])
+        shade[r][c] = RAMP[min(len(RAMP) - 1, int(lum * (len(RAMP) - 0.01)))]
+    return ["".join(row) for row in shade], ["".join(row) for row in par]
+
+
+def globe_meridians(phase, cols, rows, cw, lh):
+    out = [[" "] * cols for _ in range(rows)]
+    for r, c, px, py, radius in globe_cells(cols, rows, cw, lh):
+        lon_l, _ = lonlat(px, py, -0.5, 0, cw, lh, radius, phase)
+        lon_r, _ = lonlat(px, py, 0.5, 0, cw, lh, radius, phase)
+        if math.floor(lon_l / 30) != math.floor(lon_r / 30):
+            out[r][c] = "|"
+    return ["".join(row) for row in out]
+
+
+def ascii_globe(s, t, x, y, cols=44, rows=20, size=12, n=36, dur=3.6):
+    """An ASCII globe that turns: meridians cross-fade frame to frame over still shading and parallels,
+    and a satellite circles it on a tilted orbit, dimming when it passes behind."""
     cw, lh = size * MONO_EM, size * 1.12
+    shade, par = globe_static(cols, rows, cw, lh)
+    radius = min(cols * cw, rows * lh) / 2
+    cx, cy = x + cols * cw / 2, y - size * 0.35 + (rows - 1) * lh / 2
+    rx, ry, tilt = radius + 26, (radius + 26) * 0.28, math.radians(-14)
+    pts = []
+    for k in range(73):
+        a = math.radians(90 + k * 5)
+        ex, ey = math.cos(a) * rx, math.sin(a) * ry
+        pts.append((cx + ex * math.cos(tilt) - ey * math.sin(tilt), cy + ex * math.sin(tilt) + ey * math.cos(tilt)))
+    orbit = "M" + " L".join(f"{px:.1f} {py:.1f}" for px, py in pts)
+    s.path(orbit, "none", t["rule"], 1.2, extra='stroke-dasharray="2 5"')
+    s.add(f'<g font-family="{MONO}" font-size="{size}" style="white-space:pre">')
+    def row(r, txt, fill, extra=""):
+        """One row of glyphs, trimmed: leading spaces become an x offset, blank rows are skipped."""
+        body = txt.strip()
+        if body:
+            lead = len(txt) - len(txt.lstrip())
+            s.add(f'<text x="{x + lead * cw:.1f}" y="{y + r * lh:.1f}" fill="{fill}" {extra}>{body}</text>')
+
+    for r in range(rows):
+        row(r, shade[r], t["wood"], 'fill-opacity=".6"')
+        row(r, par[r], t["leaf"])
 
     def draw(i):
-        for r, (grid, shade) in enumerate(globe_rows(i / n * 30, cols, rows, cw, lh)):
-            yy = y + r * lh
-            s.add(f'<text x="{x}" y="{yy:.1f}" fill="{t["grey"]}" fill-opacity=".55" xml:space="preserve">{shade}</text>'
-                  f'<text x="{x}" y="{yy:.1f}" fill="{t["accent"]}" xml:space="preserve">{grid}</text>')
+        for r, txt in enumerate(globe_meridians(i / n * 30, cols, rows, cw, lh)):
+            row(r, txt, t["accent"])
 
-    s.add(f'<g font-family="{MONO}" font-size="{size}" style="white-space:pre">')
-    s.frames(n, dur, draw)
+    s.frames(n, dur, draw, blend=True)
     s.add("</g>")
+    s.add(f'<circle r="5" fill="{t["second"]}" class="depth" style="offset-path:path(\'{orbit}\');'
+          f'offset-rotate:0deg;animation:depth 10s linear infinite,ride 10s linear infinite"/>')
+    s.css["ride"] = "@keyframes ride{from{offset-distance:0%}to{offset-distance:100%}}"
 
 
 # ------------------------------------------------------------------ cover
@@ -304,7 +363,7 @@ def ticker(s, t, y):
     line = "     ·     ".join(items) + "     ·     "
     width = text_width(14, line)
     lx = X0 + 86
-    caps(s, X0, y, "Latest", t["second"], weight=700)
+    caps(s, X0, y, "Latest", t["clay"], weight=700)
     cid = s.uid("tk")
     s.defs.append(f'<clipPath id="{cid}"><rect x="{lx}" y="{y - 18}" width="{X1 - lx}" height="26"/></clipPath>')
     s.add(f'<g clip-path="url(#{cid})">')
@@ -339,10 +398,12 @@ def cover(t):
     caps(s, X0, 42, "mitaro-cs" if MOBILE else "mitaro-cs · GitHub profile", t["grey"])
     if last:
         caps(s, X1, 42, f"last commit {last.day} {MONTHS[last.month - 1]} {last.year}", t["grey"], "end")
-    s.g("wide")
-    s.line(X0, 56, X1, 56, t["ink"], 1.5)
-    s.end()
-    headline(s, X0 - 5, head_y, "Mitaro", head_size, t["ink"], -4, 0.15)
+    seg = (X1 - X0) / len(PALETTE)
+    for i, tok in enumerate(PALETTE):
+        s.g("wide", f"--t:{i * 0.07:.2f}s")
+        s.rect(X0 + i * seg, 53, seg, 4, t[tok])
+        s.end()
+    headline(s, X0 - 5, head_y, "Mitaro", head_size, t["ink"], -4, 0.15, glint=t["accent"])
     s.g("fade", "--t:.6s")
     s.text(X0, name_y, "Omar, CS student at MTUCI.", 21, t["ink"], 700)
     s.end()
@@ -391,18 +452,20 @@ def diagram(s, t, bx, bw, top):
     if MOBILE:
         s.text(centers[1] + 10, hl - 8, "HTTPS tunnel", 13.5, t["grey"])
     else:
-        s.text(centers[1] - 10, hl - 8, "HTTPS tunnel · one link, one QR", 13.5, t["grey"], anchor="end")
+        s.text(centers[1] - 18, hl - 8, "HTTPS tunnel · one link, one QR", 13.5, t["grey"], anchor="end")
+    s.circle(centers[1], hb, 12, "none", extra=f'stroke="{t["second"]}" stroke-width="1.5" opacity="0" class="ripple"')
     for i, (name, note) in enumerate((("Phone", "own copy"), ("Phone", "works offline"), ("Laptop", "syncs later"))):
         x = bx + i * (cw + gap)
+        tone = t[("second", "leaf", "clay")[i]]
         s.line(centers[i], hl, centers[i], dv, t["rule"], 1.5)
         length = (hl - hb) + abs(centers[i] - centers[1]) + (dv - hl)
-        s.path(f"M{centers[1]:.1f} {hb}V{hl}H{centers[i]:.1f}V{dv}", "none", t["second"], 3,
+        s.path(f"M{centers[1]:.1f} {hb}V{hl}H{centers[i]:.1f}V{dv}", "none", tone, 3,
                extra=f'class="packet" stroke-dasharray="16 {length + 40:.0f}" '
                      f'style="--start:16;--end:-{length:.0f};--t:{i * 0.85:.2f}s"')
         s.rect(x, dv, cw, 66, t["panel"], t["ink"], 1.2)
         s.text(x + 12, dv + 28, name, 16, t["ink"], 600)
         s.text(x + 12, dv + 51, note, 14, t["grey"])
-        s.add(f'<g font-family="{MONO}" font-size="17" font-weight="700" fill="{t["second"]}">')
+        s.add(f'<g font-family="{MONO}" font-size="17" font-weight="700" fill="{tone}">')
         s.frames(4, 0.6 + i * 0.1,
                  lambda k, x=x: s.add(f'<text x="{x + cw - 22:.1f}" y="{dv + 29}">{esc(SPINNER[k])}</text>'))
         s.add("</g>")
@@ -433,11 +496,11 @@ def campus(t):
              "Sync packets run from the host to each device, where an ASCII spinner turns.")
     head(s, t, "01", "Core project", "github.com/mitaro-cs/Campus")
     if MOBILE:
-        headline(s, X0 - 3, 120, "Campus", 72, t["ink"], -2, 0.1)
+        headline(s, X0 - 3, 120, "Campus", 72, t["ink"], -2, 0.1, glint=t["leaf"])
         para(s, X0, 158, CAMPUS_TEXT, 18, t["ink"], X1 - X0, 1.5, delay=0.4)
         diagram(s, t, X0, X1 - X0, top)
     else:
-        headline(s, X0 - 3, 134, "Campus", 80, t["ink"], -2.5, 0.1)
+        headline(s, X0 - 3, 134, "Campus", 80, t["ink"], -2.5, 0.1, glint=t["leaf"])
         para(s, X0, 180, CAMPUS_TEXT, 18, t["ink"], 392, 1.5, delay=0.4)
         diagram(s, t, 476, X1 - 476, top)
     s.line(X0, rule, X1, rule, t["rule"], 1.2)
@@ -471,8 +534,7 @@ def dial(s, t, f, cx, cy, caption_x, caption_y, r0=44, r1=126):
     for h, n in enumerate(f["hours"]):
         a0, a1 = h * 15 + 1.5, h * 15 + 13.5
         if n:
-            s.path(sector(cx, cy, r0, max(r0 + (r1 - r0) * n / top, r0 + 2), a0, a1),
-                   t["second"] if h in NIGHT_HOURS else t["accent"],
+            s.path(sector(cx, cy, r0, max(r0 + (r1 - r0) * n / top, r0 + 2), a0, a1), t[hour_token(h)],
                    extra=f'class="grow" style="transform-origin:{cx}px {cy}px;--t:{0.3 + h * 0.03:.2f}s"')
         else:
             s.path(sector(cx, cy, r0, r0 + 2, a0, a1), t["rule"])
@@ -485,6 +547,11 @@ def dial(s, t, f, cx, cy, caption_x, caption_y, r0=44, r1=126):
     gid = s.uid("sw")
     s.defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="{t["second"]}" '
                   f'stop-opacity="0"/><stop offset="1" stop-color="{t["second"]}" stop-opacity=".25"/></linearGradient>')
+    lx = cx - 170
+    for name, _, tok in DAY_PARTS:
+        s.circle(lx + 5, cy + r1 + 50, 5, t[tok])
+        s.text(lx + 16, cy + r1 + 55, name, 13.5, t["grey"])
+        lx += 16 + text_width(13.5, name) + 22
     s.add(f'<g class="sweep" style="transform-origin:{cx}px {cy}px">'
           f'<path d="{sector(cx, cy, r0 - 6, r1 + 4, -40, 0)}" fill="url(#{gid})"/>'
           f'<line x1="{cx}" y1="{cy - r0 + 6}" x2="{cx}" y2="{cy - r1 - 4}" stroke="{t["second"]}" stroke-width="2"/>'
@@ -504,9 +571,9 @@ def rhythm(t):
                 (hour_cmd, f"{f['hours'][f['peak']]:>4} {f['peak']:02d}")]
     term_h = 30 + sum(22 * len(c) + 28 for c, _ in commands) + 26
     if MOBILE:
-        table_y, dial_cy, f_y = 270, 606, 806
+        table_y, dial_cy, f_y = 270, 606, 852
     else:
-        table_y, dial_cy, f_y = 300, 236, 476
+        table_y, dial_cy, f_y = 300, 236, 500
     ty = f_y + 128
     H = ty + term_h + 24
     s = page(t, H, f"02 Rhythm: {f['night']}% of my commits land after 22:00 Moscow time. Peak hour "
@@ -515,7 +582,8 @@ def rhythm(t):
              "26 weeks, and two git commands that type themselves out with their real answers.")
     head(s, t, "02", "Rhythm", "Moscow time · last 26 weeks")
     tw = X1 - X0 if MOBILE else 360
-    headline(s, X0 - 6, 166 if MOBILE else 184, f"{f['night']}%", 112 if MOBILE else 124, t["second"], -5, 0.1)
+    headline(s, X0 - 6, 166 if MOBILE else 184, f"{f['night']}%", 112 if MOBILE else 124, t["second"], -5, 0.1,
+             glint=t["clay"])
     para(s, X0, 210 if MOBILE else 232, "of my commits land after 22:00.", 21, t["ink"], tw, 1.4, 700, delay=0.5)
     rows = [("Peak hour", f"{f['peak']:02d}:00"), ("Longest streak", f"{f['streak']} days"),
             ("Busiest day", f["weekday"]), ("Active days", str(len(f["per_day"])))]
@@ -538,6 +606,7 @@ def rhythm(t):
     peak_day = max(shown, key=shown.get) if shown else None
     for w in range(weeks):
         s.g("fade", f"--t:{0.4 + w * 0.035:.2f}s")
+        s.g("wave", f"--t:{2 + w * 0.09:.2f}s")
         for d in range(7):
             day = start + dt.timedelta(days=7 * w + d)
             if day > today:
@@ -547,9 +616,10 @@ def rhythm(t):
             if day == peak_day:
                 s.rect(x, y, cell, 8, t["second"])
             elif n:
-                s.rect(x, y, cell, 8, t["accent"], opacity=(0.35, 0.6, 0.8, 1)[(n >= 3) + (n >= 6) + (n >= 10)])
+                s.rect(x, y, cell, 8, t["leaf"], opacity=(0.35, 0.6, 0.8, 1)[(n >= 3) + (n >= 6) + (n >= 10)])
             else:
                 s.rect(x, y, cell, 8, t["rule"])
+        s.end()
         s.end()
     if peak_day:
         caps(s, X1, f_y - 16, f"busiest: {shown[peak_day]} on {peak_day.day} {MONTHS[peak_day.month - 1]}",
@@ -599,7 +669,7 @@ def toolkit(t):
     for i, (k, v) in enumerate(langs):
         n = round(cells * v / total)
         pct = f"{round(100 * v / total):>3}%"
-        parts = [(f"{k:<11} ", t["ink"]), ("█" * n, t["accent"] if i == 0 else t["ink"]),
+        parts = [(f"{k:<11} ", t["ink"]), ("█" * n, t[LANG_TOKEN.get(k, "grey")]),
                  ("░" * (cells - n), t["rule"]), (f" {pct}", t["grey"])]
         mono_text(s, X0, 92 + i * step, parts, size, delay=0.2 + i * 0.25, steps_per_s=50)
     s.line(X0, y0, X1, y0, t["rule"], 1.2)

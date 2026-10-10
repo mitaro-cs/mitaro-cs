@@ -18,7 +18,7 @@ METRICS = json.load(open(os.path.join(HERE, "metrics.json"), encoding="utf-8"))
 # its final state, so a viewer without motion sees the finished page.
 CSS = (
     "text{font-variant-numeric:tabular-nums}"
-    ".lift,.roll,.fade,.wide,.grow,.packet,.pulse,.type{animation-delay:var(--t,0s)}"
+    ".lift,.roll,.fade,.wide,.grow,.packet,.pulse,.type,.shine,.wave,.ripple{animation-delay:var(--t,0s)}"
     "@keyframes lift{from{transform:translateY(var(--dy))}to{transform:none}}"
     ".lift{animation:lift 1s cubic-bezier(.2,.8,.2,1) both}"
     "@keyframes roll{from{transform:translateY(var(--from))}to{transform:none}}"
@@ -42,6 +42,16 @@ CSS = (
     "@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}"
     ".blink{animation:blink 1s steps(1) infinite}"
     ".rest{opacity:0}"
+    "@keyframes shine{0%{transform:translateX(var(--from))}40%,100%{transform:translateX(var(--to))}}"
+    ".shine{animation:shine 6s cubic-bezier(.45,0,.55,1) infinite}"
+    "@keyframes wave{0%,100%{opacity:1}50%{opacity:.4}}"
+    ".wave{animation:wave 3.6s ease-in-out infinite}"
+    "@keyframes ripple{0%{transform:scale(.15);opacity:.9}75%,100%{transform:scale(1);opacity:0}}"
+    ".ripple{transform-box:fill-box;transform-origin:center;animation:ripple 2.6s cubic-bezier(.2,.7,.3,1) infinite}"
+    "@keyframes orbit{to{transform:rotate(360deg)}}"
+    ".orbit{transform-box:view-box;transform-origin:0 0;animation:orbit 10s linear infinite}"
+    "@keyframes depth{0%,40%{opacity:1}50%,90%{opacity:.15}100%{opacity:1}}"
+    ".depth{animation:depth 10s linear infinite}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
 
@@ -91,6 +101,12 @@ class Svg:
             a += f' opacity="{opacity}"'
         self.add(f"<rect {a} {extra}/>")
 
+    def circle(self, cx, cy, r, fill, opacity=1, extra=""):
+        a = f'cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="{fill}"'
+        if opacity != 1:
+            a += f' opacity="{opacity}"'
+        self.add(f"<circle {a} {extra}/>")
+
     def line(self, x1, y1, x2, y2, stroke, sw=1, opacity=1):
         a = f'x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{sw}"'
         if opacity != 1:
@@ -114,15 +130,22 @@ class Svg:
     def end(self):
         self.add("</g>")
 
-    def frames(self, n, dur, draw, style=""):
+    def frames(self, n, dur, draw, style="", blend=False):
         """Flip-book animation: n groups shown one at a time, dur seconds per loop. draw(i) adds frame i.
 
+        With blend, neighbouring frames cross-fade instead of cutting, which reads as smooth motion.
         Frame 0 is the resting state, so with reduced motion the first frame stays on screen."""
-        name = f"f{n}x{round(dur * 1000)}"
+        name = f"f{n}x{round(dur * 1000)}{'b' if blend else ''}"
         cut = 100 / n
-        self.css[name] = (f"@keyframes {name}{{0%,{cut:.3f}%{{opacity:1}}{cut + 0.001:.3f}%,100%{{opacity:0}}}}"
+        if blend:
+            keys = (f"0%{{opacity:0}}{cut * 0.5:.3f}%{{opacity:1}}{cut * 1.5:.3f}%{{opacity:0}}100%{{opacity:0}}")
+            timing = "linear"
+        else:
+            keys = f"0%,{cut:.3f}%{{opacity:1}}{cut + 0.001:.3f}%,100%{{opacity:0}}"
+            timing = "steps(1)"
+        self.css[name] = (f"@keyframes {name}{{{keys}}}"
                           f"@media (prefers-reduced-motion:no-preference){{.{name}{{opacity:0;"
-                          f"animation:{name} {dur}s steps(1) infinite}}}}")
+                          f"animation:{name} {dur}s {timing} infinite}}}}")
         for i in range(n):
             rest = " rest" if i else ""
             self.add(f'<g class="{name}{rest}" style="animation-delay:-{dur * (n - i) / n:.3f}s;{style}">')
