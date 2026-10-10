@@ -10,13 +10,15 @@ from xml.sax.saxutils import escape
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
+MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
+MONO_EM = 0.6   # every glyph of a monospace font is about 0.6 em wide
 METRICS = json.load(open(os.path.join(HERE, "metrics.json"), encoding="utf-8"))
 
 # Motion, all CSS so it stops under prefers-reduced-motion. Every animated element's resting state is
 # its final state, so a viewer without motion sees the finished page.
 CSS = (
     "text{font-variant-numeric:tabular-nums}"
-    ".lift,.roll,.fade,.wide,.grow,.packet,.pulse{animation-delay:var(--t,0s)}"
+    ".lift,.roll,.fade,.wide,.grow,.packet,.pulse,.type{animation-delay:var(--t,0s)}"
     "@keyframes lift{from{transform:translateY(var(--dy))}to{transform:none}}"
     ".lift{animation:lift 1s cubic-bezier(.2,.8,.2,1) both}"
     "@keyframes roll{from{transform:translateY(var(--from))}to{transform:none}}"
@@ -35,8 +37,17 @@ CSS = (
     ".pulse{animation:pulse 2.6s ease-in-out infinite}"
     "@keyframes tick{to{transform:translateX(var(--shift))}}"
     ".ticker{animation:tick var(--d) linear infinite}"
+    "@keyframes type{from{transform:translateX(var(--dx))}to{transform:none}}"
+    ".type{animation:type var(--d,1s) both}"
+    "@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}"
+    ".blink{animation:blink 1s steps(1) infinite}"
+    ".rest{opacity:0}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
+
+
+def mono_width(size, txt):
+    return len(txt) * size * MONO_EM
 
 
 def text_width(size, txt, weight=400, ls=0):
@@ -48,6 +59,7 @@ class Svg:
     def __init__(self, w, h, title, desc=""):
         self.w, self.h, self.title, self.desc = w, h, title, desc
         self.defs, self.body = [], []
+        self.css = {}   # extra rules, keyed so each is written once
         self._id = 0
 
     def uid(self, prefix="i"):
@@ -102,12 +114,27 @@ class Svg:
     def end(self):
         self.add("</g>")
 
+    def frames(self, n, dur, draw, style=""):
+        """Flip-book animation: n groups shown one at a time, dur seconds per loop. draw(i) adds frame i.
+
+        Frame 0 is the resting state, so with reduced motion the first frame stays on screen."""
+        name = f"f{n}x{round(dur * 1000)}"
+        cut = 100 / n
+        self.css[name] = (f"@keyframes {name}{{0%,{cut:.3f}%{{opacity:1}}{cut + 0.001:.3f}%,100%{{opacity:0}}}}"
+                          f"@media (prefers-reduced-motion:no-preference){{.{name}{{opacity:0;"
+                          f"animation:{name} {dur}s steps(1) infinite}}}}")
+        for i in range(n):
+            rest = " rest" if i else ""
+            self.add(f'<g class="{name}{rest}" style="animation-delay:-{dur * (n - i) / n:.3f}s;{style}">')
+            draw(i)
+            self.add("</g>")
+
     def render(self):
         desc = f"<desc>{escape(self.desc)}</desc>" if self.desc else ""
         return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" '
                 f'width="{self.w}" height="{self.h}" role="img" aria-label="{escape(self.title)}" '
                 f'font-family="{FONT}">'
-                f"<title>{escape(self.title)}</title>{desc}<defs><style>{CSS}</style>{''.join(self.defs)}</defs>"
+                f"<title>{escape(self.title)}</title>{desc}<defs><style>{CSS}{''.join(self.css.values())}</style>{''.join(self.defs)}</defs>"
                 f"{''.join(self.body)}</svg>")
 
     def save(self, out_dir, name):
