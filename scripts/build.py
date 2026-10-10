@@ -6,10 +6,12 @@ juniper, an arowana), a pen sketch on top of them, a vertical caption, and a dar
 with a top-down view of a gym and the text set in quotes. Everything is vector, drawn here; nothing
 outside the canvas has a background, so the cut-outs sit on GitHub's page in either theme.
 """
+import datetime as dt
 import json
 import math
 import os
 import random
+import re
 import sys
 
 from lib import Svg, text_width
@@ -237,5 +239,258 @@ def hero():
     return s
 
 
+# ------------------------------------------------------------------ shared: pen marks, water, data
+MSK = dt.timezone(dt.timedelta(hours=3))
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+NIGHT_HOURS = (22, 23, 0, 1, 2, 3)
+PIN_NAMES = ("campus", "storagesystem")   # Campus was called StorageSystem before the rename
+CODE_REPOS = [r for r in DATA["repos"] if r["name"] != "mitaro-cs"]   # the profile repo only holds the generator
+CODE_LANGS = ["Java", "Python", "Svelte", "TypeScript", "JavaScript", "CSS", "HTML"]
+OLIVE = ["#c9c7bd", "#a9b48a", "#7f8f57", "#56663a", "#2f3b22"]   # empty cell to busiest, juniper greens
+
+
+def pinned_repo():
+    return next(r for r in DATA["repos"] if r["name"].lower() in PIN_NAMES)
+
+
+def all_langs():
+    tot = {}
+    for r in CODE_REPOS:
+        for k, v in r["langs"].items():
+            if k == "Rich Text Format":
+                continue
+            key = k if k in CODE_LANGS else "Other"
+            tot[key] = tot.get(key, 0) + v
+    total = sum(tot.values()) or 1
+    out = {}
+    for k, v in tot.items():
+        key = k if (k != "Other" and 100 * v / total >= 4) else "Other"
+        out[key] = out.get(key, 0) + v
+    return sorted(out.items(), key=lambda kv: (kv[0] == "Other", -kv[1]))
+
+
+def facts():
+    times = sorted(dt.datetime.fromisoformat(c["ts"].replace("Z", "+00:00")).astimezone(MSK)
+                   for c in DATA["commits"])
+    per_day, hours, by_wd = {}, [0] * 24, [0] * 7
+    for m in times:
+        per_day[m.date()] = per_day.get(m.date(), 0) + 1
+        hours[m.hour] += 1
+        by_wd[m.weekday()] += 1
+    best = run = 0
+    prev = None
+    for d in sorted(per_day):
+        run = run + 1 if prev and (d - prev).days == 1 else 1
+        best, prev = max(best, run), d
+    return dict(per_day=per_day, hours=hours, streak=best,
+                night=round(100 * sum(hours[h] for h in NIGHT_HOURS) / max(1, len(times))),
+                peak=max(range(24), key=lambda h: hours[h]), weekday=WEEKDAYS[max(range(7), key=lambda d: by_wd[d])])
+
+
+def pen(s, rnd, d_fn, sw=1.4, passes=2, color=INK):
+    """Draws a stroke twice with a small tremor, like a quick pen line."""
+    for k in range(passes):
+        s.path(d_fn(lambda: rnd.uniform(-1.1, 1.1)), "none", color, sw - k * 0.5)
+
+
+def pen_ring(s, rnd, cx, cy, rx, ry, color=INK):
+    """A hand-drawn loop around something, one and a bit turns."""
+    pts = []
+    start = rnd.uniform(0, math.tau)
+    for k in range(44):
+        a = start + k / 36 * math.tau
+        f = 1 + 0.06 * math.sin(a * 3) + rnd.uniform(-0.02, 0.02)
+        pts.append((cx + math.cos(a) * rx * f, cy + math.sin(a) * ry * f))
+    s.path("M" + " L".join(f"{x:.1f} {y:.1f}" for x, y in pts), "none", color, 1.3)
+
+
+def pen_arrow(s, rnd, x0, y0, x1, y1, bend=20, color=INK):
+    mx, my = (x0 + x1) / 2, (y0 + y1) / 2
+    dx, dy = x1 - x0, y1 - y0
+    n = math.hypot(dx, dy) or 1
+    cx, cy = mx - dy / n * bend, my + dx / n * bend
+    pen(s, rnd, lambda j: f"M{x0 + j():.1f} {y0 + j():.1f}Q{cx:.1f} {cy:.1f} {x1:.1f} {y1:.1f}", 1.3, 1, color)
+    a = math.atan2(y1 - cy, x1 - cx)
+    for da in (2.6, -2.6):
+        s.line(x1, y1, x1 + math.cos(a + da) * 9, y1 + math.sin(a + da) * 9, color, 1.3)
+
+
+def water(s, x, y, w, h, seed=3):
+    """Dark water seen from above: a deep gradient and short light wave strokes."""
+    rnd = random.Random(seed)
+    cid = s.uid("wa")
+    s.defs.append(f'<clipPath id="{cid}"><rect x="{x}" y="{y}" width="{w}" height="{h}"/></clipPath>')
+    s.add(f'<g clip-path="url(#{cid})">')
+    s.rect(x, y, w, h, s.gradient([(0, "#2f4048", 1), (0.5, "#22323a", 1), (1, "#151f24", 1)], 0, 0, 0.3, 1))
+    for _ in range(260):
+        px, py = rnd.uniform(x - 10, x + w), rnd.uniform(y, y + h)
+        ln = rnd.uniform(6, 22)
+        s.path(f"M{px:.1f} {py:.1f}q{ln / 2:.1f} {-rnd.uniform(1, 3):.1f} {ln:.1f} 0", "none",
+               rnd.choice(("#9fb7bf", "#d9e4e4", "#5f7a84")), rnd.uniform(0.6, 1.4), round(rnd.uniform(0.15, 0.6), 2))
+    s.rect(x, y, w, h, "#0c1418", opacity=0.35)
+    s.add("</g>")
+
+
+def column_text(s, tx, y, tw, paras, size=13.5):
+    for para in paras:
+        for ln in wrap(f"«{para}»", size, tw):
+            s.text(tx, y, ln, size, PAPER)
+            y += size * 1.5
+        y += 16
+    return y
+
+
+def vertical(s, x, y, txt, color=INK):
+    s.add(f'<text x="0" y="0" font-size="11" fill="{color}" letter-spacing=".5" text-anchor="middle" '
+          f'transform="translate({x} {y}) rotate(-90)">{txt}</text>')
+
+
+# ------------------------------------------------------------------ slide 2: Campus
+def campus_logo_sketch(s, rnd, x, y, size):
+    """The Campus logo (Atlas carrying a globe) redrawn as a pen sketch with hatching."""
+    src = open(os.path.join(HERE, "icons", "campus.svg"), encoding="utf-8").read()
+    grid = re.search(r'id="grid"[^>]*\sd="([^"]+)"', src).group(1)
+    figure = re.search(r'id="figure"[^>]*\sd="([^"]+)"', src).group(1)
+    k = size / 600
+    cid = s.uid("gl")
+    s.defs.append(f'<clipPath id="{cid}"><circle cx="347.8" cy="273.1" r="165"/></clipPath>')
+    s.g(transform=f"translate({x:.1f} {y:.1f}) scale({k:.4f}) translate(-66 -72)")
+    s.add(f'<circle cx="347.8" cy="273.1" r="165" fill="{PAPER}"/>')
+    s.add(f'<g clip-path="url(#{cid})">')
+    for i in range(-20, 40):          # shading on the lower right of the globe
+        x0 = 200 + i * 12
+        s.add(f'<line x1="{x0}" y1="480" x2="{x0 + 260}" y2="220" stroke="{INK}" stroke-width="2.4" opacity=".55"/>')
+    s.add(f'<circle cx="300" cy="225" r="150" fill="{PAPER}"/>')
+    s.add("</g>")
+    for dx, dy, sw in ((0, 0, 5), (3, -2, 2.6)):
+        s.add(f'<circle cx="{347.8 + dx}" cy="{273.1 + dy}" r="165" fill="none" stroke="{INK}" stroke-width="{sw}"/>')
+    s.add(f'<path d="{grid}" clip-path="url(#{cid})" fill="none" stroke="{INK}" stroke-width="3.2"/>')
+    s.add(f'<path d="{figure}" fill="{CANVAS}" stroke="{INK}" stroke-width="5"/>')
+    s.add(f'<path d="{figure}" fill="none" stroke="{INK}" stroke-width="2.4" transform="translate(4 -3)" opacity=".6"/>')
+    s.add(f'<circle cx="503.5" cy="390" r="9" fill="{INK}"/>')
+    s.end()
+
+
+def campus():
+    H = 450
+    r = pinned_repo()
+    pin = DATA.get("pin") or {}
+    rnd = random.Random(31)
+    # arrows land on the drawing: around the globe, then down the figure
+    notes = [(pin.get("java"), "Java classes", (470, 64)), (pin.get("svelte"), "Svelte components", (494, 120)),
+             (pin.get("tests"), "test files", (498, 186)), (pin.get("migrations"), "database migrations", (462, 228)),
+             (pin.get("screens"), "screens", (440, 286)), (pin.get("versions"), "versions shipped", (392, 318))]
+    notes = [n for n in notes if n[0]]
+    s = Svg(W, H, f"Campus, the pinned project: a study-group site and app that lives on the group leader's own "
+            f"computer. {r.get('release') or ''}, {r['commits']} commits, "
+            + ", ".join(f"{v} {lab}" for v, lab, _ in notes) + ".",
+            "The Campus logo, Atlas carrying a globe, drawn as a pen sketch on a grey canvas, with hand-drawn arrows "
+            "to the project's numbers, and a column of dark water with the text.")
+    col_w = 252
+    s.rect(col_w - 16, 60, 600, H - 110, CANVAS)
+    campus_logo_sketch(s, rnd, 248, 8, 330)
+    for i, (v, lab, (ax, ay)) in enumerate(notes):
+        ty = 104 + i * 50
+        s.text(620, ty, str(v), 24, INK, 700)
+        s.text(620 + text_width(24, str(v)) + 10, ty, lab, 12, INK)
+        pen_arrow(s, rnd, 612, ty - 8, ax, ay, bend=10 if i % 2 else -10)
+    vertical(s, col_w - 16 + 600 - 12, 230, "pinned project · github.com/mitaro-cs/Campus")
+    water(s, 0, 0, col_w, H)
+    tx, tw = 26, col_w - 48
+    s.text(tx, 52, "CAMPUS", 13, PAPER, 700, ls=3)
+    s.text(tx, 72, f"{r.get('release') or 'in progress'} · {r['commits']} commits · AGPL-3.0", 10.5, "#c9c6bb")
+    column_text(s, tx, 128, tw, ["A site and an app for one study group: homework, a schedule, news and files.",
+                                 "It runs on the group leader's computer. Every phone keeps a copy and syncs "
+                                 "when the host is back on."], 12.5)
+    s.text(tx, H - 34, "Windows · macOS · iPhone · Android", 10.5, "#c9c6bb")
+    return s
+
+
+# ------------------------------------------------------------------ slide 3: when I commit
+def activity():
+    H = 420
+    f = facts()
+    rnd = random.Random(17)
+    langs = all_langs()
+    repos = DATA["repos"]
+    kb = sum(v for r in CODE_REPOS for k, v in r["langs"].items() if k != "Rich Text Format") // 1000
+    nums = [("repositories", len(repos)), ("commits", sum(r["commits"] for r in repos)),
+            ("stars", sum(r["stars"] for r in repos)), ("followers", DATA["followers"]),
+            ("of code", f"{kb / 1000:.1f} MB" if kb >= 1000 else f"{kb} KB")]
+    s = Svg(W, H, "When I commit: 26 weeks of commits per day, commits by hour in Moscow time, and my numbers on "
+            f"GitHub. Longest streak {f['streak']} days, peak hour {f['peak']:02d}:00, {f['night']}% after 22:00.",
+            "A grey canvas with a heatmap and an hourly bar chart in juniper greens, pen notes on the busiest spots, "
+            "and a dark column with the totals and languages.")
+    cx0, cy0, cw, ch = 30, 46, 620, 330
+    s.rect(cx0, cy0, cw, ch, CANVAS)
+    s.text(cx0 + 30, cy0 + 40, "when I commit", 20, INK, 700)
+    s.text(cx0 + 30, cy0 + 60, "Moscow time · last 26 weeks", 11, "#55574f")
+
+    weeks, cell, gap = 26, 12, 3
+    today = dt.datetime.now(MSK).date()
+    start = today - dt.timedelta(days=today.weekday() + 7 * (weeks - 1))
+    hx, hy = cx0 + 30, cy0 + 82
+    busiest = None
+    for w in range(weeks):
+        for d in range(7):
+            day = start + dt.timedelta(days=7 * w + d)
+            if day > today:
+                continue
+            n = f["per_day"].get(day, 0)
+            x, y = hx + w * (cell + gap), hy + d * (cell + gap)
+            s.rect(x, y, cell, cell, OLIVE[0 if not n else 1 + (n >= 3) + (n >= 6) + (n >= 10)], rx=2)
+            if n and (busiest is None or n > busiest[0]):
+                busiest = (n, x + cell / 2, y + cell / 2, day)
+    if busiest:
+        pen_ring(s, rnd, busiest[1], busiest[2], 16, 14)
+        bx = hx + weeks * (cell + gap) + 18
+        pen_arrow(s, rnd, bx + 4, hy + 6, busiest[1] + 12, busiest[2] - 10, bend=-16)
+        s.text(bx + 8, hy + 10, f"{busiest[0]} commits", 13, INK, 700)
+        s.text(bx + 8, hy + 26, f"on {busiest[3].day} {MONTHS[busiest[3].month - 1]}", 11, "#55574f")
+        s.text(bx + 8, hy + 58, f"{f['streak']}-day streak", 13, INK, 700)
+        s.text(bx + 8, hy + 74, f"busiest: {f['weekday']}", 11, "#55574f")
+
+    # by hour: pen-hatched bars, night hours in ink
+    bx0, by0, bw, bh = hx, cy0 + 214, weeks * (cell + gap) - gap, 80
+    top = max(f["hours"]) or 1
+    slot = bw / 24
+    for h, n in enumerate(f["hours"]):
+        hgt = max(2.0, bh * n / top)
+        x = bx0 + h * slot
+        night = h in NIGHT_HOURS
+        s.rect(x + 1, by0 + bh - hgt, slot - 3, hgt, INK if night else "#7f8f57", opacity=0.85 if night else 0.9)
+    s.line(bx0, by0 + bh + 1, bx0 + bw, by0 + bh + 1, INK, 1.2)
+    for h in (0, 6, 12, 18, 23):
+        s.text(bx0 + h * slot + (slot if h == 23 else 0), by0 + bh + 16, f"{h:02d}", 10.5, "#55574f",
+               anchor="end" if h == 23 else "start")
+    px = bx0 + f["peak"] * slot + slot / 2
+    nx = bx0 + bw + 18
+    pen_arrow(s, rnd, nx + 4, by0 + 10, px + 4, by0 + 2, bend=18)
+    s.text(nx + 8, by0 + 14, f"peak {f['peak']:02d}:00", 13, INK, 700)
+    pen_arrow(s, rnd, nx + 4, by0 + 52, bx0 + bw - slot, by0 + bh - 30, bend=-10)
+    s.text(nx + 8, by0 + 56, f"{f['night']}% after 22:00", 13, INK, 700)
+    vertical(s, cx0 + cw - 12, cy0 + ch / 2, "data: GitHub API · refreshed every 6 hours")
+
+    col_x = 640
+    water(s, col_x, 0, W - col_x, H, seed=9)
+    tx = col_x + 26
+    s.text(tx, 52, "ON GITHUB", 13, PAPER, 700, ls=3)
+    for i, (lab, v) in enumerate(nums):
+        y = 96 + i * 36
+        s.text(tx, y, str(v), 22, PAPER, 700)
+        s.text(tx + text_width(22, str(v)) + 10, y, lab, 11.5, "#c9c6bb")
+    total = sum(v for _, v in langs) or 1
+    y = 96 + len(nums) * 36 + 6
+    s.text(tx, y, "LANGUAGES", 11, PAPER, 700, ls=2)
+    for i, (k, v) in enumerate(langs[:6]):
+        yy = y + 22 + i * 18
+        s.text(tx, yy, k, 11.5, PAPER)
+        s.text(W - 26, yy, f"{round(100 * v / total)}%", 11.5, "#c9c6bb", anchor="end")
+    return s
+
+
 if __name__ == "__main__":
     hero().save(OUT, "hero.svg")
+    campus().save(OUT, "campus.svg")
+    activity().save(OUT, "activity.svg")

@@ -1,5 +1,5 @@
-Third-party material in the profile generator:
+Material in the profile generator:
 
-- `icons/`: brand glyphs from Simple Icons (CC0 1.0).
+- `icons/campus.svg`: the Campus logo, from github.com/mitaro-cs/Campus (same author).
 
-No font is embedded; the SVGs use the system monospace font.
+Everything else is drawn by `build.py`. No font is embedded; the SVGs use the system monospace font.
