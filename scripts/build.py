@@ -6,8 +6,10 @@ Light format: a few flat cards, no photos, no grain, small files. Every card is 
 Palette rule: only the ten colours pulled from the avatar (lib.PALETTE).
 Type: Instrument Serif for names, JetBrains Mono for everything that is data.
 """
+import datetime as dt
 import json
 import os
+import re
 import sys
 
 from lib import (BENCH, CLAY, LEAF, MIST, NIGHT, PALETTE, SHADE, SHIRT, SKIN, STONE, WOOD, Svg, icon_path,
@@ -136,22 +138,22 @@ def header(t, theme):
 PIN = dict(
     name="Campus",
     tag="A study-group site and app that lives on the group leader's own computer.",
-    feats=["Works offline, syncs when the host is back on",
-           "Schedule straight from an .ics calendar file",
-           "Files encrypted on disk with AES-256-GCM",
-           "Sign in with a passkey, fingerprint or face",
-           "Live updates and push for new homework",
-           "Host app for Windows and macOS, one-click updates"],
-    stack=["Java", "Spring Boot", "Svelte", "Tauri"],
     platforms="Windows · macOS · iPhone · Android",
     license="AGPL-3.0",
+    stack=["Java", "Spring Boot", "Svelte", "Tauri"],
 )
+# what the project is made of; counted from its file tree by fetch.py
+PIN_TILES = [("java", "JAVA CLASSES"), ("svelte", "COMPONENTS"), ("tests", "TEST FILES"),
+             ("migrations", "MIGRATIONS"), ("screens", "SCREENS"), ("versions", "VERSIONS")]
 
 
 def pinned(t, theme):
     r = pinned_repo()
-    H = 318
-    s = card(t, H, f"Pinned: {PIN['name']}. {PIN['tag']}")
+    stats = DATA.get("pin") or {}
+    tiles = [(str(stats[k]), lab) for k, lab in PIN_TILES if stats.get(k)]
+    H = 376 if tiles else 260
+    s = card(t, H, f"Pinned: {PIN['name']}. {PIN['tag']} "
+             + ", ".join(f"{v} {lab.lower()}" for v, lab in tiles))
     s.add(f'<path d="{icon_path("pin")}" fill="{t["accent"]}" transform="translate(34 30) scale(.67)"/>')
     kicker(s, 56, 44, "PINNED PROJECT", t["accent"])
     kicker(s, W - 36, 44, PIN["platforms"].upper(), t["mute"], 10.5, anchor="end")
@@ -159,27 +161,132 @@ def pinned(t, theme):
     s.text(32, 106, PIN["name"], "serif", 62, t["ink"])
     s.end()
     s.text(36, 138, PIN["tag"], "serif", 22, t["soft"])
-    colw = (W - 72) / 2
-    for i, f in enumerate(PIN["feats"]):
-        x, y = 36 + (i % 2) * colw, 178 + (i // 2) * 28
-        s.g("rise", f"animation-delay:{0.1 + i * 0.06:.2f}s")
-        s.text(x, y, "—", "mono", 13, t["accent"], 700)
-        s.text(x + 22, y, f, "mono", 13, t["ink"], 500)
-        s.end()
-    s.line(36, 252, W - 36, 252, t["edge"], 1.2)
-    meta = [("RELEASE", r.get("release") or "—"), ("COMMITS", str(r["commits"])), ("LICENSE", PIN["license"])]
-    x = 36
-    for a, b in meta:
-        kicker(s, x, 276, a, t["mute"], 10)
-        s.text(x, 300, b, "mono", 15, t["ink"], 700)
-        x += max(text_width("mono", 700, 15, b), text_width("mono", 700, 10, a, 2.6)) + 34
+    y = 166
+    if tiles:
+        s.line(36, y, W - 36, y, t["edge"], 1.2)
+        cw = (W - 72) / len(tiles)
+        for i, (v, lab) in enumerate(tiles):
+            x = 36 + i * cw
+            s.g("rise", f"animation-delay:{0.1 + i * 0.06:.2f}s")
+            s.text(x - 2, 222, v, "serif", 46, t["ink"])
+            kicker(s, x, 246, lab, t["mute"], 9.5)
+            s.end()
+            if i:
+                s.line(x - 14, 190, x - 14, 248, t["edge"], 1)
+        y = 272
+    s.line(36, y, W - 36, y, t["edge"], 1.2)
+    langs = bucket_langs(r["langs"], 3)
+    bw = 380
+    kicker(s, 36, y + 28, "LANGUAGES", t["mute"], 10)
+    total = lang_bar(s, t, theme, 36, y + 40, bw, 8, langs)
+    lx = 36
+    for k, v in langs[:4]:
+        s.add(f'<circle cx="{lx + 4}" cy="{y + 71}" r="4" fill="{LANG_COLOR.get(k, LANG_COLOR["Other"])[theme == "dark"]}" '
+              f'stroke="{t["edge"]}" stroke-width="1"/>')
+        lab = f"{k} {round(100 * v / total)}%"
+        s.text(lx + 13, y + 75, lab, "mono", 11, t["soft"], 600)
+        lx += text_width("mono", 600, 11, lab) + 28
     cx = W - 36
     for k in reversed(PIN["stack"]):
         tw = text_width("mono", 700, 11.5, k) + 22
         cx -= tw
-        s.rect(cx, 278, tw, 26, t["chip"], t["edge"], 1.2, 13)
-        s.text(cx + tw / 2, 295.5, k, "mono", 11.5, t["soft"], 700, anchor="middle")
+        s.rect(cx, y + 20, tw, 26, t["chip"], t["edge"], 1.2, 13)
+        s.text(cx + tw / 2, y + 37.5, k, "mono", 11.5, t["soft"], 700, anchor="middle")
         cx -= 8
+    meta = f"{r.get('release') or 'NO RELEASE'}  ·  {r['commits']} COMMITS  ·  {PIN['license']}"
+    kicker(s, W - 36, y + 75, meta.upper(), t["mute"], 10, anchor="end")
+    return s
+
+
+# ------------------------------------------------------------------ activity: when and how often
+MSK = dt.timezone(dt.timedelta(hours=3))
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
+def commit_times():
+    return [dt.datetime.fromisoformat(c["ts"].replace("Z", "+00:00")).astimezone(MSK) for c in DATA["commits"]]
+
+
+def streaks(days):
+    """Longest run of consecutive days with commits."""
+    best = run = 0
+    prev = None
+    for d in sorted(days):
+        run = run + 1 if prev and (d - prev).days == 1 else 1
+        best, prev = max(best, run), d
+    return best
+
+
+def activity(t, theme):
+    times = commit_times()
+    per_day = {}
+    for m in times:
+        per_day[m.date()] = per_day.get(m.date(), 0) + 1
+    hours = [0] * 24
+    for m in times:
+        hours[m.hour] += 1
+    by_wd = [0] * 7
+    for m in times:
+        by_wd[m.weekday()] += 1
+    night = sum(hours[h] for h in (22, 23, 0, 1, 2, 3))
+    peak = max(range(24), key=lambda h: hours[h])
+    tiles = [("LONGEST STREAK", f"{streaks(per_day)} days"), ("ACTIVE DAYS", str(len(per_day))),
+             ("BUSIEST DAY", WEEKDAYS[max(range(7), key=lambda d: by_wd[d])]),
+             ("PEAK HOUR", f"{peak:02d}:00"), ("AFTER 22:00", f"{round(100 * night / max(1, len(times)))}%")]
+    H = 318
+    s = card(t, H, "Activity: commits per day over the last 26 weeks and by hour of the day. "
+             + ", ".join(f"{a.lower()} {b}" for a, b in tiles))
+    acc = t["accent"]
+
+    # heatmap: 26 weeks x 7 days, newest week on the right
+    weeks, cell, gap = 26, 13, 3
+    today = dt.datetime.now(MSK).date()
+    start = today - dt.timedelta(days=today.weekday() + 7 * (weeks - 1))
+    kicker(s, 36, 44, f"LAST {weeks} WEEKS", t["mute"], 10.5)
+    shown = sum(v for d, v in per_day.items() if d >= start)
+    kicker(s, 36 + weeks * (cell + gap) - gap, 44, f"{shown} COMMITS", acc, 10.5, anchor="end")
+    last_month = None
+    for w in range(weeks):
+        for d in range(7):
+            day = start + dt.timedelta(days=7 * w + d)
+            if day > today:
+                continue
+            n = per_day.get(day, 0)
+            x, y = 36 + w * (cell + gap), 62 + d * (cell + gap)
+            if n:
+                op = (0.3, 0.55, 0.8, 1)[(n >= 3) + (n >= 6) + (n >= 10)]
+                s.rect(x, y, cell, cell, acc, rx=3, opacity=op)
+            else:
+                s.rect(x, y, cell, cell, t["edge"], rx=3, opacity=0.45)
+        first = start + dt.timedelta(days=7 * w)
+        if first.month != last_month and w < weeks - 1:
+            s.text(36 + w * (cell + gap), 192, MONTHS[first.month - 1], "mono", 10.5, t["mute"], 600)
+            last_month = first.month
+
+    # commits by hour, Moscow time; the night hours take the accent
+    hx, hw = 500, W - 36 - 500
+    kicker(s, hx, 44, "BY HOUR, MOSCOW TIME", t["mute"], 10.5)
+    bw = (hw - 23 * 3) / 24
+    top = max(hours) or 1
+    for h, n in enumerate(hours):
+        bh = max(2.0, 110 * n / top)
+        x = hx + h * (bw + 3)
+        s.g("rise", f"animation-delay:{h * 0.02:.2f}s")
+        s.rect(x, 172 - bh, bw, bh, acc if h in (22, 23, 0, 1, 2, 3) else t["mute"], rx=2,
+               opacity=1 if n else 0.3)
+        s.end()
+    for h in (0, 6, 12, 18):
+        s.text(hx + h * (bw + 3), 192, f"{h:02d}", "mono", 10.5, t["mute"], 600)
+    s.text(hx + hw, 192, "23", "mono", 10.5, t["mute"], 600, anchor="end")
+
+    s.line(36, 214, W - 36, 214, t["edge"], 1.2)
+    cw = (W - 72) / len(tiles)
+    for i, (a, b) in enumerate(tiles):
+        x = 36 + i * cw
+        s.g("rise", f"animation-delay:{0.2 + i * 0.07:.2f}s")
+        kicker(s, x, 246, a, acc if a == "AFTER 22:00" else t["mute"], 10)
+        s.text(x - 2, 288, b, "serif", 36, t["ink"])
+        s.end()
     return s
 
 
@@ -249,7 +356,14 @@ def commits(t, theme):
     H = 70 + len(rows) * 34 + 14
     s = card(t, H, "Latest commits: " + "; ".join(c["msg"] for c in rows))
     kicker(s, 36, 44, "LATEST COMMITS", t["mute"], 10.5)
-    kicker(s, W - 36, 44, "UPDATES EVERY 6 HOURS", t["mute"], 10.5, anchor="end")
+    kinds = {}
+    for c in DATA["commits"]:
+        m = re.match(r"(\w+)(\(.*?\))?!?:", c["msg"])
+        if m:
+            kinds[m.group(1).lower()] = kinds.get(m.group(1).lower(), 0) + 1
+    top = sorted(kinds.items(), key=lambda kv: -kv[1])[:3]
+    kicker(s, W - 36, 44, "  ·  ".join(f"{n} {k}" for k, n in top).upper() or "UPDATES EVERY 6 HOURS",
+           t["mute"], 10.5, anchor="end")
     for i, c in enumerate(rows):
         y = 84 + i * 34
         if i:
@@ -267,6 +381,7 @@ def commits(t, theme):
 if __name__ == "__main__":
     both(header, "header")
     both(pinned, "pinned")
+    both(activity, "activity")
     both(numbers, "numbers")
     both(stack, "stack")
     both(commits, "commits")

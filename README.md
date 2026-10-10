@@ -4,9 +4,9 @@ I'm **Omar**, online **Mitaro**, a computer science student at **MTUCI**. I writ
 
 [Telegram](https://t.me/treadways) · [Email](mailto:miri.saro@bk.ru) · [Instagram](https://instagram.com/stere.os)
 
-<a href="https://github.com/mitaro-cs/Campus"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/pinned-dark.svg"><img src="assets/pinned-light.svg" width="100%" alt="Pinned project: Campus. A study-group site and app that lives on the group leader's own computer. Works offline, schedule from an .ics file, files encrypted with AES-256-GCM, passkey sign-in, live updates and push, host app for Windows and macOS. Java, Spring Boot, Svelte, Tauri."></picture></a>
+<a href="https://github.com/mitaro-cs/Campus"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/pinned-dark.svg"><img src="assets/pinned-light.svg" width="100%" alt="Pinned project: Campus. A study-group site and app that lives on the group leader's own computer, for Windows, macOS, iPhone and Android. Counts of Java classes, Svelte components, test files, database migrations, screens and versions; its languages, stack, release and license."></picture></a>
 
-<a href="https://github.com/mitaro-cs/Campus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mitaro-cs/Campus/miaro/docs/screenshots/desktop-today-dark.webp"><img src="https://raw.githubusercontent.com/mitaro-cs/Campus/miaro/docs/screenshots/desktop-today-light.webp" width="100%" alt="Campus, the Today screen: the nearest deadline, homework by day and group news."></picture></a>
+Homework, schedule from an `.ics` file, news and files for one study group. It works offline, keeps files encrypted on disk with AES-256-GCM, signs in with passkeys and syncs when the host computer is back on.
 
 <details>
 <summary><b>Run Campus</b></summary>
@@ -20,11 +20,13 @@ Classmates open the link, sign in and add the site to their home screen as an ap
 
 </details>
 
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/activity-dark.svg"><img src="assets/activity-light.svg" width="100%" alt="Activity: commits per day over the last 26 weeks, commits by hour in Moscow time, the longest streak, active days, the busiest weekday, the peak hour and the share of commits after 22:00."></picture>
+
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/numbers-dark.svg"><img src="assets/numbers-light.svg" width="100%" alt="GitHub in numbers: repositories, commits, stars, followers, the amount of code, and code by language."></picture>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg"><img src="assets/stack-light.svg" width="100%" alt="Tech stack: Python, Flask, Java, Spring, Svelte, TypeScript, JavaScript, HTML5, CSS3, SQLite, Docker, Tauri, Rust, Git, GitHub Actions, Bash, Linux, Figma, Obsidian, Zed."></picture>
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="assets/commits-dark.svg"><img src="assets/commits-light.svg" width="100%" alt="My six latest commits with their date, repository and message."></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/commits-dark.svg"><img src="assets/commits-light.svg" width="100%" alt="My six latest commits with their date, repository and message, and the most common commit kinds."></picture>
 
 Also in my repositories: [VantaVault](https://github.com/mitaro-cs/VantaVault), a private vault for external drives; [AetherCloud](https://github.com/mitaro-cs/AetherCloud), your own disk as a private cloud; [Kworking](https://github.com/mitaro-cs/KworkingSystem), a booking panel for a campus coworking space; and [Mouros](https://github.com/mitaro-cs/Mouros), my Python practice archive.
 

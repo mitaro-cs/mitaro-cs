@@ -3,6 +3,7 @@
 
 Uses GITHUB_TOKEN / GH_TOKEN when present (Actions), else the `gh` CLI token, else anonymous.
 """
+import base64
 import datetime
 import json
 import os
@@ -64,12 +65,51 @@ def commit_list(repo):
         page += 1
 
 
+PIN_NAMES = ("campus", "storagesystem")   # the pinned project; it was StorageSystem before the rename
+
+
+def project_stats(paths, changelog):
+    """What the pinned project is made of, from its file tree and changelog."""
+    def count(pat):
+        return sum(1 for p in paths if re.search(pat, p))
+    migrations = [int(m) for p in paths for m in re.findall(r"/db/migration/V(\d+)__", p)]
+    return {
+        "java": count(r"^src/main/java/.+\.java$"),
+        "svelte": count(r"\.svelte$"),
+        "tests": count(r"^src/test/.+(Test|IT)\.java$") + count(r"\.spec\.ts$"),
+        "migrations": max(migrations, default=0),
+        "screens": count(r"^web/src/routes/.*\+page\.svelte$"),
+        "versions": len(re.findall(r"^## \d", changelog, re.M)),
+    }
+
+
+def pin_stats(repo, branch, old):
+    try:
+        tree = get(f"/repos/{USER}/{repo}/git/trees/{branch}?recursive=1") or {}
+        log = get(f"/repos/{USER}/{repo}/contents/CHANGELOG.md?ref={branch}") or {}
+        changelog = base64.b64decode(log.get("content", "")).decode("utf-8", "replace")
+        paths = [t["path"] for t in tree.get("tree", []) if t["type"] == "blob"]
+        if not paths or tree.get("truncated"):
+            return old
+        return project_stats(paths, changelog)
+    except Exception as e:                   # a failed call keeps the last good numbers on the card
+        print(f"pinned stats skipped: {e}", file=sys.stderr)
+        return old
+
+
 def main():
     user = get(f"/users/{USER}")
-    repos = []
+    out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "data.json")
+    try:
+        prev = json.load(open(os.path.join(HERE, "data.json")))
+    except (OSError, ValueError):
+        prev = {}
+    repos, pin = [], prev.get("pin")
     for r in get(f"/users/{USER}/repos?per_page=100&sort=created"):
         if r["fork"]:
             continue
+        if r["name"].lower() in PIN_NAMES:
+            pin = pin_stats(r["name"], r["default_branch"], pin)
         rel = get(f"/repos/{USER}/{r['name']}/releases/latest")
         repos.append({
             "name": r["name"],
@@ -89,9 +129,9 @@ def main():
         # changes once a week, so the workflow commits at least weekly and GitHub never marks the repo inactive
         "week": "{}-W{:02d}".format(*datetime.date.today().isocalendar()[:2]),
         "repos": repos,
+        "pin": pin,
         "commits": commits,
     }
-    out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "data.json")
     with open(out, "w") as fh:
         json.dump(data, fh, indent=2)
     print(f"wrote {out}: {len(repos)} repos, {sum(r['commits'] for r in repos)} commits")

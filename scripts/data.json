@@ -144,6 +144,14 @@
       "release": null
     }
   ],
+  "pin": {
+    "java": 189,
+    "svelte": 163,
+    "tests": 103,
+    "migrations": 35,
+    "screens": 27,
+    "versions": 30
+  },
   "commits": [
     {
       "repo": "StorageSystem",
