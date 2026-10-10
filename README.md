@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/profile.svg" width="100%" alt="Mitaro's profile window. @mitaro-cs: Omar or Mitaro, CS student at MTUCI, backend and security, local-first nerd. Likes Java, Svelte, encryption, local-first apps and combat sports; dislikes cloud lock-in, clever code and plain-text passwords. A pixel dog as the avatar and falling green code.">
+<img src="assets/profile.svg" width="100%" alt="Mitaro's profile window. @mitaro-cs: Omar or Mitaro, CS student at MTUCI, backend and security, local-first nerd. Likes Java, Svelte, encryption, local-first apps and combat sports; dislikes cloud lock-in, clever code and plain-text passwords. The Campus logo, Atlas carrying a globe, as the avatar, and falling code.">
 <img src="assets/rules.svg" width="100%" alt="Before you follow: I commit at odd hours, in Russian and English, mostly Java and Svelte. Don't follow if you keep passwords in plain text, trust only the cloud, or think readable code is for beginners.">
 <img src="assets/interests.svg" width="100%" alt="Mitaro is online. My interests: Campus, local-first software, security and cryptography, Java and Spring Boot, Svelte and Tauri, hand-to-hand combat, a Jarvis-style AI assistant. Find me on Telegram, email, Instagram and GitHub, with a status readout of my last commit, best streak, night share, peak hour and best day.">
 

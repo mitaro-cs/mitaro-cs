@@ -3,7 +3,7 @@
 
 Style: an old-web profile page on a Matrix terminal, in the colours of the avatar (lib.py):
 dark boxes with bark borders, falling code in leaf green,
-a pixel version of the dog from the avatar, a Nokia that shows the pinned project, and a terminal
+the Campus logo as the avatar, a Nokia that shows the pinned project, and a terminal
 with the commit stats. The panels carry their own black background, so they read the same on
 GitHub's light and dark themes. Text uses the system monospace font, nothing is embedded.
 """
@@ -11,6 +11,7 @@ import datetime as dt
 import json
 import os
 import random
+import re
 import sys
 
 from lib import BRASS, CODE, DIM, FRAME, GLOW, LCD, LCD_INK, LINE, MOSS, MUTED, PANEL, TEXT, VOID, Svg, text_width
@@ -34,31 +35,6 @@ LANG_COLOR = {"Java": GLOW, "Svelte": BRASS, "Python": LCD, "TypeScript": CODE, 
 HEAT = ["#231f1e", "#473e3a", "#7a5546", "#b27660", "#e6a986"]   # bench wood warming up to skin
 RAIN_CHARS = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ0123456789Z:=*+<>"
 
-# the little crested dog from the avatar, in phosphor: W fur, D body, d shade, E eyes and nose
-DOG = [
-    ".W..............W.",
-    ".WD............DW.",
-    ".WDD..........DDW.",
-    "..WDD.WWWWWW.DDW..",
-    "..WDDWWWWWWWWDDW..",
-    "...DDDWWWWWWDDD...",
-    "...DDDDDDDDDDDD...",
-    "...DDEEDDDDEEDD...",
-    "...DDEWDDDDEWDD...",
-    "...DDDDDDDDDDDD...",
-    "....DDDdEEdDDD....",
-    "....DDDdEEdDDD....",
-    ".....DDWWWWDD.....",
-    "......DDWWDD......",
-    ".....DDDWWDDD.....",
-    "....DDDDDDDDDD....",
-    "...DDDDDDDDDDDD..W",
-    "...DDDDDDDDDDDD.W.",
-    "...DDdDDDDDDdDDDW.",
-    "...DDdDDDDDDdDDD..",
-    "...DD.DD..DD.DD...",
-    "..WWW.WW..WW.WWW..",
-]
 RABBIT = [
     "..W...W.....",
     "..W...W.....",
@@ -179,6 +155,32 @@ def sprite(s, rows, x, y, px, colors):
                 s.rect(x + i * px, y + j * px, px, px, colors[ch])
 
 
+def campus_logo(s, x, y, size):
+    """The Campus logo (Atlas carrying a globe, from icons/campus.svg) in the avatar's colours."""
+    src = open(os.path.join(HERE, "icons", "campus.svg"), encoding="utf-8").read()
+    grid = re.search(r'id="grid"[^>]*\sd="([^"]+)"', src).group(1)
+    figure = re.search(r'id="figure"[^>]*\sd="([^"]+)"', src).group(1)
+    k = size / 600
+    cid = s.uid("gl")
+    s.defs.append(f'<clipPath id="{cid}"><circle cx="347.8" cy="273.1" r="165"/></clipPath>')
+    s.g(transform=f"translate({x:.1f} {y:.1f}) scale({k:.4f}) translate(-66 -72)")
+    s.add(f'<circle cx="347.8" cy="273.1" r="165" fill="{MOSS}" stroke="{CODE}" stroke-width="4"/>')
+    s.add(f'<path d="{grid}" clip-path="url(#{cid})" fill="none" stroke="{CODE}" stroke-width="4"/>')
+    s.add(f'<path d="{figure}" fill="{GLOW}" stroke="{VOID}" stroke-width="6" paint-order="stroke"/>')
+    s.add(f'<circle cx="503.5" cy="390" r="10" fill="{VOID}"/>')
+    s.end()
+
+
+def monitor(s, x, y):
+    """A tiny pixel screen with a blinking prompt."""
+    s.rect(x, y, 54, 40, PANEL, TEXT, 3, rx=3)
+    s.rect(x + 6, y + 6, 42, 28, MOSS)
+    s.text(x + 10, y + 26, ">", 14, GLOW, 700)
+    s.rect(x + 22, y + 24, 9, 3, GLOW, extra='class="blink"')
+    s.rect(x + 20, y + 40, 14, 6, TEXT)
+    s.rect(x + 12, y + 46, 30, 4, TEXT)
+
+
 def rain(s, x, y, w, h, seed=7):
     """Columns of falling code inside a clipped box; the lowest glyph of each column glows."""
     cid = s.uid("rc")
@@ -204,7 +206,7 @@ def rain(s, x, y, w, h, seed=7):
 def profile():
     H = 424
     s = frame("Mitaro's profile: Omar, computer science student at MTUCI, backend and security, local-first.",
-              H, "A retro profile window with a pixel dog as the avatar, likes and dislikes, and falling green code.")
+              H, "A retro profile window with the Campus logo (Atlas carrying a globe) as the avatar, likes and dislikes, and falling code.")
     # title bar
     box(s, 14, 14, W - 28, 38)
     s.text(32, 40, "×  −  +", 17, TEXT, 700)
@@ -219,7 +221,7 @@ def profile():
     s.text(30, 86, "@mitaro-cs", 13, TEXT, 700)
     s.rect(30, 96, 204, 204, s.gradient([(0, "#2f3b2c", 1), (1, VOID, 1)], 0, 0, 0, 1), LINE, 1.2)
     s.g("flick")
-    sprite(s, DOG, 60, 108, 8, {"W": TEXT, "D": "#4a3d38", "d": "#2b221f", "E": VOID})
+    campus_logo(s, 37, 103, 190)
     s.end()
     pid = s.uid("sl")
     s.defs.append(f'<pattern id="{pid}" width="4" height="3" patternUnits="userSpaceOnUse">'
@@ -288,7 +290,7 @@ def interests():
     s.line(444, 30, 444, H - 30, LINE, 1.2)
 
     # left: online sign and the list
-    sprite(s, DOG, 70, 34, 3, {"W": TEXT, "D": "#4a3d38", "d": "#2b221f", "E": VOID})
+    monitor(s, 70, 34)
     s.text(140, 56, "mitaro", 24, GLOW, 700)
     s.text(140, 84, "is online", 24, GLOW, 700)
     s.rect(140 + text_width(24, "is online") + 6, 64, 13, 22, GLOW, extra='class="blink"')
