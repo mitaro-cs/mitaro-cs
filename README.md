@@ -1,13 +1,10 @@
 <div align="center">
 
-<img src="assets/profile.svg" width="100%" alt="Mitaro's profile window. @mitaro-cs: Omar or Mitaro, CS student at MTUCI, backend and security, local-first nerd. Likes Java, Svelte, encryption, local-first apps and combat sports; dislikes cloud lock-in, clever code and plain-text passwords. The Campus logo, Atlas carrying a globe, as the avatar, and falling code.">
-<img src="assets/rules.svg" width="100%" alt="Before you follow: I commit at odd hours, in Russian and English, mostly Java and Svelte. Don't follow if you keep passwords in plain text, trust only the cloud, or think readable code is for beginners.">
-<img src="assets/interests.svg" width="100%" alt="Mitaro is online. My interests: Campus, local-first software, security and cryptography, Java and Spring Boot, Svelte and Tauri, hand-to-hand combat, a Jarvis-style AI assistant. Find me on Telegram, email, Instagram and GitHub, with a status readout of my last commit, best streak, night share, peak hour and best day.">
+<img src="assets/scene.svg" width="100%" alt="Mitaro. Omar, computer science student at MTUCI, local-first and security. A mission-control collage in early-80s style: commits per day over the last 90 days as a glowing amber chart, the Campus project in orbit with its Java classes, UI components, tests, migrations, screens and versions, a starburst sun over a night ocean and a code listing about me.">
+<a href="https://github.com/mitaro-cs/Campus"><img src="assets/monitors.svg" width="100%" alt="A wall of CRT monitors: languages as a wireframe mountain range, a Campus readout, the moon with the year I came online, and commits by hour in Moscow time as a stepped mountain."></a>
+<img src="assets/desk.svg" width="100%" alt="Data desk: commits per repository, languages, commits per week over 26 weeks and cumulative commits over time with one glowing line per repository.">
 
 [telegram](https://t.me/treadways) · [email](mailto:miri.saro@bk.ru) · [instagram](https://instagram.com/stere.os) · [campus](https://github.com/mitaro-cs/Campus)
-
-<a href="https://github.com/mitaro-cs/Campus"><img src="assets/nokia.svg" width="100%" alt="Pinned project Campus on a Nokia screen: its release, Java classes, Svelte components, tests, migrations and commits. Follow the white rabbit."></a>
-<img src="assets/terminal.svg" width="100%" alt="git log stats: commits per day over 26 weeks, commits by hour in Moscow time, repositories, commits, stars, followers, code size and code by language.">
 
 </div>
 
@@ -24,3 +21,5 @@
 Classmates open the link, sign in and add the site to their home screen as an app.
 
 </details>
+
+<sub>Every chart is real data, drawn by a Python script in <code>/scripts</code> and refreshed by GitHub Actions every six hours.</sub>
