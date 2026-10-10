@@ -12,7 +12,31 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
 METRICS = json.load(open(os.path.join(HERE, "metrics.json"), encoding="utf-8"))
 
-CSS = "text{font-variant-numeric:tabular-nums}"
+# Motion, all CSS so it stops under prefers-reduced-motion. Every animated element's resting state is
+# its final state, so a viewer without motion sees the finished page.
+CSS = (
+    "text{font-variant-numeric:tabular-nums}"
+    ".lift,.roll,.fade,.wide,.grow,.packet,.pulse{animation-delay:var(--t,0s)}"
+    "@keyframes lift{from{transform:translateY(var(--dy))}to{transform:none}}"
+    ".lift{animation:lift 1s cubic-bezier(.2,.8,.2,1) both}"
+    "@keyframes roll{from{transform:translateY(var(--from))}to{transform:none}}"
+    ".roll{animation:roll 1.8s cubic-bezier(.16,1,.3,1) both}"
+    "@keyframes fade{from{opacity:0}to{opacity:1}}"
+    ".fade{animation:fade .7s ease-out both}"
+    "@keyframes wide{from{transform:scaleX(0)}to{transform:none}}"
+    ".wide{transform-box:fill-box;transform-origin:0 50%;animation:wide 1s cubic-bezier(.2,.8,.2,1) both}"
+    "@keyframes grow{from{transform:scale(0)}to{transform:none}}"
+    ".grow{transform-box:view-box;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}"
+    "@keyframes spin{to{transform:rotate(360deg)}}"
+    ".sweep{transform-box:view-box;animation:spin 14s linear infinite}"
+    "@keyframes flow{from{stroke-dashoffset:var(--start)}to{stroke-dashoffset:var(--end)}}"
+    ".packet{animation:flow 2.6s cubic-bezier(.45,0,.55,1) infinite}"
+    "@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}"
+    ".pulse{animation:pulse 2.6s ease-in-out infinite}"
+    "@keyframes tick{to{transform:translateX(var(--shift))}}"
+    ".ticker{animation:tick var(--d) linear infinite}"
+    "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
+)
 
 
 def text_width(size, txt, weight=400, ls=0):
