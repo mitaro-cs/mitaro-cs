@@ -1,56 +1,47 @@
-"""Shared helpers for the profile graphics: the park palette, text measuring, SVG builder.
+"""Shared helpers for the profile graphics: the terminal palette, text measuring, SVG builder.
 
-Text uses the system font stack GitHub itself uses, so nothing is embedded. Widths are measured
-with Liberation Sans advances (metric-compatible with Arial) from metrics.json, plus a little slack
-for wider system fonts such as SF Pro.
+Text uses the system monospace font (SF Mono, Menlo, Consolas, ...), nothing is embedded. Every
+glyph of a monospace font is 0.6 em wide or a little less, so widths are measured as 0.6 em.
 """
-import json
 import os
 import re
 from xml.sax.saxutils import escape
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
+FONT = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'DejaVu Sans Mono', monospace"
 
-# The park palette: a bench under plane trees on a bright day, and the same park after dusk.
-LEAF_DEEP = "#2e4a33"   # shade under the canopy
-LEAF = "#4f7d4a"        # leaves in the sun
-LEAF_SOFT = "#9cbf86"   # young leaves
-MEADOW = "#e4edd9"      # the lawn in light
-MIST = "#f4f7ef"        # bright morning air
-SKY = "#a9c8d6"         # sky between the trees
-BARK = "#6b5a48"        # plane tree bark
-BENCH = "#a8683f"       # the wooden bench
-SAND = "#d9c79a"        # the gravel path
-LAMP = "#e9a25f"        # a street lamp at dusk
-DOG = "#3b302c"         # the little dog on the bench
-FUR = "#f3efe8"         # its white crest
-FOREST = "#1a2a20"      # the park after dusk
-NIGHT = "#121b16"       # deepest shadow
-
-METRICS = json.load(open(os.path.join(HERE, "metrics.json"), encoding="utf-8"))
+# phosphor green on black, like a terminal in the Matrix
+VOID = "#010602"       # the screen behind everything
+PANEL = "#030d05"      # inside a box
+LINE = "#1e7a32"       # box borders
+DIM = "#0f4a1c"        # faint rules and empty cells
+MOSS = "#17652a"       # buttons
+CODE = "#1fbf4a"       # falling code
+GLOW = "#4dff7c"       # the brightest green
+TEXT = "#e3f5e6"       # body text
+MUTED = "#8fb59a"      # quiet text
+FRAME = "#d7e8d9"      # the dashed outer frame
+LCD = "#a9c98b"        # a Nokia screen
+LCD_INK = "#1c2a14"    # its pixels
+BRASS = "#d8cf63"      # a sticker border
 
 ANIM_CSS = (
-    "text{font-variant-numeric:tabular-nums}"
-    "@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}"
-    ".rise{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}"
+    "@keyframes rain{from{transform:translateY(var(--from))}to{transform:translateY(var(--to))}}"
+    ".rain{animation:rain var(--d) linear infinite;animation-delay:var(--delay)}"
+    "@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}"
+    ".blink{animation:blink 1.1s steps(1) infinite}"
+    "@keyframes flick{0%,100%{opacity:1}4%{opacity:.7}6%{opacity:1}48%{opacity:.9}50%{opacity:1}}"
+    ".flick{animation:flick 5s steps(1) infinite}"
+    "@keyframes rise{from{opacity:0}to{opacity:1}}"
+    ".rise{animation:rise .6s steps(4) both}"
     "@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}"
-    ".grow{transform-box:fill-box;transform-origin:0 50%;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}"
-    "@keyframes wag{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(16deg)}}"
-    ".wag{transform-box:fill-box;transform-origin:0 100%;animation:wag .7s ease-in-out infinite}"
-    "@keyframes tilt{0%,62%,100%{transform:rotate(0)}70%,88%{transform:rotate(-9deg)}}"
-    ".tilt{transform-box:fill-box;transform-origin:50% 90%;animation:tilt 5s ease-in-out infinite}"
-    "@keyframes sway{0%,100%{transform:rotate(-.8deg)}50%{transform:rotate(.8deg)}}"
-    ".sway{transform-box:fill-box;transform-origin:50% 100%;animation:sway 7s ease-in-out infinite}"
-    "@keyframes glow{0%,100%{opacity:.85}50%{opacity:1}}"
-    ".glow{animation:glow 3.2s ease-in-out infinite}"
+    ".grow{transform-box:fill-box;transform-origin:0 50%;animation:grow 1.1s steps(12) both}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
 
 
 def text_width(size, txt, weight=400, ls=0):
-    m = METRICS["700" if weight >= 600 else "400"]
-    return sum(m.get(ch, 560) for ch in txt) * size / 1000 * 1.05 + ls * len(txt)
+    return len(txt) * (size * 0.6 + ls)
 
 
 def icon_path(name):
@@ -81,7 +72,7 @@ class Svg:
             self.defs.append(f'<radialGradient id="{gid}" cx="{x1}" cy="{y1}" r="{x2}">{st}</radialGradient>')
         return f"url(#{gid})"
 
-    def text(self, x, y, txt, size=16, fill=NIGHT, weight=400, anchor="start", ls=0, opacity=1):
+    def text(self, x, y, txt, size=16, fill=TEXT, weight=400, anchor="start", ls=0, opacity=1):
         a = f'x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}"'
         if weight != 400:
             a += f' font-weight="{weight}"'
