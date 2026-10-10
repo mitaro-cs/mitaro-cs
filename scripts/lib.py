@@ -1,101 +1,56 @@
-"""Shared helpers for the profile graphics: the avatar palette, font embedding, SVG builder."""
-import base64
-import io
+"""Shared helpers for the profile graphics: the park palette, text measuring, SVG builder.
+
+Text uses the system font stack GitHub itself uses, so nothing is embedded. Widths are measured
+with Liberation Sans advances (metric-compatible with Arial) from metrics.json, plus a little slack
+for wider system fonts such as SF Pro.
+"""
+import json
 import os
 import re
 from xml.sax.saxutils import escape
 
-from fontTools import subset
-from fontTools.pens.boundsPen import BoundsPen
-from fontTools.ttLib import TTFont
-from fontTools.varLib import instancer
-
 HERE = os.path.dirname(os.path.abspath(__file__))
-# Palette: every colour is a k-means cluster or region mean of the avatar's pixels
-# (a man on a park bench, muted 35mm look). Nothing outside this list is drawn.
-NIGHT = "#0e0b0d"    # deepest shadow under the bench
-SHADE = "#1a1718"    # shade between the planks
-BENCH = "#37302e"    # weathered bench wood
-WOOD = "#6c6662"     # sunlit plank grey
-STONE = "#bdaea3"    # khaki trousers
-MIST = "#e3eeef"     # highlight on the shirt
-SHIRT = "#a2bbc5"    # the pale blue shirt
-SKIN = "#e6a986"     # sunlit skin
-CLAY = "#b27660"     # skin in shadow
-LEAF = "#2f3b2c"     # the trees behind
-PALETTE = [("NIGHT", NIGHT), ("SHADE", SHADE), ("BENCH", BENCH), ("LEAF", LEAF), ("WOOD", WOOD),
-           ("CLAY", CLAY), ("SKIN", SKIN), ("STONE", STONE), ("SHIRT", SHIRT), ("MIST", MIST)]
+FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
 
-FONTS = {
-    "mono": ("JetBrainsMono[wght].ttf", "JBMono", "ui-monospace, Menlo, Consolas, monospace"),
-    "serif": ("InstrumentSerif-Regular.ttf", "ISerif", "Georgia, 'Times New Roman', serif"),
-}
+# The park palette: a bench under plane trees on a bright day, and the same park after dusk.
+LEAF_DEEP = "#2e4a33"   # shade under the canopy
+LEAF = "#4f7d4a"        # leaves in the sun
+LEAF_SOFT = "#9cbf86"   # young leaves
+MEADOW = "#e4edd9"      # the lawn in light
+MIST = "#f4f7ef"        # bright morning air
+SKY = "#a9c8d6"         # sky between the trees
+BARK = "#6b5a48"        # plane tree bark
+BENCH = "#a8683f"       # the wooden bench
+SAND = "#d9c79a"        # the gravel path
+LAMP = "#e9a25f"        # a street lamp at dusk
+DOG = "#3b302c"         # the little dog on the bench
+FUR = "#f3efe8"         # its white crest
+FOREST = "#1a2a20"      # the park after dusk
+NIGHT = "#121b16"       # deepest shadow
 
-_cache = {}
+METRICS = json.load(open(os.path.join(HERE, "metrics.json"), encoding="utf-8"))
 
 ANIM_CSS = (
+    "text{font-variant-numeric:tabular-nums}"
     "@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}"
     ".rise{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}"
     "@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}"
     ".grow{transform-box:fill-box;transform-origin:0 50%;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both}"
+    "@keyframes wag{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(16deg)}}"
+    ".wag{transform-box:fill-box;transform-origin:0 100%;animation:wag .7s ease-in-out infinite}"
+    "@keyframes tilt{0%,62%,100%{transform:rotate(0)}70%,88%{transform:rotate(-9deg)}}"
+    ".tilt{transform-box:fill-box;transform-origin:50% 90%;animation:tilt 5s ease-in-out infinite}"
+    "@keyframes sway{0%,100%{transform:rotate(-.8deg)}50%{transform:rotate(.8deg)}}"
+    ".sway{transform-box:fill-box;transform-origin:50% 100%;animation:sway 7s ease-in-out infinite}"
+    "@keyframes glow{0%,100%{opacity:.85}50%{opacity:1}}"
+    ".glow{animation:glow 3.2s ease-in-out infinite}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
 
 
-def font(key, weight=400):
-    ck = (key, weight)
-    if ck not in _cache:
-        f = TTFont(os.path.join(HERE, "fonts", FONTS[key][0]))
-        if "fvar" in f:
-            f = instancer.instantiateVariableFont(f, {"wght": weight})
-        _cache[ck] = f
-    return _cache[ck]
-
-
-def text_width(key, weight, size, txt, ls=0):
-    f = font(key, weight)
-    cmap, hm, upm = f.getBestCmap(), f["hmtx"], f["head"].unitsPerEm
-    total = 0
-    for ch in txt:
-        g = cmap.get(ord(ch), ".notdef")
-        total += hm[g][0] if g in hm.metrics else hm[".notdef"][0]
-    return total * size / upm + ls * len(txt)
-
-
-def ink_bounds(key, weight, size, ch):
-    """Real ink box of a glyph in px, y up: (xmin, ymin, xmax, ymax). Font metrics lie, outlines do not."""
-    f = font(key, weight)
-    gs = f.getGlyphSet()
-    name = f.getBestCmap()[ord(ch)]
-    pen = BoundsPen(gs)
-    gs[name].draw(pen)
-    k = size / f["head"].unitsPerEm
-    xmin, ymin, xmax, ymax = pen.bounds
-    return xmin * k, ymin * k, xmax * k, ymax * k
-
-
-def cap_height(key, weight, size):
-    return ink_bounds(key, weight, size, "H")[3]
-
-
-def _woff2_b64(key, weight, chars):
-    tmp = io.BytesIO()
-    font(key, weight).save(tmp)
-    tmp.seek(0)
-    f = TTFont(tmp, recalcTimestamp=False)
-    f["head"].modified = f["head"].created   # fixed timestamp: same input, same bytes, no empty bot commits
-    opts = subset.Options()
-    opts.flavor = "woff2"
-    opts.layout_features = ["kern", "liga", "calt", "ccmp", "locl", "mark", "mkmk"]
-    opts.notdef_outline = True
-    opts.name_IDs = [1, 2]
-    sub = subset.Subsetter(opts)
-    sub.populate(text="".join(sorted(chars)) + " ")
-    sub.subset(f)
-    f.flavor = "woff2"
-    buf = io.BytesIO()
-    f.save(buf)
-    return base64.b64encode(buf.getvalue()).decode()
+def text_width(size, txt, weight=400, ls=0):
+    m = METRICS["700" if weight >= 600 else "400"]
+    return sum(m.get(ch, 560) for ch in txt) * size / 1000 * 1.05 + ls * len(txt)
 
 
 def icon_path(name):
@@ -107,8 +62,7 @@ def icon_path(name):
 class Svg:
     def __init__(self, w, h, title, desc=""):
         self.w, self.h, self.title, self.desc = w, h, title, desc
-        self.defs, self.body, self.used = [], [], {}
-        self.extra_css = ""
+        self.defs, self.body = [], []
         self._id = 0
 
     def uid(self, prefix="i"):
@@ -118,34 +72,28 @@ class Svg:
     def add(self, s):
         self.body.append(s)
 
-    def gradient(self, stops, x1=0, y1=0, x2=1, y2=0, units="objectBoundingBox", kind="linear", extra=""):
+    def gradient(self, stops, x1=0, y1=0, x2=1, y2=0, kind="linear"):
         gid = self.uid("g")
         st = "".join(f'<stop offset="{o}" stop-color="{c}" stop-opacity="{a}"/>' for o, c, a in stops)
         if kind == "linear":
-            self.defs.append(f'<linearGradient id="{gid}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
-                             f'gradientUnits="{units}">{st}</linearGradient>')
+            self.defs.append(f'<linearGradient id="{gid}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}">{st}</linearGradient>')
         else:
-            self.defs.append(f'<radialGradient id="{gid}" cx="{x1}" cy="{y1}" r="{x2}" '
-                             f'gradientUnits="{units}" {extra}>{st}</radialGradient>')
+            self.defs.append(f'<radialGradient id="{gid}" cx="{x1}" cy="{y1}" r="{x2}">{st}</radialGradient>')
         return f"url(#{gid})"
 
-    def text(self, x, y, txt, key="mono", size=16, fill=MIST, weight=400, anchor="start", ls=0,
-             opacity=1, transform=None, extra=""):
-        self.used.setdefault((key, weight), set()).update(txt)
-        _, fam, fb = FONTS[key]
-        a = (f'x="{x:.1f}" y="{y:.1f}" font-family="{fam}, {fb}" font-size="{size}" '
-             f'font-weight="{weight}" fill="{fill}"')
+    def text(self, x, y, txt, size=16, fill=NIGHT, weight=400, anchor="start", ls=0, opacity=1):
+        a = f'x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill}"'
+        if weight != 400:
+            a += f' font-weight="{weight}"'
         if anchor != "start":
             a += f' text-anchor="{anchor}"'
         if ls:
             a += f' letter-spacing="{ls}"'
         if opacity != 1:
             a += f' fill-opacity="{opacity}"'
-        if transform:
-            a += f' transform="{transform}"'
-        self.add(f"<text {a} {extra}>{escape(txt)}</text>")
+        self.add(f"<text {a}>{escape(txt)}</text>")
 
-    def rect(self, x, y, w, h, fill="none", stroke=None, sw=1, rx=0, opacity=1, transform=None, extra=""):
+    def rect(self, x, y, w, h, fill="none", stroke=None, sw=1, rx=0, opacity=1, extra=""):
         a = f'x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" fill="{fill}"'
         if rx:
             a += f' rx="{rx}"'
@@ -153,59 +101,47 @@ class Svg:
             a += f' stroke="{stroke}" stroke-width="{sw}"'
         if opacity != 1:
             a += f' opacity="{opacity}"'
-        if transform:
-            a += f' transform="{transform}"'
         self.add(f"<rect {a} {extra}/>")
 
-    def poly(self, pts, fill="none", stroke=None, sw=1, opacity=1, transform=None, extra=""):
-        a = f'points="{pts}" fill="{fill}"'
-        if stroke:
-            a += f' stroke="{stroke}" stroke-width="{sw}" stroke-linejoin="round"'
+    def circle(self, cx, cy, r, fill, opacity=1, extra=""):
+        a = f'cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="{fill}"'
         if opacity != 1:
             a += f' opacity="{opacity}"'
-        if transform:
-            a += f' transform="{transform}"'
-        self.add(f"<polygon {a} {extra}/>")
+        self.add(f"<circle {a} {extra}/>")
 
-    def path(self, d, fill="none", stroke=None, sw=1, opacity=1, transform=None, extra=""):
+    def path(self, d, fill="none", stroke=None, sw=1, opacity=1, extra=""):
         a = f'd="{d}" fill="{fill}"'
         if stroke:
             a += f' stroke="{stroke}" stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round"'
         if opacity != 1:
             a += f' opacity="{opacity}"'
-        if transform:
-            a += f' transform="{transform}"'
         self.add(f"<path {a} {extra}/>")
 
-    def line(self, x1, y1, x2, y2, stroke=MIST, sw=1, opacity=1, dash=None):
-        a = f'x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{stroke}" stroke-width="{sw}"'
+    def line(self, x1, y1, x2, y2, stroke, sw=1, opacity=1):
+        a = f'x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{sw}"'
         if opacity != 1:
             a += f' stroke-opacity="{opacity}"'
-        if dash:
-            a += f' stroke-dasharray="{dash}"'
         self.add(f"<line {a}/>")
 
-    def icon(self, name, x, y, size, fill=MIST):
+    def icon(self, name, x, y, size, fill):
         self.add(f'<path d="{icon_path(name)}" fill="{fill}" '
                  f'transform="translate({x:.1f} {y:.1f}) scale({size / 24:.4f})"/>')
 
-    def g(self, cls="", style=""):
-        self.add(f'<g class="{cls}"' + (f' style="{style}"' if style else "") + ">")
+    def g(self, cls="", style="", transform=""):
+        a = f' class="{cls}"' if cls else ""
+        a += f' style="{style}"' if style else ""
+        a += f' transform="{transform}"' if transform else ""
+        self.add(f"<g{a}>")
 
     def end(self):
         self.add("</g>")
 
     def render(self):
-        faces = []
-        for (key, weight), chars in sorted(self.used.items()):
-            fam = FONTS[key][1]
-            faces.append(f"@font-face{{font-family:{fam};font-weight:{weight};"
-                         f"src:url(data:font/woff2;base64,{_woff2_b64(key, weight, chars)}) format('woff2');}}")
-        style = "".join(faces) + ANIM_CSS + self.extra_css
         desc = f"<desc>{escape(self.desc)}</desc>" if self.desc else ""
         return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" '
-                f'width="{self.w}" height="{self.h}" role="img" aria-label="{escape(self.title)}">'
-                f"<title>{escape(self.title)}</title>{desc}<defs><style>{style}</style>{''.join(self.defs)}</defs>"
+                f'width="{self.w}" height="{self.h}" role="img" aria-label="{escape(self.title)}" '
+                f'font-family="{FONT}">'
+                f"<title>{escape(self.title)}</title>{desc}<defs><style>{ANIM_CSS}</style>{''.join(self.defs)}</defs>"
                 f"{''.join(self.body)}</svg>")
 
     def save(self, out_dir, name):

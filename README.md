@@ -1,4 +1,4 @@
-<picture><source media="(prefers-color-scheme: dark)" srcset="assets/header-dark.svg"><img src="assets/header-light.svg" width="100%" alt="Mitaro. Omar, computer science student at MTUCI. I build local-first software: your data stays on your machine."></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/header-dark.svg"><img src="assets/header-light.svg" width="100%" alt="Mitaro. Omar, computer science student at MTUCI. I build local-first software: your data stays on your machine. A corner of a park with plane trees, a street lamp and a bench with a small crested dog on it."></picture>
 
 I'm **Omar**, online **Mitaro**, a computer science student at **MTUCI**. I write `Java` with Spring Boot, `Svelte`, `Python` and `Flask`, and I lean on one idea: **local-first**. The data stays on a machine you control, not on someone else's servers. Right now I'm digging into backend architecture and security: encryption, hashing, storing passwords properly.
 
@@ -30,4 +30,4 @@ Classmates open the link, sign in and add the site to their home screen as an ap
 
 Also in my repositories: [VantaVault](https://github.com/mitaro-cs/VantaVault), a private vault for external drives; [AetherCloud](https://github.com/mitaro-cs/AetherCloud), your own disk as a private cloud; [Kworking](https://github.com/mitaro-cs/KworkingSystem), a booking panel for a campus coworking space; and [Mouros](https://github.com/mitaro-cs/Mouros), my Python practice archive.
 
-<sub>The cards are drawn by a Python script in <code>/scripts</code> in the avatar's colours and refreshed by GitHub Actions every six hours.</sub>
+<sub>The cards are drawn by a Python script in <code>/scripts</code> in park colours and refreshed by GitHub Actions every six hours.</sub>
