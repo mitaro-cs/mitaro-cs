@@ -1,8 +1,9 @@
-<img src="assets/hero.svg" width="100%" alt="Mitaro. Omar, computer science student at MTUCI. A collage: an old juniper and an arowana breaking out of a grey canvas, a pen sketch of a fish over the trunk, and a dark column that reads: a study group should not need someone else's server; Campus lives on the group leader's own computer, and the data stays with the people who wrote it.">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/cover-dark.svg"><img src="assets/cover-light.svg" width="100%" alt="Mitaro. Omar, CS student at MTUCI. I build local-first software: the data stays on a machine you control, not on someone else's server. Commits, public repositories, amount of code, and the pinned project, Campus."></picture>
 
-I'm **Omar**, online **Mitaro**, a computer science student at **MTUCI**. I write `Java` with Spring Boot, `Svelte`, `Python` and `Flask`, and I build software that keeps your data on a machine you control.
+**Contents:** [01 Campus](#campus) · [02 Rhythm](#rhythm) · [03 Toolkit](#toolkit) · [Contact](#contact)
 
-<a href="https://github.com/mitaro-cs/Campus"><img src="assets/campus.svg" width="100%" alt="Campus, the pinned project, drawn as a pen sketch of its logo, Atlas carrying a globe, with arrows to its numbers: Java classes, Svelte components, test files, database migrations, screens and versions shipped. A site and an app for one study group that runs on the group leader's computer; every phone keeps a copy and syncs when the host is back on."></a>
+<a name="campus"></a>
+<a href="https://github.com/mitaro-cs/Campus"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/campus-dark.svg"><img src="assets/campus-light.svg" width="100%" alt="01 Campus: a site and an app for one study group that lives on the group leader's own computer. How it works: the host computer runs Spring Boot with SQLite and encrypted files; an HTTPS tunnel gives the group one link and one QR code; every phone and laptop keeps its own copy and works offline. Java classes, Svelte components, test files, database migrations, versions and the latest release."></picture></a>
 
 <details>
 <summary><b>Run Campus</b></summary>
@@ -16,10 +17,15 @@ Classmates open the link, sign in and add the site to their home screen as an ap
 
 </details>
 
-<img src="assets/activity.svg" width="100%" alt="When I commit: 26 weeks of commits per day and commits by hour in Moscow time, with pen notes on the busiest day, the longest streak, the peak hour and the share after 22:00; and my totals on GitHub with code by language.">
+<a name="rhythm"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/rhythm-dark.svg"><img src="assets/rhythm-light.svg" width="100%" alt="02 Rhythm: the share of my commits after 22:00 Moscow time, the peak hour, the longest streak, the busiest day and active days; commits by hour of the day and commits per day over the last 26 weeks."></picture>
 
-**Find me:** [Telegram](https://t.me/treadways) · [Email](mailto:miri.saro@bk.ru) · [Instagram](https://instagram.com/stere.os)
+<a name="toolkit"></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/toolkit-dark.svg"><img src="assets/toolkit-light.svg" width="100%" alt="03 Toolkit: code by language across my repositories, and the languages, frameworks and tools I use."></picture>
 
-**Also here:** [VantaVault](https://github.com/mitaro-cs/VantaVault), a private vault for external drives · [AetherCloud](https://github.com/mitaro-cs/AetherCloud), your own disk as a private cloud · [Kworking](https://github.com/mitaro-cs/KworkingSystem), a booking panel for a campus coworking space · [Mouros](https://github.com/mitaro-cs/Mouros), my Python practice archive
+<a name="contact"></a>
+**Contact:** [Telegram](https://t.me/treadways) · [Email](mailto:miri.saro@bk.ru) · [Instagram](https://instagram.com/stere.os)
 
-<sub>The slides are drawn by a Python script in <code>/scripts</code> and refreshed by GitHub Actions every six hours.</sub>
+**Other projects:** [VantaVault](https://github.com/mitaro-cs/VantaVault), a private vault for external drives · [AetherCloud](https://github.com/mitaro-cs/AetherCloud), your own disk as a private cloud · [Kworking](https://github.com/mitaro-cs/KworkingSystem), a booking panel for a campus coworking space · [Mouros](https://github.com/mitaro-cs/Mouros), my Python practice archive
+
+<sub>The pages are built by a Python script in <code>/scripts</code> from the GitHub API and refreshed every six hours.</sub>

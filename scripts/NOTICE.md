@@ -1,5 +1,5 @@
 Material in the profile generator:
 
-- `icons/campus.svg`: the Campus logo, from github.com/mitaro-cs/Campus (same author).
+- `metrics.json`: advance widths of Liberation Sans (SIL Open Font License 1.1), used only to measure text.
 
-Everything else is drawn by `build.py`. No font is embedded; the SVGs use the system monospace font.
+No font is embedded; the SVGs use the system sans-serif font.
