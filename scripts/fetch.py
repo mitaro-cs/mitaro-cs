@@ -65,11 +65,11 @@ def commit_list(repo):
         page += 1
 
 
-PIN_NAMES = ("campus", "storagesystem")   # the pinned project; it was StorageSystem before the rename
+PIN_NAMES = ("campus", "storagesystem")   # the core project; it was StorageSystem before the rename
 
 
 def project_stats(paths, changelog):
-    """What the pinned project is made of, from its file tree and changelog."""
+    """What the core project is made of, from its file tree and changelog."""
     def count(pat):
         return sum(1 for p in paths if re.search(pat, p))
     migrations = [int(m) for p in paths for m in re.findall(r"/db/migration/V(\d+)__", p)]
@@ -93,7 +93,7 @@ def pin_stats(repo, branch, old):
             return old
         return project_stats(paths, changelog)
     except Exception as e:                   # a failed call keeps the last good numbers on the card
-        print(f"pinned stats skipped: {e}", file=sys.stderr)
+        print(f"core project stats skipped: {e}", file=sys.stderr)
         return old
 
 
