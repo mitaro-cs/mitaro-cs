@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Builds every SVG of the profile README into ../assets from scripts/data.json.
 
-Style: an old-web profile page on a Matrix terminal. Black boxes with green borders, falling code,
+Style: an old-web profile page on a Matrix terminal, in the colours of the avatar (lib.py):
+dark boxes with bark borders, falling code in leaf green,
 a pixel version of the dog from the avatar, a Nokia that shows the pinned project, and a terminal
 with the commit stats. The panels carry their own black background, so they read the same on
 GitHub's light and dark themes. Text uses the system monospace font, nothing is embedded.
@@ -28,9 +29,9 @@ CODE_REPOS = [r for r in DATA["repos"] if r["name"] != "mitaro-cs"]   # the prof
 CODE_LANGS = ["Java", "Python", "Svelte", "TypeScript", "JavaScript", "CSS", "HTML"]
 NOT_CODE = {"Rich Text Format"}
 PIN_NAMES = ("campus", "storagesystem")   # Campus was called StorageSystem before the rename
-LANG_COLOR = {"Java": GLOW, "Svelte": CODE, "Python": LCD, "TypeScript": "#2f8f8a", "JavaScript": BRASS,
-              "CSS": "#5b8f65", "HTML": MUTED, "Other": "#3b4a3e"}
-HEAT = ["#062010", DIM, "#1a7a30", "#2fb34a", GLOW]
+LANG_COLOR = {"Java": GLOW, "Svelte": BRASS, "Python": LCD, "TypeScript": CODE, "JavaScript": MUTED,
+              "CSS": "#6c6662", "HTML": "#8a7a6a", "Other": "#473e3a"}
+HEAT = ["#231f1e", "#473e3a", "#7a5546", "#b27660", "#e6a986"]   # bench wood warming up to skin
 RAIN_CHARS = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ0123456789Z:=*+<>"
 
 # the little crested dog from the avatar, in phosphor: W fur, D body, d shade, E eyes and nose
@@ -154,12 +155,12 @@ def box(s, x, y, w, h, fill=PANEL):
 
 def strip(s, x, y, w, txt):
     """The thin title row on top of a small box."""
-    s.rect(x, y, w, 20, "#0a2410", LINE, 1.2)
+    s.rect(x, y, w, 20, "#241f1d", LINE, 1.2)
     s.text(x + 6, y + 14, txt, 11, TEXT, 700)
 
 
 def button(s, x, y, w, h, txt, size=12):
-    s.rect(x, y, w, h, MOSS, "#2f9a48", 1.2, rx=2)
+    s.rect(x, y, w, h, MOSS, "#5c6e52", 1.2, rx=2)
     s.text(x + w / 2, y + h / 2 + size * 0.36, txt, size, TEXT, anchor="middle")
 
 
@@ -194,7 +195,7 @@ def rain(s, x, y, w, h, seed=7):
             ch = rnd.choice(RAIN_CHARS)
             head = k == n - 1
             op = 1 if head else 0.25 + 0.75 * k / n
-            s.text(x + 3 + c * step, y + k * line, ch, 12, FRAME if head else CODE, 700 if head else 400, opacity=round(op, 2))
+            s.text(x + 3 + c * step, y + k * line, ch, 12, TEXT if head else CODE, 700 if head else 400, opacity=round(op, 2))
         s.end()
     s.add("</g>")
 
@@ -216,9 +217,9 @@ def profile():
     box(s, 14, 62, W - 28, H - 76)
     # left: handle, avatar, status
     s.text(30, 86, "@mitaro-cs", 13, TEXT, 700)
-    s.rect(30, 96, 204, 204, s.gradient([(0, "#0b2e14", 1), (1, "#041208", 1)], 0, 0, 0, 1), LINE, 1.2)
+    s.rect(30, 96, 204, 204, s.gradient([(0, "#2f3b2c", 1), (1, VOID, 1)], 0, 0, 0, 1), LINE, 1.2)
     s.g("flick")
-    sprite(s, DOG, 60, 108, 8, {"W": GLOW, "D": "#1a7a30", "d": DIM, "E": VOID})
+    sprite(s, DOG, 60, 108, 8, {"W": TEXT, "D": "#4a3d38", "d": "#2b221f", "E": VOID})
     s.end()
     pid = s.uid("sl")
     s.defs.append(f'<pattern id="{pid}" width="4" height="3" patternUnits="userSpaceOnUse">'
@@ -244,13 +245,13 @@ def profile():
                                      ("(-_-)", "cloud lock-in, clever code, plain-text passwords"))):
         y = 248 + i * 76
         s.rect(x0, y, 266, 66, PANEL, LINE, 1.2)
-        s.rect(x0, y, 266, 22, "#0a2410", LINE, 1.2)
+        s.rect(x0, y, 266, 22, "#241f1d", LINE, 1.2)
         s.text(x0 + 6, y + 16, face, 12, TEXT, 700)
         for j, ln in enumerate(wrap(txt, 12, 252)[:2]):
             s.text(x0 + 6, y + 40 + j * 16, ln, 12, TEXT)
 
     # right: the rain
-    s.rect(542, 76, 318, 334, "#020a04", LINE, 1.2)
+    s.rect(542, 76, 318, 334, "#120f10", LINE, 1.2)
     rain(s, 543, 77, 316, 332)
     return s
 
@@ -287,7 +288,7 @@ def interests():
     s.line(444, 30, 444, H - 30, LINE, 1.2)
 
     # left: online sign and the list
-    sprite(s, DOG, 70, 34, 3, {"W": GLOW, "D": CODE, "d": "#1a7a30", "E": VOID})
+    sprite(s, DOG, 70, 34, 3, {"W": TEXT, "D": "#4a3d38", "d": "#2b221f", "E": VOID})
     s.text(140, 56, "mitaro", 24, GLOW, 700)
     s.text(140, 84, "is online", 24, GLOW, 700)
     s.rect(140 + text_width(24, "is online") + 6, 64, 13, 22, GLOW, extra='class="blink"')
@@ -306,11 +307,11 @@ def interests():
     icons = ["telegram", "gmail", "instagram", "github"]
     x = 659 - (len(icons) * 28 + (len(icons) - 1) * 22) / 2
     for ic in icons:
-        s.icon(ic, x, 86, 28, "#cfe3d2")
+        s.icon(ic, x, 86, 28, TEXT)
         x += 50
     status = [("status", "online"), ("last commit", f["last"]), ("best streak", f"{f['streak']} days"),
               ("night shift", f"{f['night']}%"), ("peak hour", f"{f['peak']:02d}:00"), ("best day", f["weekday"])]
-    s.rect(474, 140, 370, 176, "#020a04", LINE, 1.2)
+    s.rect(474, 140, 370, 176, "#120f10", LINE, 1.2)
     for i, (k, v) in enumerate(status):
         y = 168 + i * 25
         lead = f"> {k} " + "." * (16 - len(k)) + " "
@@ -335,21 +336,21 @@ def nokia():
     cid = s.uid("nc")
     s.defs.append(f'<clipPath id="{cid}"><rect x="15" y="15" width="428" height="{H - 30}"/></clipPath>')
     s.add(f'<g clip-path="url(#{cid})">')
-    s.rect(119, 30, 220, 320, s.gradient([(0, "#34464d", 1), (1, "#1a2428", 1)], 0, 0, 0, 1), "#0c1214", 2, rx=46)
-    s.text(229, 62, "NOKIA", 15, "#dfe6e8", 700, anchor="middle", ls=1)
-    s.rect(141, 76, 176, 150, "#11181a", rx=12)
+    s.rect(119, 30, 220, 320, s.gradient([(0, "#3d4448", 1), (1, "#1e2224", 1)], 0, 0, 0, 1), VOID, 2, rx=46)
+    s.text(229, 62, "NOKIA", 15, TEXT, 700, anchor="middle", ls=1)
+    s.rect(141, 76, 176, 150, "#151313", rx=12)
     s.rect(151, 86, 156, 130, LCD, rx=4)
     for i, ln in enumerate(lcd):
         s.text(159, 106 + i * 19, ln, 11.5, LCD_INK, 700)
     s.text(159, 208, "Options", 11.5, LCD_INK, 700)
     s.text(299, 208, "Back", 11.5, LCD_INK, 700, anchor="end")
-    s.add('<ellipse cx="229" cy="256" rx="42" ry="14" fill="#3a4b52" stroke="#0c1214" stroke-width="1.5"/>')
+    s.add('<ellipse cx="229" cy="256" rx="42" ry="14" fill="#4a5258" stroke="#0e0b0d" stroke-width="1.5"/>')
     for kx in (160, 298):
-        s.add(f'<ellipse cx="{kx}" cy="252" rx="18" ry="8" fill="#2b3a40"/>')
+        s.add(f'<ellipse cx="{kx}" cy="252" rx="18" ry="8" fill="#33393c"/>')
     s.add("</g>")
 
     # the white rabbit
-    s.rect(512, 104, 294, 40, "#0b1a0d", BRASS, 1.5, extra='stroke-dasharray="3 2"')
+    s.rect(512, 104, 294, 40, PANEL, BRASS, 1.5, extra='stroke-dasharray="3 2"')
     sprite(s, RABBIT, 520, 110, 2.4, {"W": FRAME, "E": VOID})
     s.text(556, 129, "follow the white rabbit", 13, BRASS, 700)
     s.text(659, 186, "Campus is pinned. Open it.", 13, MUTED, anchor="middle")

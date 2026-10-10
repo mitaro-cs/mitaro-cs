@@ -10,20 +10,20 @@ from xml.sax.saxutils import escape
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'DejaVu Sans Mono', monospace"
 
-# phosphor green on black, like a terminal in the Matrix
-VOID = "#010602"       # the screen behind everything
-PANEL = "#030d05"      # inside a box
-LINE = "#1e7a32"       # box borders
-DIM = "#0f4a1c"        # faint rules and empty cells
-MOSS = "#17652a"       # buttons
-CODE = "#1fbf4a"       # falling code
-GLOW = "#4dff7c"       # the brightest green
-TEXT = "#e3f5e6"       # body text
-MUTED = "#8fb59a"      # quiet text
-FRAME = "#d7e8d9"      # the dashed outer frame
-LCD = "#a9c98b"        # a Nokia screen
-LCD_INK = "#1c2a14"    # its pixels
-BRASS = "#d8cf63"      # a sticker border
+# the avatar's colours: a man on a park bench in muted 35mm, a pale blue shirt, a little dark dog
+VOID = "#0e0b0d"       # night under the bench, the screen behind everything
+PANEL = "#1a1718"      # shade between the planks, inside a box
+LINE = "#5e584b"       # sunlit bark, box borders
+DIM = "#2f2a27"        # weathered wood, faint rules and empty cells
+MOSS = "#354331"       # the trees behind, buttons
+CODE = "#7f9470"       # leaves in the light, falling code
+GLOW = "#e6a986"       # sunlit skin, the warm highlight
+TEXT = "#e3eeef"       # light on the shirt, body text
+MUTED = "#bdaea3"      # khaki trousers, quiet text
+FRAME = "#bdaea3"      # the dashed outer frame
+LCD = "#a2bbc5"        # the pale blue shirt, a backlit Nokia screen
+LCD_INK = "#0e0b0d"    # its pixels
+BRASS = "#b27660"      # skin in shadow, a sticker border
 
 ANIM_CSS = (
     "@keyframes rain{from{transform:translateY(var(--from))}to{transform:translateY(var(--to))}}"
