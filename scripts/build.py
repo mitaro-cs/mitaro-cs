@@ -31,14 +31,14 @@ NIGHT_HOURS = (22, 23, 0, 1, 2, 3)
 # the avatar: a man on a park bench in a pale blue shirt, khaki trousers and suede boots, the trees and
 # bark behind. Every text colour keeps 4.5:1 contrast or more on its background.
 THEMES = {
-    "light": dict(bg="#f2ede5", ink="#0d0506", grey="#5e554d", rule="#ddd3c6", panel="#e8e1d6",
+    "light": dict(bg="#f2ede5", ink="#000000", grey="#5e554d", rule="#ddd3c6", panel="#e8e1d6",
                   accent="#3d6680",   # the shirt
                   second="#b0603a",   # sunlit skin
                   khaki="#8a7350",    # the trousers
                   suede="#7d5538",    # the boots
                   leaf="#4f6e40",     # the trees
                   bark="#6f665b"),    # the bench and the bark
-    "dark": dict(bg="#0d0506", ink="#f2ece9", grey="#c4b6ad", rule="#2e2023", panel="#1a1012",
+    "dark": dict(bg="#000000", ink="#f2f2f2", grey="#bdb5ae", rule="#262626", panel="#121212",
                  accent="#a9c4d4", second="#e8a882", khaki="#d6c6a6", suede="#c9976f", leaf="#9fbb88",
                  bark="#ada294"),
 }
@@ -662,7 +662,7 @@ def sync_diagram(s, t, top):
 
 def terminal_theme():
     """The Campus page is a dark terminal in both themes, so it reads as its own place."""
-    return dict(THEMES["dark"], panel="#1c1114", rule="#34252a")
+    return dict(THEMES["dark"], panel="#141414", rule="#2c2c2c")
 
 
 def campus(_t):
@@ -821,7 +821,7 @@ def about(t):
 
 # ------------------------------------------------------------------ 03 Map: repositories as a constellation
 def sky_theme():
-    return dict(THEMES["dark"], rule="#2e2023")
+    return dict(THEMES["dark"], rule="#262626")
 
 
 def star_map(_t):
