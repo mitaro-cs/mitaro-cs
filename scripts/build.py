@@ -7,7 +7,7 @@ coastlines in land.txt) and Moscow marked; Campus is a dark terminal page with a
 and its git log typing itself out; About is neofetch for a person; Map is a night sky where the repositories
 are a constellation; Toolkit fills ASCII bars; Now types out what I am working on.
 All motion is CSS and stops under prefers-reduced-motion; every element rests in its final state.
-Each page is rendered for light and dark themes and as a single-column version for phones.
+Every page sits on black in both GitHub themes and has a single-column version for phones.
 """
 import datetime as dt
 import json
@@ -28,20 +28,12 @@ MOBILE = False
 LAYOUTS = {"": (888, 40, 848, False), "-mobile": (440, 20, 420, True)}
 
 NIGHT_HOURS = (22, 23, 0, 1, 2, 3)
-# the avatar: a man on a park bench in a pale blue shirt, khaki trousers and suede boots, the trees and
-# bark behind. Every text colour keeps 4.5:1 contrast or more on its background.
-THEMES = {
-    "light": dict(bg="#f2ede5", ink="#000000", grey="#5e554d", rule="#ddd3c6", panel="#e8e1d6",
-                  accent="#3d6680",   # the shirt
-                  second="#b0603a",   # sunlit skin
-                  khaki="#8a7350",    # the trousers
-                  suede="#7d5538",    # the boots
-                  leaf="#4f6e40",     # the trees
-                  bark="#6f665b"),    # the bench and the bark
-    "dark": dict(bg="#000000", ink="#f2f2f2", grey="#bdb5ae", rule="#262626", panel="#121212",
-                 accent="#a9c4d4", second="#e8a882", khaki="#d6c6a6", suede="#c9976f", leaf="#9fbb88",
-                 bark="#ada294"),
-}
+# black is the base in both GitHub themes, so the page looks the same for everyone; the accents are the avatar's
+# colours (a pale blue shirt, sunlit skin, khaki trousers, suede boots, the trees and the bark behind), each
+# with 4.5:1 contrast or more on black
+DARK = dict(bg="#000000", ink="#f2f2f2", grey="#bdb5ae", rule="#262626", panel="#121212",
+            accent="#a9c4d4", second="#e8a882", khaki="#d6c6a6", suede="#c9976f", leaf="#9fbb88", bark="#ada294")
+THEMES = {"light": DARK, "dark": DARK}
 PALETTE = ["leaf", "bark", "suede", "second", "khaki", "accent"]   # the avatar, trees to shirt
 LANG_TOKEN = {"Java": "accent", "Svelte": "suede", "Python": "khaki", "TypeScript": "leaf", "JavaScript": "bark",
               "CSS": "second", "HTML": "grey", "Other": "grey"}
