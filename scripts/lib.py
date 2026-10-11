@@ -54,6 +54,12 @@ CSS = (
     ".orbit{transform-box:view-box;transform-origin:0 0;animation:orbit 10s linear infinite}"
     "@keyframes depth{0%,40%{opacity:1}50%,90%{opacity:.15}100%{opacity:1}}"
     ".depth{animation:depth 10s linear infinite}"
+    "@keyframes ping{0%{transform:scale(.4);opacity:.8}70%,100%{transform:scale(1.6);opacity:0}}"
+    ".ping{transform-box:fill-box;transform-origin:center;animation:ping 2.4s ease-out infinite}"
+    "@keyframes glide{0%{transform:translateX(0);opacity:0}8%{opacity:1}40%,100%{transform:translateX(var(--w));opacity:0}}"
+    ".glide{opacity:0;animation:glide 7s cubic-bezier(.45,0,.55,1) infinite;animation-delay:var(--t,1.5s)}"
+    "@keyframes twinkle{0%,100%{opacity:var(--o,.5)}50%{opacity:.08}}"
+    ".twinkle{animation:twinkle var(--d,3s) ease-in-out infinite;animation-delay:var(--t,0s)}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
 

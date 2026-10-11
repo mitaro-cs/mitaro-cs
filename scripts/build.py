@@ -31,14 +31,14 @@ NIGHT_HOURS = (22, 23, 0, 1, 2, 3)
 # the avatar: a man on a park bench in a pale blue shirt, khaki trousers and suede boots, the trees and
 # bark behind. Every text colour keeps 4.5:1 contrast or more on its background.
 THEMES = {
-    "light": dict(bg="#f2ede5", ink="#1d1a17", grey="#5e554d", rule="#ddd3c6", panel="#e8e1d6",
+    "light": dict(bg="#f2ede5", ink="#0d0506", grey="#5e554d", rule="#ddd3c6", panel="#e8e1d6",
                   accent="#3d6680",   # the shirt
                   second="#b0603a",   # sunlit skin
                   khaki="#8a7350",    # the trousers
                   suede="#7d5538",    # the boots
                   leaf="#4f6e40",     # the trees
                   bark="#6f665b"),    # the bench and the bark
-    "dark": dict(bg="#151413", ink="#f0eee9", grey="#c2b8ab", rule="#2f2b28", panel="#1f1d1b",
+    "dark": dict(bg="#0d0506", ink="#f2ece9", grey="#c4b6ad", rule="#2e2023", panel="#1a1012",
                  accent="#a9c4d4", second="#e8a882", khaki="#d6c6a6", suede="#c9976f", leaf="#9fbb88",
                  bark="#ada294"),
 }
@@ -286,74 +286,126 @@ RAMP = ".:-=+*#%@"
 MOSCOW = (55.75, 37.62)
 
 
-def globe(s, t, cx, top, rows, size, frames=64, period=9.6):
-    """The Earth in ASCII, turning: real coastlines shaded by a fixed light, on a ball of the shirt's blue,
-    with Moscow marked. Returns the bottom edge."""
-    cw, lh = size * MONO_EM, size * 1.05
-    rad = rows * lh / 2
-    cols = int(2 * rad / cw)
+def displacement_png(n, rad):
+    """The map that wraps a flat strip onto a sphere for feDisplacementMap: red moves pixels sideways, green up
+    and down, 128 means stay. Each disc pixel looks up the longitude and latitude it shows."""
+    import base64
+    import io
+    import zlib
+    raw = bytearray()
+    for j in range(n):
+        raw.append(0)
+        for i in range(n):
+            nx, ny = (i + 0.5) / n * 2 - 1, 1 - (j + 0.5) / n * 2
+            d = nx * nx + ny * ny
+            if d >= 1:
+                raw += bytes((128, 128, 0))
+                continue
+            lat = math.asin(ny)
+            lon = math.asin(max(-1.0, min(1.0, nx / max(1e-6, math.cos(lat)))))
+            dx, dy = lon / (math.pi / 2) - nx, -(lat / (math.pi / 2) - ny)   # in radii, both within -1..1
+            raw += bytes((round(127.5 + dx * 127.5), round(127.5 + dy * 127.5), 0))
+    def chunk(kind, data):
+        return (len(data).to_bytes(4, "big") + kind + data
+                + (zlib.crc32(kind + data) & 0xffffffff).to_bytes(4, "big"))
+    png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", n.to_bytes(4, "big") * 2 + bytes((8, 2, 0, 0, 0)))
+           + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b""))
+    del io
+    return "data:image/png;base64," + base64.b64encode(png).decode()
+
+
+def land_char(lat, lon):
+    """Inland reads denser than the coast: the share of land around the cell picks the glyph."""
+    r0, c0 = int((90 - lat) / 2), int((lon + 180) / 2)
+    cells = [LAND[min(89, max(0, r0 + dr))][(c0 + dc) % 180] for dr in (-1, 0, 1) for dc in (-2, -1, 0, 1, 2)]
+    share = cells.count("#") / len(cells)
+    if LAND[min(89, r0)][c0 % 180] != "#" and share < 0.5:
+        return " "
+    return RAMP[min(len(RAMP) - 1, 2 + int(share * (len(RAMP) - 2)))]
+
+
+def globe(s, t, cx, top, size, period=24.0):
+    """The Earth in ASCII, turning without a single jump: a flat strip of real coastlines slides sideways
+    and a displacement filter wraps it onto the sphere, so the land squeezes at the limb as it should.
+    Meridians and parallels ride on the strip, Moscow is marked on it, and a satellite circles the
+    globe, passing behind it. Returns the bottom edge."""
+    cw = size * MONO_EM
+    cols = 76                                   # columns around the whole Earth
+    rad = cols * cw / 4                         # 90 degrees of longitude is one radius
+    rows = round(2 * rad / (size * 1.04))
+    lh = 2 * rad / rows
     cy = top + rad
-    tilt = math.radians(18)
-    light = (-0.55, 0.5, 0.67)
-    ocean, land = s.uid("oc"), s.uid("ld")
-    s.defs.append(f'<radialGradient id="{ocean}" cx=".38" cy=".34" r=".75"><stop offset="0" stop-color="{t["accent"]}" '
-                  f'stop-opacity=".32"/><stop offset="1" stop-color="{t["accent"]}" stop-opacity=".06"/></radialGradient>'
-                  f'<linearGradient id="{land}" gradientUnits="userSpaceOnUse" x1="{cx - rad:.0f}" y1="{top:.0f}" '
-                  f'x2="{cx + rad:.0f}" y2="{top + 2 * rad:.0f}"><stop offset="0" stop-color="{t["khaki"]}"/>'
-                  f'<stop offset=".5" stop-color="{t["leaf"]}"/><stop offset="1" stop-color="{t["bark"]}"/></linearGradient>')
-    s.g("grow", f"transform-origin:{cx:.0f}px {cy:.0f}px;--t:.3s;animation-duration:1.6s")
-    s.circle(cx, cy, rad + 2, f"url(#{ocean})")
-    s.circle(cx, cy, rad + 2, "none", extra=f'stroke="{t["accent"]}" stroke-opacity=".45" stroke-width="1.2"')
-    # parallels do not move as the Earth turns, so they are drawn once: the front half of each
-    for lat in (-60, -30, 0, 30, 60):
-        ph = math.radians(lat)
-        ry, rx = math.cos(ph) * math.sin(tilt) * rad, math.cos(ph) * rad
-        y = cy - math.sin(ph) * math.cos(tilt) * rad
-        s.path(f"M{cx - rx:.1f} {y:.1f}A{rx:.1f} {ry:.1f} 0 0 0 {cx + rx:.1f} {y:.1f}", "none", t["accent"], 0.8,
-               0.35 if lat else 0.6)
+    ocean, land, shade, fid, clip = s.uid("oc"), s.uid("ld"), s.uid("sh"), s.uid("gf"), s.uid("gc")
+    s.defs.append(
+        f'<radialGradient id="{ocean}" cx=".38" cy=".34" r=".75"><stop offset="0" stop-color="{t["accent"]}" '
+        f'stop-opacity=".30"/><stop offset="1" stop-color="{t["accent"]}" stop-opacity=".05"/></radialGradient>'
+        f'<linearGradient id="{land}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{t["khaki"]}"/>'
+        f'<stop offset=".5" stop-color="{t["leaf"]}"/><stop offset="1" stop-color="{t["suede"]}"/></linearGradient>'
+        f'<radialGradient id="{shade}" cx=".36" cy=".32" r=".8"><stop offset=".35" stop-color="{t["bg"]}" '
+        f'stop-opacity="0"/><stop offset="1" stop-color="{t["bg"]}" stop-opacity=".8"/></radialGradient>'
+        f'<clipPath id="{clip}"><circle cx="{cx:.1f}" cy="{cy:.1f}" r="{rad:.1f}"/></clipPath>'
+        f'<filter id="{fid}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" '
+        f'x="{cx - rad:.1f}" y="{top:.1f}" width="{2 * rad:.1f}" height="{2 * rad:.1f}" '
+        f'color-interpolation-filters="sRGB"><feImage href="{displacement_png(112, rad)}" x="{cx - rad:.1f}" '
+        f'y="{top:.1f}" width="{2 * rad:.1f}" height="{2 * rad:.1f}" preserveAspectRatio="none" result="map"/>'
+        f'<feDisplacementMap in="SourceGraphic" in2="map" scale="{2 * rad:.1f}" xChannelSelector="R" '
+        f'yChannelSelector="G"/></filter>')
 
-    def point(lat, lon, spin):
-        """View position of a place: x right, y up, z towards the viewer."""
-        ph, la = math.radians(lat), math.radians(lon) + spin
-        x, y, z = math.cos(ph) * math.sin(la), math.sin(ph), math.cos(ph) * math.cos(la)
-        return x, y * math.cos(tilt) - z * math.sin(tilt), y * math.sin(tilt) + z * math.cos(tilt)
-
-    def frame(i):
-        spin = 2 * math.pi * i / frames   # west to east, as the Earth turns
-        spans = []
-        for r in range(rows):
-            ny = 1 - (r + 0.5) / rows * 2
-            line = []
-            for c in range(cols):
-                nx = ((c + 0.5) * cw - rad) / rad
-                d = nx * nx + ny * ny
-                if d >= 0.97:
-                    line.append(" ")
-                    continue
-                nz = math.sqrt(1 - d)
-                # back to the globe's own frame: undo the tilt, then the spin
-                y, z = ny * math.cos(tilt) + nz * math.sin(tilt), -ny * math.sin(tilt) + nz * math.cos(tilt)
-                lat, lon = math.degrees(math.asin(max(-1, min(1, y)))), math.degrees(math.atan2(nx, z) - spin)
-                lon = (lon + 180) % 360 - 180
-                if LAND[min(89, int((90 - lat) / 2))][min(179, int((lon + 180) / 2))] != "#":
-                    line.append(" ")
-                    continue
-                lum = max(0.0, nx * light[0] + ny * light[1] + nz * light[2])
-                line.append(RAMP[min(len(RAMP) - 1, int(lum * len(RAMP) * 1.15))])
-            txt = "".join(line)
-            if txt.strip():
-                lead = len(txt) - len(txt.lstrip())
-                spans.append(f'<tspan x="{cx - rad + lead * cw:.1f}" y="{top + (r + 0.8) * lh:.1f}">'
-                             f"{esc(txt.strip())}</tspan>")
-        s.add(f'<text fill="url(#{land})" xml:space="preserve" style="white-space:pre">{"".join(spans)}</text>')
-        x, y, z = point(*MOSCOW, spin)
-        if z > 0.15:
-            s.circle(cx + x * rad, cy - y * rad, 3.2, t["second"])
-
-    s.add(f'<g font-family="{MONO}" font-size="{size}" font-weight="700">')
-    s.frames(frames, period, frame, blend=True)
+    # the satellite's orbit: the far half is drawn before the globe, the near half after it
+    orx, ory, tilt = rad * 1.32, rad * 0.30, -16
+    orbit = f"M{cx - orx:.1f} {cy:.1f}A{orx:.1f} {ory:.1f} 0 1 1 {cx + orx:.1f} {cy:.1f}A{orx:.1f} {ory:.1f} 0 1 1 {cx - orx:.1f} {cy:.1f}"
+    turn = f"rotate({tilt} {cx:.1f} {cy:.1f})"
+    s.add(f'<g transform="{turn}">')
+    s.path(f"M{cx - orx:.1f} {cy:.1f}A{orx:.1f} {ory:.1f} 0 0 1 {cx + orx:.1f} {cy:.1f}", "none", t["grey"], 1,
+           0.35, extra='stroke-dasharray="2 5"')
     s.add("</g>")
+
+    s.g("grow", f"transform-origin:{cx:.0f}px {cy:.0f}px;--t:.3s;animation-duration:1.6s")
+    s.circle(cx, cy, rad, t["bg"])           # hides the far half of the orbit
+    s.circle(cx, cy, rad, f"url(#{ocean})")
+    # the strip: two copies of a 360-degree map side by side, sliding east by one copy per period
+    strip = []
+    for r in range(rows):
+        lat = 90 - (r + 0.5) * 180 / rows
+        strip.append("".join(land_char(lat, -180 + (c + 0.5) * 360 / cols) for c in range(cols)))
+    s.add(f'<g clip-path="url(#{clip})"><g filter="url(#{fid})">')
+    s.add(f'<g class="spin" style="--w:{4 * rad:.1f}px;animation:spin-strip {period}s linear infinite">')
+    for copy in (0, -1):
+        x0 = cx - 2 * rad + copy * 4 * rad
+        for lon in range(-180, 180, 30):
+            x = cx + (lon / 90 + copy * 4) * rad
+            s.line(x, top, x, top + 2 * rad, t["accent"], 0.9, 0.45)
+        for lat in (-60, -30, 0, 30, 60):
+            y = cy - lat / 90 * rad
+            s.line(x0, y, x0 + 4 * rad, y, t["accent"], 0.9, 0.6 if lat == 0 else 0.4)
+        spans = "".join(f'<tspan x="{x0:.1f}" y="{top + (r + 0.5) * lh + size * 0.35:.1f}">{esc(ln)}</tspan>'
+                        for r, ln in enumerate(strip) if ln.strip())
+        s.add(f'<text font-family="{MONO}" font-size="{size}" font-weight="700" fill="url(#{land})" '
+              f'xml:space="preserve" style="white-space:pre">{spans}</text>')
+        mx = cx + (MOSCOW[1] / 90 + copy * 4) * rad
+        my = cy - MOSCOW[0] / 90 * rad
+        s.circle(mx, my, 7, t["second"], 0.35)
+        s.circle(mx, my, 3.6, t["second"])
+    s.add("</g></g></g>")
+    s.css["spin-strip"] = ("@keyframes spin-strip{from{transform:translateX(0)}to{transform:translateX(var(--w))}}"
+                           "@media (prefers-reduced-motion:reduce){.spin{animation:none!important}}")
+    # night falls on the far side; the rim catches the light
+    s.circle(cx, cy, rad, f"url(#{shade})")
+    s.circle(cx, cy, rad, "none", extra=f'stroke="{t["accent"]}" stroke-opacity=".5" stroke-width="1.2"')
     s.end()
+
+    s.add(f'<g transform="{turn}">')
+    s.path(f"M{cx + orx:.1f} {cy:.1f}A{orx:.1f} {ory:.1f} 0 0 1 {cx - orx:.1f} {cy:.1f}", "none", t["grey"], 1,
+           0.55, extra='stroke-dasharray="2 5"')
+    # the satellite rides the whole ellipse; it fades out while it is behind the globe
+    s.add(f'<g class="sat" style="offset-path:path(\'{orbit}\');offset-rotate:0deg;'
+          f'animation:sat 9s linear infinite">')
+    s.circle(0, 0, 3.4, t["khaki"])
+    s.circle(0, 0, 7, t["khaki"], 0.25)
+    s.add("</g></g>")
+    s.css["sat"] = ("@keyframes sat{0%{offset-distance:0%;opacity:0}2%,48%{opacity:0}52%{opacity:1}"
+                    "96%{opacity:1}100%{offset-distance:100%;opacity:0}}"
+                    ".sat{opacity:0}@media (prefers-reduced-motion:reduce){.sat{display:none}}")
     return cy + rad
 
 
@@ -365,11 +417,11 @@ def cover(t):
     if MOBILE:
         head_y, head_size, name_y, para_y, para_w = 150, 100, 202, 236, X1 - X0
         para_end = para_y + 18.5 * 1.45 * len(wrap(deck, 18.5, para_w))
-        globe_cx, globe_top, globe_rows, globe_size = W / 2, para_end + 10, 26, 10
-        y_rule = globe_top + globe_rows * 10.5 + 62
+        globe_cx, globe_top, globe_size = W / 2, para_end + 30, 11
+        y_rule = globe_top + 76 * globe_size * MONO_EM / 2 + 78
     else:
         head_y, head_size, name_y, para_y, para_w = 184, 124, 240, 274, 420
-        globe_cx, globe_top, globe_rows, globe_size, y_rule = 680, 76, 22, 11, 372
+        globe_cx, globe_top, globe_size, y_rule = 680, 74, 11, 372
     fig_y = y_rule + 56
     fig_end = fig_y + (86 if MOBILE else 0) + 54
     H = fig_end + (52 if MOBILE else 80)
@@ -379,18 +431,30 @@ def cover(t):
              "commits.")
     caps(s, X0, 42, "mitaro-cs" if MOBILE else "mitaro-cs · GitHub profile", t["grey"])
     if last:
-        caps(s, X1, 42, f"last commit {last.day} {MONTHS[last.month - 1]} {last.year}", t["grey"], "end")
+        note = f"last commit {last.day} {MONTHS[last.month - 1]} {last.year}"
+        caps(s, X1, 42, note, t["grey"], "end")
+        dx = X1 - text_width(12.5, note.upper(), 600, 1.5) - 12
+        s.circle(dx, 37.5, 7, t["leaf"], extra='class="ping" opacity="0"')
+        s.circle(dx, 37.5, 3.5, t["leaf"])
     seg = (X1 - X0) / len(PALETTE)
     for i, tok in enumerate(PALETTE):
         s.g("wide", f"--t:{i * 0.07:.2f}s")
         s.rect(X0 + i * seg, 53, seg, 4, t[tok])
         s.end()
+    band, cl = s.uid("bd"), s.uid("bc")
+    s.defs.append(f'<linearGradient id="{band}"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
+                  f'<stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" '
+                  f'stop-opacity="0"/></linearGradient><clipPath id="{cl}"><rect x="{X0}" y="53" width="{X1 - X0}" '
+                  f'height="4"/></clipPath>')
+    s.add(f'<g clip-path="url(#{cl})">')
+    s.rect(X0 - 120, 53, 120, 4, f"url(#{band})", extra=f'class="glide" style="--w:{X1 - X0 + 120}px"')
+    s.add("</g>")
     headline(s, X0 - 5, head_y, "Mitaro", head_size, t["ink"], -4, 0.15, glint=t["accent"])
     s.g("fade", "--t:.6s")
     s.text(X0, name_y, "Omar, CS student at MTUCI.", 21, t["ink"], 700)
     s.end()
     para(s, X0, para_y, deck, 18.5, t["grey"], para_w, 1.45, delay=0.75)
-    bottom = globe(s, t, globe_cx, globe_top, globe_rows, globe_size)
+    bottom = globe(s, t, globe_cx, globe_top, globe_size)
     lat, lon = MOSCOW
     mono_text(s, globe_cx - mono_width(12, f"{lat}°N {lon}°E · Moscow · UTC+3") / 2, bottom + 30,
               [(f"{lat}°N {lon}°E", t["grey"]), (" · ", t["rule"]), ("Moscow", t["second"]), (" · UTC+3", t["grey"])],
@@ -433,7 +497,7 @@ def cubic_len(p0, p1, p2, p3, n=24):
 def route(start, mid, end, vertical):
     """A lane from start straight to mid (through the tunnel), then an S-curve to end. Returns the path there,
     the path back and the length."""
-    bend = 22
+    bend = (end[1] - mid[1] if vertical else end[0] - mid[0]) / 2
     if vertical:
         c1, c2 = (mid[0], mid[1] + bend), (end[0], end[1] - bend)
         there = f"M{start[0]:.1f} {start[1]:.1f}V{mid[1]:.1f}"
@@ -468,23 +532,37 @@ def sync_diagram(s, t, top):
     period = 12
     tones = dict(down=t["accent"], up=t["khaki"])
     caps(s, X0, top, "How it syncs", t["grey"])
-    if MOBILE:
-        host = (X0, top + 20, X1 - X0, 92)
-        spare = None
-        pipe = (W / 2 - 13, top + 120, 26, 84)
-        cw = (X1 - X0 - 28) / 3
-        devices = [(X0 + i * (cw + 14), top + 246, cw, 62) for i in range(3)]
-        bottom = top + 246 + 62
-    else:
-        host = (X0, top + 22, 236, 96)
-        spare = (X0, top + 150, 236, 62)
-        pipe = (306, top + 57, 250, 26)
-        devices = [(616, top + 22 + i * 66, X1 - 616, 56) for i in range(3)]
-        bottom = top + 22 + 2 * 66 + 56
     statuses = (["synced", "1 queued", "2 queued", "3 queued", "sending 3"] if MOBILE else
                 ["synced", "offline · 1 queued", "offline · 2 queued", "offline · 3 queued", "back · sending 3"])
     names = ([("phone", "offline copy"), ("phone", None), ("laptop", "browser")] if MOBILE else
-             [("phone", "offline copy · synced"), ("phone", None), ("laptop", "browser · live updates")])
+             [("phone", "offline copy"), ("phone", None), ("laptop", "browser · live")])
+    host_lines = ["Spring Boot · SQLite", "files in AES-256-GCM"] + (["a spare takes over in 1 min"] if MOBILE else [])
+    spare_lines = ["full copy every 5 s", "takes over in 1 min"]
+    mono = 11 if MOBILE else 12.5
+
+    def fit(title, lines):
+        """A card wide enough for its words: padding, dot, the longer of the title and the lines."""
+        return 46 + max([text_width(15, title, 700)] + [mono_width(mono, ln) for ln in lines])
+
+    gap = 4.5   # between lanes; six of them share the pipe, in the order of the devices
+    if MOBILE:
+        host = (X0, top + 20, X1 - X0, 100)
+        spare = None
+        pipe = (W / 2 - 17, top + 136, 34, 70)
+        cw = (X1 - X0 - 28) / 3
+        devices = [(X0 + i * (cw + 14), top + 270, cw, 62) for i in range(3)]
+        bottom = top + 270 + 62
+    else:
+        hw = fit("spare computer", host_lines + spare_lines)
+        host = (X0, top + 22, hw, 78)
+        spare = (X0, top + 136, hw, 78)
+        dw = max(fit("phone", statuses + [ln for _, ln in names if ln]), 190)
+        devices = [(X1 - dw, top + 22 + i * 66, dw, 56) for i in range(3)]
+        mid_y = top + 22 + 66 + 28
+        pipe = (X0 + hw + 40, mid_y - 17, (X1 - dw - 110) - (X0 + hw + 40), 34)
+        host = (X0, mid_y - 39, hw, 78)
+        spare = (X0, mid_y + 62, hw, 78)
+        bottom = mid_y + 140
 
     def card(box, title, lines, dot=None):
         x, y, w, h = box
@@ -513,11 +591,13 @@ def sync_diagram(s, t, top):
     hx, hy, hw, hh = host
     lanes = []
     for i, (dx, dy, dw, dh) in enumerate(devices):
-        for lane, off in (("down", -5), ("up", 5)):
+        for j, lane in enumerate(("down", "up")):
+            off = (i * 2 + j - 2.5) * gap          # lane order matches device order, so no two lanes cross
+            end_off = (j - 0.5) * 12
             if vertical:
-                start, mid, end = (W / 2 + off, hy + hh), (W / 2 + off, py + ph), (dx + dw / 2 + off, dy)
+                start, mid, end = (W / 2 + off, hy + hh), (W / 2 + off, py + ph), (dx + dw / 2 + end_off, dy)
             else:
-                start, mid, end = (hx + hw, py + ph / 2 + off), (px + pw, py + ph / 2 + off), (dx, dy + dh / 2 + off)
+                start, mid, end = (hx + hw, py + ph / 2 + off), (px + pw, py + ph / 2 + off), (dx, dy + dh / 2 + end_off)
             there, back, length = route(start, mid, end, vertical)
             lanes.append((i, lane, there if lane == "down" else back, length))
     off_link = cycle(s, "offlink", [(36, 76)], period, on=0.2, off=1)
@@ -545,18 +625,15 @@ def sync_diagram(s, t, top):
                      f'animation:burst {period}s cubic-bezier(.4,0,.6,1) infinite;animation-delay:{k * 0.3:.1f}s"')
 
     # the cards, over the lanes
-    card(host, "host computer", ["Spring Boot · SQLite", "files sealed with AES-256-GCM"] +
-         (["a spare takes over in 1 min"] if MOBILE else []), t["leaf"])
+    card(host, "host computer", host_lines, t["leaf"])
     s.circle(hx + 16, hy + 19.5, 9, t["leaf"], extra='class="pulse" opacity=".3"')
     if spare:
         sx, sy, sw, sh = spare
-        card(spare, "spare computer", ["a full copy, takes over in 1 min"], t["bark"])
+        card(spare, "spare computer", spare_lines, t["bark"])
         s.path(f"M{sx + 30} {hy + hh}V{sy}", "none", t["rule"], 1.4, extra='stroke-dasharray="3 4"')
         s.path(f"M{sx + 30} {hy + hh}V{sy}", "none", t["leaf"], 3,
                extra=f'class="packet" stroke-dasharray="6 {sy - hy - hh + 20:.0f}" '
                      f'style="--start:6;--end:-{sy - hy - hh:.0f};animation-duration:3.2s"')
-        s.add(f'<text x="{sx + 42}" y="{(hy + hh + sy) / 2 + 4:.1f}" font-size="11.5" font-family="{MONO}" '
-              f'fill="{t["grey"]}">copy every 5 s</text>')
     for i, box in enumerate(devices):
         title, line = names[i]
         if line:
@@ -585,7 +662,7 @@ def sync_diagram(s, t, top):
 
 def terminal_theme():
     """The Campus page is a dark terminal in both themes, so it reads as its own place."""
-    return dict(THEMES["dark"], bg="#1b1917", panel="#25221f", rule="#38332e")
+    return dict(THEMES["dark"], panel="#1c1114", rule="#34252a")
 
 
 def campus(_t):
@@ -601,14 +678,14 @@ def campus(_t):
     if MOBILE:
         text_end = 158 + 18 * 1.5 * len(wrap(CAMPUS_TEXT, 18, X1 - X0))
         diagram_top = text_end + 24
-        log_x, log_y = X0, diagram_top + 400
+        log_x, log_y = X0, diagram_top + 424
         log_room = int((X1 - X0) / (12.5 * MONO_EM))
     else:
-        diagram_top = 326
+        diagram_top = 340
         log_x, log_y = 486, 100
         log_room = int((X1 - log_x) / (12.5 * MONO_EM))
     log_end = log_y + 26 + len(log) * 22
-    rule = (log_end if MOBILE else diagram_top + 240) + 18
+    rule = (log_end if MOBILE else diagram_top + 312) + 18
     fig_y = rule + 58
     fig_rows = (len(items) + 2) // 3 if MOBILE else 1
     end = fig_y + (fig_rows - 1) * 86 + 48
@@ -701,7 +778,7 @@ def about(t):
         lx, ly = X0, 146
         ix, iy = X0 + 330, 128
     llh, ilh = lsize * 1.2, isize * 1.62
-    H = iy + (len(rows) + 3) * ilh + 34
+    H = iy + (len(rows) + 4.3) * ilh + 30
     s = page(t, H, "02 About: " + "; ".join(f"{a} {b}" for a, b in rows) + ".",
              "neofetch for a person: a big M made of my name, shimmering in the colours of the avatar, and the facts "
              "typed out next to it.")
@@ -733,14 +810,18 @@ def about(t):
     bw = 3 * isize * MONO_EM
     for k, tok in enumerate(PALETTE + ["ink", "grey"]):
         s.g("grow", f"transform-origin:{ix + (k + 0.5) * bw:.0f}px {y - isize * 0.4:.0f}px;--t:{delay + 0.1 + k * 0.08:.2f}s")
-        s.rect(ix + k * bw, y - isize * 0.9, bw, isize * 1.15, t[tok])
+        s.rect(ix + k * bw, y - isize * 0.9, bw, isize * 1.15, t[tok],
+               extra=f'class="wave" style="--t:{3 + k * 0.25:.2f}s"')
         s.end()
+    y += ilh * 1.3
+    mono_text(s, ix, y, [("$ ", t["second"])], isize)
+    s.rect(ix + mono_width(isize, "$ "), y - isize + 2, isize * MONO_EM, isize, t["ink"], extra='class="blink"')
     return s
 
 
 # ------------------------------------------------------------------ 03 Map: repositories as a constellation
 def sky_theme():
-    return dict(THEMES["dark"], bg="#11110f", rule="#2c2925")
+    return dict(THEMES["dark"], rule="#2e2023")
 
 
 def star_map(_t):
@@ -751,11 +832,27 @@ def star_map(_t):
     s = page(t, H, "03 Map: my repositories as a constellation, in the order I made them; the higher and larger "
              "the star, the more commits. " + ", ".join(f"{REPO_NAMES.get(r['name'].lower(), r['name'])} "
                                                        f"{r['commits']}" for r in repos) + ".",
-             "Stars twinkle and a line draws itself through them from the first repository to the newest.")
+             "Stars twinkle, shooting stars cross the sky, and a line draws itself through the repositories from the "
+             "first to the newest, with a light running along it.")
     rnd = random.Random(42)
-    for _ in range(90 if MOBILE else 160):
-        s.circle(rnd.uniform(0, W), rnd.uniform(56, H - 40), rnd.choice((0.6, 0.8, 1.1)), t["grey"],
-                 round(rnd.uniform(0.15, 0.6), 2))
+    for k in range(90 if MOBILE else 160):
+        x, y, r, o = rnd.uniform(0, W), rnd.uniform(56, H - 40), rnd.choice((0.6, 0.8, 1.1)), round(rnd.uniform(0.15, 0.6), 2)
+        if k % 3:
+            s.circle(x, y, r, t["grey"], o)
+        else:
+            s.circle(x, y, r + 0.3, t["grey"], extra=f'class="twinkle" style="--o:{o + 0.2:.2f};'
+                                                      f'--d:{rnd.uniform(2.2, 5):.1f}s;--t:-{rnd.uniform(0, 5):.1f}s"')
+    # shooting stars, now and then
+    trail = s.uid("tr")
+    s.defs.append(f'<linearGradient id="{trail}"><stop offset="0" stop-color="{t["ink"]}" stop-opacity="0"/>'
+                  f'<stop offset="1" stop-color="{t["ink"]}"/></linearGradient>')
+    s.css["shoot"] = ("@keyframes shoot{0%{transform:translate(0,0);opacity:0}1%{opacity:1}"
+                      "7%,100%{transform:translate(260px,110px);opacity:0}}"
+                      ".shoot{opacity:0;animation:shoot var(--d) cubic-bezier(.3,0,.7,1) infinite;animation-delay:var(--t)}")
+    for k, (sx, sy, dur, lag) in enumerate([(W * 0.18, 70, 11, 2.5), (W * 0.55, 60, 14, 8.0), (W * 0.05, 140, 17, 13.0)]):
+        s.add(f'<g class="shoot" style="--d:{dur}s;--t:{lag}s"><g transform="rotate(23 {sx:.0f} {sy})">'
+              f'<rect x="{sx - 70:.0f}" y="{sy - 0.75}" width="70" height="1.5" rx=".75" fill="url(#{trail})"/>'
+              f'<circle cx="{sx:.0f}" cy="{sy}" r="1.6" fill="{t["ink"]}"/></g></g>')
     head(s, t, "03", "Map", "in the order I made them")
     left, right, top, bottom = X0 + 30, X1 - 30, 110, H - 92
     top_c = max(r["commits"] for r in repos) or 1
@@ -768,6 +865,8 @@ def star_map(_t):
     length = sum(math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) for i in range(len(pts) - 1))
     s.path(line, "none", t["leaf"], 1.4, opacity=0.8,
            extra=f'class="draw" stroke-dasharray="{length:.0f}" style="--len:{length:.0f};--t:.4s"')
+    s.path(line, "none", t["khaki"], 2.6, extra=f'class="packet" stroke-dasharray="26 {length + 60:.0f}" '
+                                              f'style="--start:26;--end:-{length:.0f};--t:3s;animation-duration:7s"')
     for i, (x, y, r) in enumerate(pts):
         langs = {k: v for k, v in r["langs"].items() if k != "Rich Text Format"}
         main = max(langs, key=langs.get) if langs else "Other"
@@ -817,6 +916,12 @@ def toolkit(t):
         parts = [(f"{k:<11} ", t["ink"]), ("█" * n, t[LANG_TOKEN.get(k, "grey")]),
                  ("░" * (cells - n), t["rule"]), (f" {pct}", t["grey"])]
         mono_text(s, X0, 92 + i * step, parts, size, delay=0.2 + i * 0.25, steps_per_s=50)
+    glint = s.uid("gl")
+    s.defs.append(f'<linearGradient id="{glint}"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
+                  f'<stop offset=".5" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" '
+                  f'stop-opacity="0"/></linearGradient>')
+    s.rect(X0 - 90, 92 - size - 4, 90, len(langs) * step + 4, f"url(#{glint})",
+           extra=f'class="glide" style="--w:{X1 - X0 + 90}px;--t:3s;animation-duration:6s"')
     s.line(X0, y0, X1, y0, t["rule"], 1.2)
     if MOBILE:
         y = y0 + 34
@@ -857,11 +962,12 @@ def now(t):
     for tag, tok, txt in NOW:
         parts = [txt] if len(txt) <= room else wrap_mono(txt, room)
         lines.append((tag, tok, parts))
-    rows = 1 + sum(len(p) for _, _, p in lines) + 1
+    rows = 1 + sum(len(p) for _, _, p in lines) + 2
     box_top = 66
     H = box_top + 30 + rows * (size + 11) + 30
     s = page(t, H, "05 Now: " + "; ".join(f"{tag} {txt}" for tag, _, txt in NOW) + ".",
-             "A terminal that types out what I am working on now, with a spinner on the current build.")
+             "A terminal that types out what I am working on now, with a spinner on the current work and the next Campus "
+             "build filling an ASCII progress bar.")
     head(s, t, "05", "Now", "updated by hand")
     s.rect(X0, box_top, X1 - X0, H - box_top - 22, t["panel"], rx=8)
     x, y = X0 + 18, box_top + 32
@@ -880,6 +986,28 @@ def now(t):
                 s.frames(4, 0.6, lambda q, sx=sx, y=y: s.add(f'<text x="{sx:.1f}" y="{y:.1f}">{esc(SPINNER[q])}</text>'))
                 s.add("</g>")
             y += lh
+    # the next Campus build: an ASCII bar that fills smoothly, its stage changing as it goes
+    cells = min(24, room - 11)
+    label = "[campus   ] "
+    bx = x + mono_width(size, label)
+    s.g("fade", f"--t:{delay:.2f}s")
+    mono_text(s, x, y, [(label, t["accent"]), ("░" * cells, t["rule"])], size)
+    clip = s.uid("bar")
+    s.defs.append(f'<clipPath id="{clip}"><rect x="{bx:.1f}" y="{y - size:.1f}" width="{cells * cw:.1f}" '
+                  f'height="{size * 1.4:.1f}" class="fillbar"/></clipPath>')
+    s.css["fillbar"] = ("@keyframes fillbar{0%,25%{transform:scaleX(1)}25.01%{transform:scaleX(0)}"
+                        "100%{transform:scaleX(1)}}.fillbar{transform-box:fill-box;transform-origin:0 0;"
+                        "animation:fillbar 8s cubic-bezier(.3,0,.6,1) infinite}")
+    s.add(f'<g clip-path="url(#{clip})">')
+    mono_text(s, bx, y, [("█" * cells, t["accent"])], size)
+    s.add("</g>")
+    sx = bx + (cells + 1) * cw
+    stages = [("ready ✓", t["leaf"]), ("compiling", t["grey"]), ("testing", t["grey"]), ("packaging", t["grey"])]
+    s.add(f'<g font-family="{MONO}" font-size="{size}">')
+    s.frames(4, 8, lambda q: s.add(f'<text x="{sx:.1f}" y="{y:.1f}" fill="{stages[q][1]}">{stages[q][0]}</text>'))
+    s.add("</g>")
+    s.end()
+    y += lh
     mono_text(s, x, y, [("$ ", t["second"])], size)
     s.rect(x + mono_width(size, "$ "), y - size + 2, cw, size, t["ink"], extra='class="blink"')
     return s
