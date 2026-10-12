@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """Builds the SVGs of the profile README into ../assets from scripts/data.json.
 
-Concept: an editorial profile in the colours of the avatar where every page has its own character and the real
-data is always the object. The cover is a poster with the Earth turning in ASCII characters (Natural Earth
-coastlines in land.txt) and Moscow marked; Campus is a dark terminal page with a live diagram of how it syncs
-and its git log typing itself out; About is neofetch for a person; Map is a night sky where the repositories
-are a constellation; Toolkit fills ASCII bars; Now types out what I am working on.
-All motion is CSS and stops under prefers-reduced-motion; every element rests in its final state.
-Every page sits on black in both GitHub themes and has a single-column version for phones.
+The README follows the classic GitHub profile: a greeting, the tech stack, socials, the core project,
+trophies and a stats card. The pictures are drawn here rather than borrowed from badge and stats services,
+so they load fast, never break when a service is down and share one look: black and white, like the avatar
+(a man in a white robe on a snowy driveway). The Earth beside the greeting turns in ASCII characters
+(Natural Earth coastlines in land.txt); Campus is a terminal page with a live diagram of how it syncs.
+All motion is CSS and stops under prefers-reduced-motion; every element rests in its final state. Black works
+in both GitHub themes, so each picture is built once, plus a narrow version for phones where it helps.
 """
 import datetime as dt
 import json
 import math
 import os
-import random
 import sys
 
 from lib import MONO, MONO_EM, Svg, mono_width, text_width
@@ -28,15 +27,11 @@ MOBILE = False
 LAYOUTS = {"": (888, 40, 848, False), "-mobile": (440, 20, 420, True)}
 
 NIGHT_HOURS = (22, 23, 0, 1, 2, 3)
-# black is the base in both GitHub themes, so the page looks the same for everyone; the accents are the avatar's
-# colours (a pale blue shirt, sunlit skin, khaki trousers, suede boots, the trees and the bark behind), each
-# with 4.5:1 contrast or more on black
-DARK = dict(bg="#000000", ink="#f2f2f2", grey="#bdb5ae", rule="#262626", panel="#121212",
-            accent="#a9c4d4", second="#e8a882", khaki="#d6c6a6", suede="#c9976f", leaf="#9fbb88", bark="#ada294")
-THEMES = {"light": DARK, "dark": DARK}
-PALETTE = ["leaf", "bark", "suede", "second", "khaki", "accent"]   # the avatar, trees to shirt
-LANG_TOKEN = {"Java": "accent", "Svelte": "suede", "Python": "khaki", "TypeScript": "leaf", "JavaScript": "bark",
-              "CSS": "second", "HTML": "grey", "Other": "grey"}
+# the avatar is a black and white photo: snow and a white robe, grey asphalt, dark hedges, a black night.
+# Every text shade keeps 4.5:1 contrast or more on black.
+MONO_T = dict(bg="#000000", ink="#f5f5f5", grey="#a8a8a8", rule="#262626", panel="#0d0d0d", dim="#4d4d4d",
+              accent="#ffffff", second="#dcdcdc", khaki="#c4c4c4", suede="#adadad", leaf="#969696", bark="#808080")
+LANG_SHADES = ["#ffffff", "#c9c9c9", "#999999", "#707070", "#4f4f4f", "#383838", "#262626"]
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 MSK = dt.timezone(dt.timedelta(hours=3))
@@ -108,8 +103,9 @@ def esc(txt):
 
 # ------------------------------------------------------------------ type, rules and motion
 def page(t, h, title, desc=""):
+    """A black card with a hairline edge, so it reads as a card on GitHub's light and dark pages alike."""
     s = Svg(W, h, title, desc)
-    s.rect(0, 0, W, h, t["bg"])
+    s.rect(0.5, 0.5, W - 1, h - 1, t["bg"], t["rule"], 1, rx=12)
     return s
 
 
@@ -120,9 +116,11 @@ def caps(s, x, y, txt, fill, anchor="start", size=12.5, weight=600):
 def head(s, t, num, label, right=""):
     """Section line: number in the accent, label in caps, a hairline that draws itself, a note on the right."""
     right = "" if MOBILE else right
-    caps(s, X0, 42, num, t["accent"], size=13.5, weight=700)
-    caps(s, X0 + 34, 42, label, t["ink"], size=13.5, weight=700)
-    start = X0 + 34 + text_width(13.5, label.upper(), 700, 1.5) + 14
+    lx = X0 + 34 if num else X0
+    if num:
+        caps(s, X0, 42, num, t["accent"], size=13.5, weight=700)
+    caps(s, lx, 42, label, t["ink"], size=13.5, weight=700)
+    start = lx + text_width(13.5, label.upper(), 700, 1.5) + 14
     end = X1 - (text_width(12.5, right.upper(), 600, 1.5) + 14 if right else 0)
     s.g("wide", "--t:.1s")
     s.line(start, 37, end, 37, t["rule"], 1.2)
@@ -233,44 +231,13 @@ def mono_text(s, x, y, parts, size, delay=None, steps_per_s=36, mask=None):
 BG_HOLDER = ["#000"]   # the page colour the typing mask paints with, set per theme
 
 
-def both(fn, name):
+def both(fn, name, layouts=LAYOUTS):
+    """Builds a picture for each layout: name.svg for wide screens and name-mobile.svg for phones."""
     global W, X0, X1, MOBILE
-    for suffix, (w, x0, x1, mobile) in LAYOUTS.items():
+    for suffix, (w, x0, x1, mobile) in layouts.items():
         W, X0, X1, MOBILE = w, x0, x1, mobile
-        for theme, t in THEMES.items():
-            BG_HOLDER[0] = t["bg"]
-            fn(t).save(OUT, f"{name}-{theme}{suffix}.svg")
-
-
-# ------------------------------------------------------------------ cover: a poster with an ASCII Earth
-def fade_edge(s, t):
-    gid = s.uid("fd")
-    s.defs.append(f'<linearGradient id="{gid}"><stop offset="0" stop-color="{t["bg"]}" stop-opacity="0"/>'
-                  f'<stop offset="1" stop-color="{t["bg"]}"/></linearGradient>')
-    return f"url(#{gid})"
-
-
-def ticker(s, t, y):
-    """A band with my latest real commits running right to left."""
-    rows = [c for c in DATA["commits"] if not c["msg"].startswith(("Initial commit", "Merge "))][:8]
-    items = []
-    for c in rows:
-        _, m, d = c["ts"][:10].split("-")
-        items.append(f"{c['msg']}  —  {REPO_NAMES.get(c['repo'].lower(), c['repo'])}, {int(d)} {MONTHS[int(m) - 1]}")
-    line = "     ·     ".join(items) + "     ·     "
-    width = text_width(14, line)
-    lx = X0 + 86
-    caps(s, X0, y, "Latest", t["suede"], weight=700)
-    cid = s.uid("tk")
-    s.defs.append(f'<clipPath id="{cid}"><rect x="{lx}" y="{y - 18}" width="{X1 - lx}" height="26"/></clipPath>')
-    s.add(f'<g clip-path="url(#{cid})">')
-    s.g("ticker", f"--shift:-{width:.0f}px;--d:{width / 45:.0f}s")
-    for k in range(2):
-        s.add(f'<text x="{lx + k * width:.1f}" y="{y}" font-size="14" fill="{t["ink"]}" xml:space="preserve">'
-              f'{esc(line)}</text>')
-    s.end()
-    s.add("</g>")
-    s.rect(X1 - 40, y - 18, 40, 26, fade_edge(s, t))
+        BG_HOLDER[0] = MONO_T["bg"]
+        fn(MONO_T).save(OUT, f"{name}{suffix}.svg")
 
 
 LAND = [ln.rstrip("\n") for ln in open(os.path.join(HERE, "land.txt"), encoding="utf-8")]   # 2° cells, Natural Earth
@@ -401,78 +368,6 @@ def globe(s, t, cx, top, size, period=24.0):
     return cy + rad
 
 
-def cover(t):
-    f = facts()
-    repos = DATA["repos"]
-    last = f["last"]
-    deck = "I build local-first software: the data stays on a machine you control, not on someone else's server."
-    if MOBILE:
-        head_y, head_size, name_y, para_y, para_w = 150, 100, 202, 236, X1 - X0
-        para_end = para_y + 18.5 * 1.45 * len(wrap(deck, 18.5, para_w))
-        globe_cx, globe_top, globe_size = W / 2, para_end + 30, 11
-        y_rule = globe_top + 76 * globe_size * MONO_EM / 2 + 78
-    else:
-        head_y, head_size, name_y, para_y, para_w = 184, 124, 240, 274, 420
-        globe_cx, globe_top, globe_size, y_rule = 680, 74, 11, 372
-    fig_y = y_rule + 56
-    fig_end = fig_y + (86 if MOBILE else 0) + 54
-    H = fig_end + (52 if MOBILE else 80)
-    s = page(t, H, "Mitaro. Omar, computer science student at MTUCI. I build local-first software: the data stays "
-             "on a machine you control. Core project: Campus.",
-             "A poster: the Earth in ASCII characters turning, with Moscow marked, the key figures and a ticker of my latest "
-             "commits.")
-    caps(s, X0, 42, "mitaro-cs" if MOBILE else "mitaro-cs · GitHub profile", t["grey"])
-    if last:
-        note = f"last commit {last.day} {MONTHS[last.month - 1]} {last.year}"
-        caps(s, X1, 42, note, t["grey"], "end")
-        dx = X1 - text_width(12.5, note.upper(), 600, 1.5) - 12
-        s.circle(dx, 37.5, 7, t["leaf"], extra='class="ping" opacity="0"')
-        s.circle(dx, 37.5, 3.5, t["leaf"])
-    seg = (X1 - X0) / len(PALETTE)
-    for i, tok in enumerate(PALETTE):
-        s.g("wide", f"--t:{i * 0.07:.2f}s")
-        s.rect(X0 + i * seg, 53, seg, 4, t[tok])
-        s.end()
-    band, cl = s.uid("bd"), s.uid("bc")
-    s.defs.append(f'<linearGradient id="{band}"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
-                  f'<stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" '
-                  f'stop-opacity="0"/></linearGradient><clipPath id="{cl}"><rect x="{X0}" y="53" width="{X1 - X0}" '
-                  f'height="4"/></clipPath>')
-    s.add(f'<g clip-path="url(#{cl})">')
-    s.rect(X0 - 120, 53, 120, 4, f"url(#{band})", extra=f'class="glide" style="--w:{X1 - X0 + 120}px"')
-    s.add("</g>")
-    headline(s, X0 - 5, head_y, "Mitaro", head_size, t["ink"], -4, 0.15, glint=t["accent"])
-    s.g("fade", "--t:.6s")
-    s.text(X0, name_y, "Omar, CS student at MTUCI.", 21, t["ink"], 700)
-    s.end()
-    para(s, X0, para_y, deck, 18.5, t["grey"], para_w, 1.45, delay=0.75)
-    bottom = globe(s, t, globe_cx, globe_top, globe_size)
-    lat, lon = MOSCOW
-    mono_text(s, globe_cx - mono_width(12, f"{lat}°N {lon}°E · Moscow · UTC+3") / 2, bottom + 30,
-              [(f"{lat}°N {lon}°E", t["grey"]), (" · ", t["rule"]), ("Moscow", t["second"]), (" · UTC+3", t["grey"])],
-              12, delay=1.4)
-    s.line(X0, y_rule, X1, y_rule, t["rule"], 1.2)
-    figures(s, t, fig_y, [(sum(r["commits"] for r in repos), "commits"), (len(repos), "public repositories"),
-                          (code_size(), "of code"), ("Campus", "core project")], accent_last=True, delay=0.5,
-            cols=2 if MOBILE else None)
-    s.line(X0, fig_end, X1, fig_end, t["ink"], 1.5)
-    if MOBILE:
-        ticker(s, t, fig_end + 32)
-        return s
-    caps(s, X0, fig_end + 26, "Contents", t["grey"])
-    x = X0 + 112
-    for num, name in SECTIONS:
-        caps(s, x, fig_end + 26, num, t["accent"], weight=700)
-        caps(s, x + 26, fig_end + 26, name, t["ink"], weight=700)
-        x += 26 + text_width(12.5, name.upper(), 700, 1.5) + 24
-    s.line(X0, fig_end + 40, X1, fig_end + 40, t["rule"], 1.2)
-    ticker(s, t, fig_end + 66)
-    return s
-
-
-SECTIONS = [("01", "Campus"), ("02", "About"), ("03", "Map"), ("04", "Toolkit"), ("05", "Now")]
-
-
 # ------------------------------------------------------------------ 01 Campus: a dark terminal page
 SPINNER = "|/-\\"
 CAMPUS_TEXT = ("A site and an app for one study group: homework, a schedule from an .ics file, news and files. It "
@@ -522,7 +417,7 @@ def sync_diagram(s, t, top):
     """How Campus syncs: the host computer, an HTTPS tunnel with two lanes (changes out, edits back) and the
     devices. One phone drops offline every cycle, queues its edits, comes back and sends them in a burst."""
     period = 12
-    tones = dict(down=t["accent"], up=t["khaki"])
+    tones = dict(down=t["accent"], up=t["bark"])
     caps(s, X0, top, "How it syncs", t["grey"])
     statuses = (["synced", "1 queued", "2 queued", "3 queued", "sending 3"] if MOBILE else
                 ["synced", "offline · 1 queued", "offline · 2 queued", "offline · 3 queued", "back · sending 3"])
@@ -640,7 +535,7 @@ def sync_diagram(s, t, top):
                   f'fill="{t["second"] if 0 < k < 4 else t["grey"]}" class="cyc" '
                   f'style="opacity:{1 if k == 0 else 0};{anim}">{esc(txt)}</text>')
         s.circle(x + 16, y + 19.5, 4, t["leaf"], extra=f'class="cyc" style="{cycle(s, "dotok", [(0, 36), (76, 100)], period)}"')
-        s.circle(x + 16, y + 19.5, 4, t["second"], extra=f'class="cyc" style="opacity:0;'
+        s.circle(x + 16, y + 19.5, 4, t["dim"], extra=f'class="cyc" style="opacity:0;'
                                                          f'{cycle(s, "dotoff", [(36, 76)], period)}"')
     # what the colours mean
     ly = bottom + 30
@@ -652,14 +547,8 @@ def sync_diagram(s, t, top):
     return ly
 
 
-def terminal_theme():
-    """The Campus page is a dark terminal in both themes, so it reads as its own place."""
-    return dict(THEMES["dark"], panel="#141414", rule="#2c2c2c")
-
-
 def campus(_t):
-    t = terminal_theme()
-    BG_HOLDER[0] = t["bg"]
+    t = _t
     r = core_repo()
     pin = DATA.get("pin") or {}
     items = [(pin.get(k), lab) for k, lab in (("java", "Java classes"), ("svelte", "UI components"),
@@ -682,11 +571,11 @@ def campus(_t):
     fig_rows = (len(items) + 2) // 3 if MOBILE else 1
     end = fig_y + (fig_rows - 1) * 86 + 48
     H = end + (74 if MOBILE else 48)
-    s = page(t, H, "01 Campus, my core project: a site and an app for one study group that lives on the group "
+    s = page(t, H, "Campus, my core project: a site and an app for one study group that lives on the group "
              "leader's own computer. " + ", ".join(f"{v} {lab}" for v, lab in items) + ".",
              "A dark terminal page: how Campus syncs, from the host computer through an HTTPS tunnel to phones that "
              "keep working offline, and git log --graph of the latest Campus commits typing itself out.")
-    head(s, t, "01", "Core project", "github.com/mitaro-cs/Campus")
+    head(s, t, "", "Core project", "github.com/mitaro-cs/Campus")
     if MOBILE:
         headline(s, X0 - 3, 120, "Campus", 72, t["ink"], -2, 0.1, glint=t["khaki"])
         para(s, X0, 158, CAMPUS_TEXT, 18, t["ink"], X1 - X0, 1.5, delay=0.4)
@@ -719,308 +608,324 @@ def campus(_t):
     return s
 
 
-# ------------------------------------------------------------------ 02 About: neofetch for a person
-def logo_rows(rows=14, cols=26, word="mitaro", stem=5.5, thick=2.6, meet=9):
-    """A big M filled with my name, the way neofetch draws a system's logo."""
-    out, k = [], 0
-    for r in range(rows):
-        line = ""
-        for c in range(cols):
-            x = c + 0.5
-            xl = stem - 1.5 + min(r, meet) / meet * (cols / 2 - stem + 1.5)   # the left diagonal, mirrored on the right
-            if x < stem or x > cols - stem or (r <= meet + 1 and min(abs(x - xl), abs(x - (cols - xl))) < thick):
-                line += word[k % len(word)]
-                k += 1
-            else:
-                line += " "
-        out.append(line)
-    return out
+# ------------------------------------------------------------------ the Earth beside the greeting
+def globe_header(t):
+    s = Svg(W, 272, "The Earth turning in ASCII characters with Moscow marked and a satellite circling it.",
+            "Real coastlines as ASCII glyphs wrapped onto a sphere, in black and white like the avatar.")
+    globe(s, t, W / 2, 10, 11)
+    return s
 
 
-def about_rows():
+# ------------------------------------------------------------------ badges: the tech stack and socials
+ICONS = json.load(open(os.path.join(HERE, "icons.json"), encoding="utf-8"))   # Simple Icons, CC0
+ICON_NAMES = {"openjdk": "Java", "zedindustries": "Zed", "gnubash": "Bash", "apachemaven": "Maven",
+              "nodedotjs": "Node.js", "html5": "HTML", "maildotru": "Email"}
+STACK = [("Languages", ["openjdk", "python", "typescript", "javascript", "rust", "html5", "css", "gnubash"]),
+         ("Frameworks", ["springboot", "svelte", "flask", "tauri", "nodedotjs", "vite", "apachemaven"]),
+         ("Tools", ["sqlite", "docker", "git", "githubactions", "linux", "macos", "figma", "zedindustries"])]
+BADGE_H = 30
+
+
+def badge_label(slug):
+    return (ICON_NAMES.get(slug) or ICONS[slug]["title"]).upper()
+
+
+def badge_width(slug):
+    return 14 + 15 + 9 + text_width(11.5, badge_label(slug), 700, 1.4) + 13
+
+
+def badge(s, t, x, y, slug, delay=0.0):
+    """A for-the-badge style badge: the logo and the name in white on black."""
+    w = badge_width(slug)
+    s.g("pop", f"--t:{delay:.2f}s")
+    s.rect(x + 0.5, y + 0.5, w - 1, BADGE_H - 1, "#0b0b0b", "#333333", 1, rx=5)
+    s.path(ICONS[slug]["path"], t["accent"], extra=f'transform="translate({x + 14:.1f} {y + 7.5:.1f}) scale(.625)"')
+    s.text(x + 38, y + BADGE_H / 2 + 4.2, badge_label(slug), 11.5, t["ink"], 700, ls=1.4)
+    s.end()
+    return w
+
+
+def glint_over(s, rects, delay, period=7.0):
+    """A soft band of light that runs over the given rectangles now and then, and nowhere else."""
+    clip, band = s.uid("gc"), s.uid("gb")
+    xs = [r[0] for r in rects] + [r[0] + r[2] for r in rects]
+    x0, x1 = min(xs), max(xs)
+    y0 = min(r[1] for r in rects)
+    y1 = max(r[1] + r[3] for r in rects)
+    s.defs.append(f'<clipPath id="{clip}">' + "".join(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" '
+                                                      f'rx="5"/>' for x, y, w, h in rects) + "</clipPath>"
+                  f'<linearGradient id="{band}"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
+                  f'<stop offset=".5" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" '
+                  f'stop-opacity="0"/></linearGradient>')
+    s.add(f'<g clip-path="url(#{clip})">')
+    s.rect(x0 - 120, y0, 120, y1 - y0, f"url(#{band})",
+           extra=f'class="glide" style="--w:{x1 - x0 + 120:.0f}px;--t:{delay:.2f}s;animation-duration:{period}s"')
+    s.add("</g>")
+
+
+def stack(t):
+    """The tech stack as badges, one group per line, wrapping like inline badges do."""
+    gap, label_w = 8, (0 if MOBILE else 112)
+    placed, y = [], 0
+    for title, slugs in STACK:
+        if MOBILE:
+            placed.append(("label", title, 0, y + 14))
+            y += 24
+        else:
+            placed.append(("label", title, 0, y + BADGE_H / 2 + 4.5))
+        x = label_w
+        row = []
+        for slug in slugs:
+            w = badge_width(slug)
+            if x + w > W and x > label_w:
+                placed.append(("row", row, 0, 0))
+                row, x, y = [], label_w, y + BADGE_H + gap
+            row.append((slug, x, y, w))
+            x += w + gap
+        placed.append(("row", row, 0, 0))
+        y += BADGE_H + gap + (18 if MOBILE else 10)
+    H = y - (18 if MOBILE else 10) - gap + 2
+    every = [ICONS[sl]["title"] if sl not in ICON_NAMES else ICON_NAMES[sl] for _, sls in STACK for sl in sls]
+    s = Svg(W, H, "Tech stack: " + ", ".join(every) + ".",
+            "Badges with the logo and name of each language, framework and tool, in black and white.")
+    k = 0
+    for kind, what, x, y in placed:
+        if kind == "label":
+            caps(s, x, y, what, t["grey"], size=11.5)
+            continue
+        for slug, bx, by, w in what:
+            badge(s, t, bx, by, slug, 0.1 + k * 0.04)
+            k += 1
+        glint_over(s, [(bx, by, w, BADGE_H) for _, bx, by, w in what], 2.5 + k * 0.08)
+    return s
+
+
+SOCIALS = [("telegram", "https://t.me/treadways"), ("maildotru", "mailto:miri.saro@bk.ru"),
+           ("instagram", "https://instagram.com/stere.os")]
+
+
+def social_badge(slug, delay):
+    def draw(t):
+        w = badge_width(slug)
+        s = Svg(w, BADGE_H, ICON_NAMES.get(slug, ICONS[slug]["title"]))
+        badge(s, t, 0, 0, slug)
+        glint_over(s, [(0, 0, w, BADGE_H)], delay, 6.0)
+        return s
+    return draw
+
+
+# ------------------------------------------------------------------ trophies
+RANKS = ["C", "B", "A", "AA", "AAA", "S", "SS", "SSS"]
+CUP = ["..XXXXXXXX..",
+       "XXXXXXXXXXXX",
+       "X.XXXXXXXX.X",
+       "X.XXXXXXXX.X",
+       ".XXXXXXXXXX.",
+       "..XXXXXXXX..",
+       "...XXXXXX...",
+       "....XXXX....",
+       ".....XX.....",
+       ".....XX.....",
+       "....XXXX....",
+       "...XXXXXX..."]
+METALS = {"top": ("#ffffff", "#c8c8c8", "#7d7d7d"), "mid": ("#cfcfcf", "#959595", "#5c5c5c"),
+          "low": ("#8c8c8c", "#636363", "#404040")}
+
+
+def trophy_list():
     f = facts()
     repos = DATA["repos"]
+    act = DATA.get("activity") or {}
+    pin = DATA.get("pin") or {}
     since = dt.date.fromisoformat(DATA["created"][:10])
     years = (f["last"].date() - since).days // 365 if f["last"] else 0
-    langs = [k for k, _ in all_langs() if k != "Other"][:3]
-    release = core_repo().get("release")
-    rows = [("Name", "Omar · Mitaro"),
-            ("Study", "computer science, MTUCI"),
-            ("Location", "Moscow, UTC+3"),
-            ("Uptime", f"{years} years on GitHub, since {MONTHS[since.month - 1]} {since.year}"),
-            ("Repos", f"{len(repos)} public · {sum(r.get('stars', 0) for r in repos)} stars"),
-            ("Commits", f"{sum(r['commits'] for r in repos)} · {len(f['per_day'])} active days"),
-            ("Night", f"{f['night']}% after 22:00 · peak {f['peak']:02d}:00"),
-            ("Streak", f"{f['streak']} days · busiest on {f['weekday']}s"),
-            ("Langs", " · ".join(langs)),
-            ("Core", "Campus" + (f" {release}" if release else "")),
-            ("Editor", "Zed")]
-    return rows
+    langs = len({k for r in CODE_REPOS for k in r["langs"] if k != "Rich Text Format"})
+    return [("Commits", sum(r["commits"] for r in repos), "commits", (1, 10, 50, 100, 200, 500, 1000, 2000)),
+            ("Pull requests", act.get("prs", 0), "opened", (1, 5, 10, 20, 50, 100, 200, 500)),
+            ("Merged", act.get("merged", 0), "merged PRs", (1, 5, 10, 20, 50, 100, 200, 500)),
+            ("Repositories", len(repos), "public", (1, 3, 5, 10, 20, 30, 50, 100)),
+            ("Stars", sum(r.get("stars", 0) for r in repos), "earned", (1, 5, 10, 30, 50, 100, 200, 500)),
+            ("Followers", DATA.get("followers", 0), "following me", (1, 3, 5, 10, 20, 50, 100, 200)),
+            ("Streak", f["streak"], "days in a row", (1, 3, 5, 7, 14, 30, 60, 100)),
+            ("Releases", pin.get("versions", 0), "Campus versions", (1, 3, 5, 10, 20, 30, 50, 100)),
+            ("Tests", pin.get("tests", 0), "test files", (1, 10, 25, 50, 100, 200, 500, 1000)),
+            ("Languages", langs, "in my code", (1, 2, 3, 4, 6, 8, 10, 12)),
+            ("Experience", years, "years on GitHub", (1, 2, 3, 4, 5, 6, 8, 10)),
+            ("Night owl", f["night"], "% after 22:00", (5, 10, 15, 20, 25, 30, 40, 50))]
 
 
-def about(t):
-    rows = about_rows()
-    logo = logo_rows()
-    if MOBILE:
-        lsize, isize = 14, 13.5
-        lx, ly = (W - mono_width(lsize, logo[0])) / 2, 134
-        ix, iy = X0, ly + len(logo) * lsize * 1.2 + 26
+def trophy(s, t, x, y, w, h, title, value, unit, steps, i):
+    level = sum(1 for v in steps if value >= v)
+    rank = RANKS[level - 1] if level else "–"
+    tier = "top" if level >= 6 else "mid" if level >= 3 else "low"
+    hi, main, dark = METALS[tier]
+    s.g("pop", f"--t:{0.1 + i * 0.07:.2f}s")
+    s.rect(x + 0.5, y + 0.5, w - 1, h - 1, "#0b0b0b", "#2e2e2e", 1, rx=8)
+    # the rank chip: solid for the S ranks, outlined below
+    cw = 14 + text_width(11, rank, 700, 0.8)
+    if tier == "top":
+        s.rect(x + 10, y + 10, cw, 19, t["accent"], rx=4)
+        s.text(x + 10 + cw / 2, y + 23.5, rank, 11, t["bg"], 700, "middle", 0.8)
     else:
-        lsize, isize = 16, 15
-        lx, ly = X0, 146
-        ix, iy = X0 + 330, 128
-    llh, ilh = lsize * 1.2, isize * 1.62
-    H = iy + (len(rows) + 4.3) * ilh + 30
-    s = page(t, H, "02 About: " + "; ".join(f"{a} {b}" for a, b in rows) + ".",
-             "neofetch for a person: a big M made of my name, shimmering in the colours of the avatar, and the facts "
-             "typed out next to it.")
-    head(s, t, "02", "About", "$ neofetch --user mitaro")
-    mono_text(s, X0, 92, [("$ ", t["second"]), ("neofetch", t["ink"])], isize, delay=0.2)
-    # the logo: rows fade in from the top, then a band of light runs down them again and again
-    s.add(f'<g font-family="{MONO}" font-size="{lsize}" font-weight="700">')
-    for r, ln in enumerate(logo):
-        tok = PALETTE[min(len(PALETTE) - 1, r * len(PALETTE) // len(logo))]
-        s.g("fade", f"--t:{0.5 + r * 0.06:.2f}s")
-        s.add(f'<text x="{lx:.1f}" y="{ly + r * llh:.1f}" fill="{t[tok]}" xml:space="preserve" style="white-space:pre;'
-              f'animation:shimmer 4.2s ease-in-out infinite;animation-delay:{r * 0.12:.2f}s">{ln}</text>')
+        s.rect(x + 10.5, y + 10.5, cw - 1, 18, "none", main, 1, rx=4)
+        s.text(x + 10 + cw / 2, y + 23.5, rank, 11, main, 700, "middle", 0.8)
+    # the cup, in pixels, bobbing gently
+    px = 4.2
+    cx0, cy0 = x + w / 2 - 6 * px, y + 34
+    s.add(f'<g class="bob" style="--t:-{i * 0.37:.2f}s"><use href="#cup-{tier}" x="{cx0:.1f}" y="{cy0:.1f}"/></g>')
+    if not any(f'id="cup-{tier}"' in d for d in s.defs):   # each metal's cup is drawn once and reused
+        rects = []
+        for r, line in enumerate(CUP):
+            cols = [c for c, ch in enumerate(line) if ch == "X"]
+            body = [c for c in cols if 0 < c < 11] or cols
+            for c in cols:
+                fill = hi if c == body[0] or r == 0 else dark if c == body[-1] or c in (0, 11) else main
+                rects.append(f'<rect x="{c * px:.1f}" y="{r * px:.1f}" width="{px + 0.2:.1f}" height="{px + 0.2:.1f}" '
+                             f'fill="{fill}"/>')
+        s.defs.append(f'<g id="cup-{tier}">{"".join(rects)}</g>')
+    if tier != "low":
+        for k, (dx, dy) in enumerate(((-9, 4), (13.5, 1), (12.5, 9))):
+            s.rect(cx0 + dx * px, cy0 + dy * px, 3, 3, hi,
+                   extra=f'class="twinkle" style="--o:.9;--d:{2.2 + k * 0.7:.1f}s;--t:-{i * 0.5 + k:.1f}s"')
+    s.text(x + w / 2, y + 108, title, 13.5, t["ink"], 700, "middle")
+    s.text(x + w / 2, y + 126, f"{value} {unit}" if not unit.startswith("%") else f"{value}{unit}", 11.5,
+           t["grey"], anchor="middle")
+    # progress to the next rank
+    nxt = next((v for v in steps if v > value), None)
+    prev = ([v for v in steps if v <= value] or [0])[-1]
+    frac = 1.0 if nxt is None else (value - prev) / max(1, nxt - prev)
+    bx, bw = x + 14, w - 28
+    s.rect(bx, y + 140, bw, 4, t["rule"], rx=2)
+    if frac > 0:
+        s.g("wide", f"--t:{0.8 + i * 0.07:.2f}s")
+        s.rect(bx, y + 140, bw * frac, 4, main, rx=2)
         s.end()
-    s.add("</g>")
-    s.css["shimmer"] = ("@keyframes shimmer{0%,60%,100%{opacity:1}30%{opacity:.35}}"
-                        "@media (prefers-reduced-motion:reduce){text{animation:none!important}}")
-    # the facts, typed out one after another
-    delay = 0.9
-    delay = mono_text(s, ix, iy, [("mitaro", t["accent"]), ("@", t["grey"]), ("github", t["accent"])], isize,
-                      delay=delay, steps_per_s=40) + 0.05
-    mono_text(s, ix, iy + ilh, [("─" * 15, t["rule"])], isize)
-    key_w = max(len(a) for a, _ in rows) + 2
-    room = int((X1 - ix) / (isize * MONO_EM)) - key_w
-    for k, (a, b) in enumerate(rows):
-        b = b if len(b) <= room else b[:room - 1] + "…"
-        delay = mono_text(s, ix, iy + (k + 2) * ilh, [(f"{a}:".ljust(key_w), t["second"]), (b, t["ink"])], isize,
-                          delay=delay, steps_per_s=95) + 0.03
-    y = iy + (len(rows) + 2.4) * ilh
-    bw = 3 * isize * MONO_EM
-    for k, tok in enumerate(PALETTE + ["ink", "grey"]):
-        s.g("grow", f"transform-origin:{ix + (k + 0.5) * bw:.0f}px {y - isize * 0.4:.0f}px;--t:{delay + 0.1 + k * 0.08:.2f}s")
-        s.rect(ix + k * bw, y - isize * 0.9, bw, isize * 1.15, t[tok],
-               extra=f'class="wave" style="--t:{3 + k * 0.25:.2f}s"')
-        s.end()
-    y += ilh * 1.3
-    mono_text(s, ix, y, [("$ ", t["second"])], isize)
-    s.rect(ix + mono_width(isize, "$ "), y - isize + 2, isize * MONO_EM, isize, t["ink"], extra='class="blink"')
+    s.text(x + w / 2, y + 158, "max rank" if nxt is None else f"next at {nxt}", 10.5, t["bark"], anchor="middle")
+    s.end()
+    return (x, y, w, h)
+
+
+def trophies(t):
+    items = trophy_list()
+    cols = 3 if MOBILE else 6
+    gap = 10
+    w = (W - (cols - 1) * gap) / cols
+    h = 168
+    rows = (len(items) + cols - 1) // cols
+    H = rows * h + (rows - 1) * gap
+    s = Svg(W, H, "GitHub trophies: " + "; ".join(
+        f"{a} {v} {u.lstrip('%').strip()}, rank {RANKS[sum(1 for x in st if v >= x) - 1] if v >= st[0] else 'none'}"
+        for a, v, u, st in items) + ".",
+        "Pixel-art cups ranked C to SSS from my GitHub numbers, each with a bar to the next rank.")
+    cards = []
+    for i, (title, value, unit, steps) in enumerate(items):
+        x, y = (i % cols) * (w + gap), (i // cols) * (h + gap)
+        cards.append(trophy(s, t, x, y, w, h, title, value, unit, steps, i))
+    for r in range(rows):
+        glint_over(s, cards[r * cols:(r + 1) * cols], 3 + r * 1.2, 8.0)
     return s
 
 
-# ------------------------------------------------------------------ 03 Map: repositories as a constellation
-def sky_theme():
-    return dict(THEMES["dark"], rule="#262626")
+# ------------------------------------------------------------------ stats card
+STAT_ICONS = {
+    "star": "M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z",
+    "commit": "M1 8h4M11 8h4M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+    "pr": "M4 2.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM4 5.5v5M4 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM12 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM12 10.5V6a2 2 0 0 0-2-2H8M9.5 2.5 8 4l1.5 1.5",
+    "merge": "M4 2.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM4 5.5v8M12 8.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM4 5.5c0 3 3 4.5 6.5 4.5",
+    "issue": "M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zM8 7.2v1.6",
+    "repo": "M3 2.5h8.5a1 1 0 0 1 1 1v10H4.5a1.5 1.5 0 0 1-1.5-1.5zM3 12a1.5 1.5 0 0 1 1.5-1.5h8",
+}
 
 
-def star_map(_t):
-    t = sky_theme()
-    BG_HOLDER[0] = t["bg"]
-    repos = sorted(DATA["repos"], key=lambda r: r["created"])
-    H = 470 if MOBILE else 430
-    s = page(t, H, "03 Map: my repositories as a constellation, in the order I made them; the higher and larger "
-             "the star, the more commits. " + ", ".join(f"{REPO_NAMES.get(r['name'].lower(), r['name'])} "
-                                                       f"{r['commits']}" for r in repos) + ".",
-             "Stars twinkle, shooting stars cross the sky, and a line draws itself through the repositories from the "
-             "first to the newest, with a light running along it.")
-    rnd = random.Random(42)
-    for k in range(90 if MOBILE else 160):
-        x, y, r, o = rnd.uniform(0, W), rnd.uniform(56, H - 40), rnd.choice((0.6, 0.8, 1.1)), round(rnd.uniform(0.15, 0.6), 2)
-        if k % 3:
-            s.circle(x, y, r, t["grey"], o)
-        else:
-            s.circle(x, y, r + 0.3, t["grey"], extra=f'class="twinkle" style="--o:{o + 0.2:.2f};'
-                                                      f'--d:{rnd.uniform(2.2, 5):.1f}s;--t:-{rnd.uniform(0, 5):.1f}s"')
-    # shooting stars, now and then
-    trail = s.uid("tr")
-    s.defs.append(f'<linearGradient id="{trail}"><stop offset="0" stop-color="{t["ink"]}" stop-opacity="0"/>'
-                  f'<stop offset="1" stop-color="{t["ink"]}"/></linearGradient>')
-    s.css["shoot"] = ("@keyframes shoot{0%{transform:translate(0,0);opacity:0}1%{opacity:1}"
-                      "7%,100%{transform:translate(260px,110px);opacity:0}}"
-                      ".shoot{opacity:0;animation:shoot var(--d) cubic-bezier(.3,0,.7,1) infinite;animation-delay:var(--t)}")
-    for k, (sx, sy, dur, lag) in enumerate([(W * 0.18, 70, 11, 2.5), (W * 0.55, 60, 14, 8.0), (W * 0.05, 140, 17, 13.0)]):
-        s.add(f'<g class="shoot" style="--d:{dur}s;--t:{lag}s"><g transform="rotate(23 {sx:.0f} {sy})">'
-              f'<rect x="{sx - 70:.0f}" y="{sy - 0.75}" width="70" height="1.5" rx=".75" fill="url(#{trail})"/>'
-              f'<circle cx="{sx:.0f}" cy="{sy}" r="1.6" fill="{t["ink"]}"/></g></g>')
-    head(s, t, "03", "Map", "in the order I made them")
-    left, right, top, bottom = X0 + 30, X1 - 30, 110, H - 92
-    top_c = max(r["commits"] for r in repos) or 1
-    pts = []
-    for i, r in enumerate(repos):
-        x = left + (right - left) * i / max(1, len(repos) - 1)
-        y = bottom - (bottom - top) * math.log1p(r["commits"]) / math.log1p(top_c)
-        pts.append((x, y, r))
-    line = "M" + " L".join(f"{x:.1f} {y:.1f}" for x, y, _ in pts)
-    length = sum(math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) for i in range(len(pts) - 1))
-    s.path(line, "none", t["leaf"], 1.4, opacity=0.8,
-           extra=f'class="draw" stroke-dasharray="{length:.0f}" style="--len:{length:.0f};--t:.4s"')
-    s.path(line, "none", t["khaki"], 2.6, extra=f'class="packet" stroke-dasharray="26 {length + 60:.0f}" '
-                                              f'style="--start:26;--end:-{length:.0f};--t:3s;animation-duration:7s"')
-    for i, (x, y, r) in enumerate(pts):
-        langs = {k: v for k, v in r["langs"].items() if k != "Rich Text Format"}
-        main = max(langs, key=langs.get) if langs else "Other"
-        tone = t[LANG_TOKEN.get(main if main in CODE_LANGS else "Other", "grey")]
-        rad = 3 + math.sqrt(r["commits"]) * (0.9 if MOBILE else 1.2)
-        s.circle(x, y, rad * 2.6, tone, 0.18, extra=f'class="pulse" style="--t:{i * 0.37:.2f}s"')
-        s.circle(x, y, rad, tone)
-        name = REPO_NAMES.get(r["name"].lower(), r["name"])
-        limit = 9 if MOBILE else 14
-        if len(name) > limit:
-            name = name[:limit - 1] + "…"
-        up = i % 2 == 0
-        ly = y - rad - 10 if up else y + rad + 20
-        s.g("fade", f"--t:{0.6 + i * 0.12:.2f}s")
-        s.text(x, ly, name, 12.5 if MOBILE else 13.5, t["ink"], 600, "middle")
-        s.end()
-        _, m = r["created"].split("-")[:2]
-        s.text(x, H - 52, f"{MONTHS[int(m) - 1]}", 11.5, t["grey"], anchor="middle")
-        s.text(x, H - 36, f"{r['commits']}", 11.5, tone, 700, "middle")
-    s.line(X0, H - 70, X1, H - 70, t["rule"], 1)
-    return s
+def rank_of(commits, prs, issues, stars, followers):
+    """github-readme-stats' rank: weighted CDFs against medians, lower percentile is better."""
+    def exp_cdf(x):
+        return 1 - 2 ** -x
+
+    def log_cdf(x):
+        return x / (1 + x)
+    score = (2 * exp_cdf(commits / 250) + 3 * exp_cdf(prs / 50) + exp_cdf(issues / 25) + 4 * log_cdf(stars / 50)
+             + log_cdf(followers / 10)) / 12
+    pct = (1 - score) * 100
+    levels = [(1, "S"), (12.5, "A+"), (25, "A"), (37.5, "A-"), (50, "B+"), (62.5, "B"), (75, "B-"), (87.5, "C+"),
+              (100, "C")]
+    return next(lev for top, lev in levels if pct <= top), pct
 
 
-# ------------------------------------------------------------------ 04 Toolkit
-TOOLKIT = [("Languages", ["Java", "Python", "TypeScript", "JavaScript", "Rust", "SQL"]),
-           ("Frameworks", ["Spring Boot", "Svelte", "Flask", "Tauri"]),
-           ("Tools", ["SQLite", "Docker", "Git and Actions", "Linux", "Figma", "Zed"])]
-
-
-def toolkit(t):
+def stats(t):
+    repos = DATA["repos"]
+    act = DATA.get("activity") or {}
+    commits = sum(r["commits"] for r in repos)
+    stars = sum(r.get("stars", 0) for r in repos)
+    last = facts()["last"]
+    year_ago = (last - dt.timedelta(days=365)) if last else None
+    touched = {c["repo"] for c in DATA["commits"]
+               if year_ago and dt.datetime.fromisoformat(c["ts"].replace("Z", "+00:00")) >= year_ago}
+    rows = [("star", "Total Stars Earned", stars), ("commit", "Total Commits", commits),
+            ("pr", "Total PRs", act.get("prs", 0)), ("merge", "Merged PRs", act.get("merged", 0)),
+            ("issue", "Total Issues", act.get("issues", 0)), ("repo", "Contributed to (last year)", len(touched))]
+    level, pct = rank_of(commits, act.get("prs", 0), act.get("issues", 0), stars, DATA.get("followers", 0))
     langs = all_langs()
     total = sum(v for _, v in langs) or 1
-    size, cells, step = (13.5, 28, 26) if MOBILE else (15, 50, 28)
-    y0 = 104 + len(langs) * step
+    pad = 28
     if MOBILE:
-        blocks = [wrap(" · ".join(items), 17, X1 - X0) for _, items in TOOLKIT]
-        H = y0 + sum(40 + 26 * len(b) + 14 for b in blocks) + 20
+        ring = (W / 2, 84 + len(rows) * 34 + 74)
+        lang_x, lang_y, lang_w = pad, ring[1] + 150, W - 2 * pad
     else:
-        H = y0 + 260
-    s = page(t, H, "04 Toolkit. Code by language: " + ", ".join(f"{k} {round(100 * v / total)}%" for k, v in langs)
-             + ". " + " ".join(f"{a}: {', '.join(b)}." for a, b in TOOLKIT),
-             "Language shares drawn as ASCII bars of block glyphs that fill in, then what I use.")
-    head(s, t, "04", "Toolkit", f"{code_size()} of code in {len(CODE_REPOS)} repositories")
-    for i, (k, v) in enumerate(langs):
-        n = round(cells * v / total)
-        pct = f"{round(100 * v / total):>3}%"
-        parts = [(f"{k:<11} ", t["ink"]), ("█" * n, t[LANG_TOKEN.get(k, "grey")]),
-                 ("░" * (cells - n), t["rule"]), (f" {pct}", t["grey"])]
-        mono_text(s, X0, 92 + i * step, parts, size, delay=0.2 + i * 0.25, steps_per_s=50)
-    glint = s.uid("gl")
-    s.defs.append(f'<linearGradient id="{glint}"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
-                  f'<stop offset=".5" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" '
-                  f'stop-opacity="0"/></linearGradient>')
-    s.rect(X0 - 90, 92 - size - 4, 90, len(langs) * step + 4, f"url(#{glint})",
-           extra=f'class="glide" style="--w:{X1 - X0 + 90}px;--t:3s;animation-duration:6s"')
-    s.line(X0, y0, X1, y0, t["rule"], 1.2)
-    if MOBILE:
-        y = y0 + 34
-        for i, ((title, _), lines) in enumerate(zip(TOOLKIT, blocks)):
-            caps(s, X0, y, title, t[("accent", "suede", "leaf")[i]], weight=700)
-            s.g("fade", f"--t:{0.6 + i * 0.15:.2f}s")
-            for j, ln in enumerate(lines):
-                s.text(X0, y + 30 + j * 26, ln, 17, t["ink"])
-            s.end()
-            y += 40 + 26 * len(lines) + 14
-        return s
-    cw = (X1 - X0) / len(TOOLKIT)
-    for i, (title, items) in enumerate(TOOLKIT):
-        x = X0 + i * cw + (16 if i else 0)
-        caps(s, x, y0 + 34, title, t[("accent", "suede", "leaf")[i]], weight=700)
-        for j, item in enumerate(items):
-            s.g("fade", f"--t:{0.6 + i * 0.15 + j * 0.06:.2f}s")
-            s.text(x, y0 + 68 + j * 27, item, 17, t["ink"])
-            s.end()
-        if i:
-            s.line(X0 + i * cw, y0 + 18, X0 + i * cw, H - 22, t["rule"], 1.2)
-    return s
-
-
-# ------------------------------------------------------------------ 05 Now
-NOW = [("building", "accent", "Java and Flask backends with a cleaner structure"),
-       ("studying", "suede", "security: encryption, hashing, local-first design"),
-       ("prototype", "leaf", "a personal AI assistant, Jarvis-style"),
-       ("student", "khaki", "computer science at MTUCI")]
-
-
-def now(t):
-    size = 13 if MOBILE else 15
-    cw = size * MONO_EM
-    tag_w = 12
-    room = int((X1 - X0 - 36) / cw) - tag_w
-    lines = []
-    for tag, tok, txt in NOW:
-        parts = [txt] if len(txt) <= room else wrap_mono(txt, room)
-        lines.append((tag, tok, parts))
-    rows = 1 + sum(len(p) for _, _, p in lines) + 2
-    box_top = 66
-    H = box_top + 30 + rows * (size + 11) + 30
-    s = page(t, H, "05 Now: " + "; ".join(f"{tag} {txt}" for tag, _, txt in NOW) + ".",
-             "A terminal that types out what I am working on now, with a spinner on the current work and the next Campus "
-             "build filling an ASCII progress bar.")
-    head(s, t, "05", "Now", "updated by hand")
-    s.rect(X0, box_top, X1 - X0, H - box_top - 22, t["panel"], rx=8)
-    x, y = X0 + 18, box_top + 32
-    lh = size + 11
-    delay = mono_text(s, x, y, [("$ ", t["second"]), ("now --verbose", t["ink"])], size, 0.4,
-                      mask=t["panel"]) + 0.2
-    y += lh
-    for k, (tag, tok, parts) in enumerate(lines):
-        for j, part in enumerate(parts):
-            label = f"[{tag:<9}] " if j == 0 else " " * tag_w
-            delay = mono_text(s, x, y, [(label, t[tok]), (part, t["ink"])], size, delay, steps_per_s=70,
-                              mask=t["panel"]) + 0.05
-            if k == 0 and j == 0:
-                sx = x + mono_width(size, label + part) + cw
-                s.add(f'<g font-family="{MONO}" font-size="{size}" font-weight="700" fill="{t[tok]}">')
-                s.frames(4, 0.6, lambda q, sx=sx, y=y: s.add(f'<text x="{sx:.1f}" y="{y:.1f}">{esc(SPINNER[q])}</text>'))
-                s.add("</g>")
-            y += lh
-    # the next Campus build: an ASCII bar that fills smoothly, its stage changing as it goes
-    cells = min(24, room - 11)
-    label = "[campus   ] "
-    bx = x + mono_width(size, label)
-    s.g("fade", f"--t:{delay:.2f}s")
-    mono_text(s, x, y, [(label, t["accent"]), ("░" * cells, t["rule"])], size)
-    clip = s.uid("bar")
-    s.defs.append(f'<clipPath id="{clip}"><rect x="{bx:.1f}" y="{y - size:.1f}" width="{cells * cw:.1f}" '
-                  f'height="{size * 1.4:.1f}" class="fillbar"/></clipPath>')
-    s.css["fillbar"] = ("@keyframes fillbar{0%,25%{transform:scaleX(1)}25.01%{transform:scaleX(0)}"
-                        "100%{transform:scaleX(1)}}.fillbar{transform-box:fill-box;transform-origin:0 0;"
-                        "animation:fillbar 8s cubic-bezier(.3,0,.6,1) infinite}")
-    s.add(f'<g clip-path="url(#{clip})">')
-    mono_text(s, bx, y, [("█" * cells, t["accent"])], size)
-    s.add("</g>")
-    sx = bx + (cells + 1) * cw
-    stages = [("ready ✓", t["leaf"]), ("compiling", t["grey"]), ("testing", t["grey"]), ("packaging", t["grey"])]
-    s.add(f'<g font-family="{MONO}" font-size="{size}">')
-    s.frames(4, 8, lambda q: s.add(f'<text x="{sx:.1f}" y="{y:.1f}" fill="{stages[q][1]}">{stages[q][0]}</text>'))
-    s.add("</g>")
+        ring = (520, 160)
+        lang_x, lang_y, lang_w = 640, 84, W - 640 - pad
+    H = (lang_y + len(langs) * 36 + 30) if MOBILE else 84 + len(rows) * 34 + 40
+    s = page(t, H, f"Mitaro's GitHub stats: {stars} stars, {commits} commits, {act.get('prs', 0)} pull requests, "
+             f"{act.get('merged', 0)} merged, {act.get('issues', 0)} issues, contributed to {len(touched)} "
+             f"repositories in the last year, rank {level}. Languages: "
+             + ", ".join(f"{k} {round(100 * v / total)}%" for k, v in langs) + ".",
+             "A stats card: the numbers roll in, the rank ring draws itself, the language bars fill.")
+    s.g("fade", "--t:.1s")
+    s.text(pad, 46, "Mitaro's GitHub Stats", 20, t["ink"], 700)
     s.end()
-    y += lh
-    mono_text(s, x, y, [("$ ", t["second"])], size)
-    s.rect(x + mono_width(size, "$ "), y - size + 2, cw, size, t["ink"], extra='class="blink"')
+    for i, (icon, label, value) in enumerate(rows):
+        y = 88 + i * 34
+        s.g("fade", f"--t:{0.25 + i * 0.08:.2f}s")
+        s.path(STAT_ICONS[icon], "none", t["grey"], 1.4, extra=f'transform="translate({pad} {y - 13})"')
+        s.text(pad + 28, y, f"{label}:", 15, t["grey"], 600)
+        s.end()
+        odometer(s, W - pad - 60 if MOBILE else 380, y, value, 16, t["ink"], 0.3 + i * 0.1)
+    # the rank ring draws itself to the share of developers this rank beats
+    cx, cy = ring
+    r = 56
+    circ = 2 * math.pi * r
+    arc = circ * max(0.02, min(1, (100 - pct) / 100))
+    s.circle(cx, cy, r + 14, t["accent"], 0.06, extra='class="pulse"')
+    s.circle(cx, cy, r, "none", extra=f'stroke="{t["rule"]}" stroke-width="9"')
+    s.add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r}" fill="none" stroke="{t["accent"]}" stroke-width="9" '
+          f'stroke-linecap="round" stroke-dasharray="{arc:.1f} {circ:.1f}" transform="rotate(-90 {cx:.1f} {cy:.1f})" '
+          f'class="draw" style="--len:{arc:.1f};--t:.6s"/>')
+    s.g("fade", "--t:1.2s")
+    s.text(cx, cy + 12, level, 34, t["ink"], 700, "middle")
+    s.text(cx, cy + r + 34, f"rank · top {pct:.0f}%", 11.5, t["grey"], anchor="middle")
+    s.end()
+    # the languages, each with a bar in its own shade
+    caps(s, lang_x, lang_y - 2 if not MOBILE else lang_y - 22, "Most used languages", t["grey"], size=11.5)
+    for i, (name, v) in enumerate(langs):
+        y = lang_y + 22 + i * 36 if not MOBILE else lang_y + i * 36
+        share = v / total
+        s.g("fade", f"--t:{0.5 + i * 0.08:.2f}s")
+        s.text(lang_x, y, name, 13.5, t["ink"], 600)
+        s.text(lang_x + lang_w, y, f"{100 * share:.1f}%", 12.5, t["grey"], anchor="end")
+        s.end()
+        s.rect(lang_x, y + 8, lang_w, 5, t["rule"], rx=2.5)
+        s.g("wide", f"--t:{0.7 + i * 0.1:.2f}s")
+        s.rect(lang_x, y + 8, max(3, lang_w * share), 5, LANG_SHADES[min(i, len(LANG_SHADES) - 1)]
+               if name != "Other" else "#5a5a5a", rx=2.5)
+        s.end()
     return s
-
-
-def wrap_mono(txt, room):
-    lines, cur = [], ""
-    for wd in txt.split():
-        t = (cur + " " + wd).strip()
-        if len(t) <= room or not cur:
-            cur = t
-        else:
-            lines.append(cur)
-            cur = wd
-    return lines + [cur]
 
 
 if __name__ == "__main__":
-    both(cover, "cover")
+    both(globe_header, "globe", {"": (340, 0, 340, False)})
+    both(stack, "stack")
+    for k, (slug, _) in enumerate(SOCIALS):
+        both(social_badge(slug, 2 + k * 1.3), f"badge-{slug}", {"": (0, 0, 0, False)})
     both(campus, "campus")
-    both(about, "about")
-    both(star_map, "map")
-    both(toolkit, "toolkit")
-    both(now, "now")
+    both(trophies, "trophies")
+    both(stats, "stats")

@@ -60,6 +60,10 @@ CSS = (
     ".glide{opacity:0;animation:glide 7s cubic-bezier(.45,0,.55,1) infinite;animation-delay:var(--t,1.5s)}"
     "@keyframes twinkle{0%,100%{opacity:var(--o,.5)}50%{opacity:.08}}"
     ".twinkle{animation:twinkle var(--d,3s) ease-in-out infinite;animation-delay:var(--t,0s)}"
+    "@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"
+    ".pop{animation:pop .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--t,0s)}"
+    "@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}"
+    ".bob{animation:bob 3.2s ease-in-out infinite;animation-delay:var(--t,0s)}"
     "@media (prefers-reduced-motion:reduce){[class]{animation:none!important}}"
 )
 

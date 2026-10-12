@@ -97,6 +97,17 @@ def pin_stats(repo, branch, old):
         return old
 
 
+def activity(old):
+    """Pull requests, merged ones and issues I opened anywhere on GitHub, for the stats card."""
+    try:
+        def total(q):
+            return (get(f"/search/issues?q={q}+author:{USER}&per_page=1") or {}).get("total_count", 0)
+        return {"prs": total("type:pr"), "merged": total("type:pr+is:merged"), "issues": total("type:issue")}
+    except Exception as e:
+        print(f"activity skipped: {e}", file=sys.stderr)
+        return old
+
+
 def main():
     user = get(f"/users/{USER}")
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "data.json")
@@ -130,6 +141,7 @@ def main():
         "week": "{}-W{:02d}".format(*datetime.date.today().isocalendar()[:2]),
         "repos": repos,
         "pin": pin,
+        "activity": activity(prev.get("activity")),
         "commits": commits,
     }
     with open(out, "w") as fh:

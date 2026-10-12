@@ -1,9 +1,31 @@
-<picture><source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/cover-dark-mobile.svg"><source media="(max-width: 600px)" srcset="assets/cover-light-mobile.svg"><source media="(prefers-color-scheme: dark)" srcset="assets/cover-dark.svg"><img src="assets/cover-light.svg" width="100%" alt="Mitaro. Omar, CS student at MTUCI. I build local-first software: the data stays on a machine you control, not on someone else's server. The Earth in ASCII characters turning smoothly with Moscow marked and a satellite circling it, commits, public repositories, amount of code, my core project Campus, and a ticker of my latest commits."></picture>
+<img align="right" width="38%" src="assets/globe.svg" alt="The Earth turning in ASCII characters with Moscow marked and a satellite circling it.">
 
-**Contents:** [01 Campus](#campus) · [02 About](#about) · [03 Map](#map) · [04 Toolkit](#toolkit) · [05 Now](#now) · [Contact](#contact)
+### 💫 Hi 👋, I'm Mitaro
 
-<a name="campus"></a>
-<a href="https://github.com/mitaro-cs/Campus"><picture><source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/campus-dark-mobile.svg"><source media="(max-width: 600px)" srcset="assets/campus-light-mobile.svg"><source media="(prefers-color-scheme: dark)" srcset="assets/campus-dark.svg"><img src="assets/campus-light.svg" width="100%" alt="01 Campus, my core project: a site and an app for one study group that lives on the group leader's own computer. A live diagram of how it syncs: the host computer and a spare, an HTTPS tunnel with changes going out and edits coming back, and phones that keep working offline and send their queued edits when they are back; the latest Campus commits as git log --graph, and its numbers: Java classes, UI components, test files, migrations, versions and the latest release."></picture></a>
+📫 Email me at [miri.saro@bk.ru](mailto:miri.saro@bk.ru) for collaboration, projects, or anything else 🙂
+
+- 🔭 Building **[Campus](https://github.com/mitaro-cs/Campus)**, a local-first site and app for a study group
+- 🎓 Omar, computer science student at MTUCI, Moscow
+- 🌱 Currently learning: security (encryption, hashing), Rust and Tauri
+- 🤖 Prototyping a personal AI assistant, Jarvis-style
+- 💬 How to reach me: [Telegram](https://t.me/treadways)
+- ⚡ Fun fact: about a third of my commits land after 22:00
+
+<br clear="right">
+
+## 💻 Tech Stack:
+
+<picture><source media="(max-width: 600px)" srcset="assets/stack-mobile.svg"><img src="assets/stack.svg" width="100%" alt="Tech stack. Languages: Java, Python, TypeScript, JavaScript, Rust, HTML, CSS, Bash. Frameworks: Spring Boot, Svelte, Flask, Tauri, Node.js, Vite, Maven. Tools: SQLite, Docker, Git, GitHub Actions, Linux, macOS, Figma, Zed."></picture>
+
+## 🌐 Socials:
+
+<a href="https://t.me/treadways"><img src="assets/badge-telegram.svg" height="30" alt="Telegram"></a>
+<a href="mailto:miri.saro@bk.ru"><img src="assets/badge-maildotru.svg" height="30" alt="Email"></a>
+<a href="https://instagram.com/stere.os"><img src="assets/badge-instagram.svg" height="30" alt="Instagram"></a>
+
+## 🚀 Core Project
+
+<a href="https://github.com/mitaro-cs/Campus"><picture><source media="(max-width: 600px)" srcset="assets/campus-mobile.svg"><img src="assets/campus.svg" width="100%" alt="Campus, my core project: a site and an app for one study group that lives on the group leader's own computer. A live diagram of how it syncs: the host computer and a spare, an HTTPS tunnel with changes going out and edits coming back, and phones that keep working offline and send their queued edits when they are back; the latest Campus commits as git log --graph; and its numbers: Java classes, UI components, test files, migrations, versions and the latest release."></picture></a>
 
 <details>
 <summary><b>Run Campus</b></summary>
@@ -17,21 +39,29 @@ Classmates open the link, sign in and add the site to their home screen as an ap
 
 </details>
 
-<a name="about"></a>
-<picture><source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/about-dark-mobile.svg"><source media="(max-width: 600px)" srcset="assets/about-light-mobile.svg"><source media="(prefers-color-scheme: dark)" srcset="assets/about-dark.svg"><img src="assets/about-light.svg" width="100%" alt="02 About, neofetch style: a big M made of my name next to the facts. Omar, Mitaro; computer science at MTUCI; Moscow, UTC+3; years on GitHub; public repositories and stars; commits and active days; the share of commits after 22:00 and the peak hour; the longest streak and the busiest weekday; top languages; core project Campus; editor Zed."></picture>
+## 🏆 GitHub Trophies
 
-<a name="map"></a>
-<picture><source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/map-dark-mobile.svg"><source media="(max-width: 600px)" srcset="assets/map-light-mobile.svg"><source media="(prefers-color-scheme: dark)" srcset="assets/map-dark.svg"><img src="assets/map-light.svg" width="100%" alt="03 Map: my repositories as a constellation in the order I made them under twinkling and shooting stars, higher and larger for more commits, with the month each was made and its commit count."></picture>
+<picture><source media="(max-width: 600px)" srcset="assets/trophies-mobile.svg"><img src="assets/trophies.svg" width="100%" alt="GitHub trophies: pixel-art cups ranked C to SSS for commits, pull requests, merged pull requests, repositories, stars, followers, streak, Campus releases, test files, languages, years on GitHub and late-night commits, each with a bar to the next rank."></picture>
 
-<a name="toolkit"></a>
-<picture><source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/toolkit-dark-mobile.svg"><source media="(max-width: 600px)" srcset="assets/toolkit-light-mobile.svg"><source media="(prefers-color-scheme: dark)" srcset="assets/toolkit-dark.svg"><img src="assets/toolkit-light.svg" width="100%" alt="04 Toolkit: code by language as ASCII bars that fill in, and the languages, frameworks and tools I use."></picture>
+## 🧩 Other Projects
 
-<a name="now"></a>
-<picture><source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="assets/now-dark-mobile.svg"><source media="(max-width: 600px)" srcset="assets/now-light-mobile.svg"><source media="(prefers-color-scheme: dark)" srcset="assets/now-dark.svg"><img src="assets/now-light.svg" width="100%" alt="05 Now: building Java and Flask backends with a cleaner structure; studying security, encryption, hashing and local-first design; prototyping a personal AI assistant, Jarvis-style; studying computer science at MTUCI; and the next Campus build filling a progress bar."></picture>
+- 🔐 [VantaVault](https://github.com/mitaro-cs/VantaVault): a private vault for external drives
+- ☁️ [AetherCloud](https://github.com/mitaro-cs/AetherCloud): your own disk as a private cloud
+- 🪑 [Kworking](https://github.com/mitaro-cs/KworkingSystem): a booking panel for a campus coworking space
+- 🐍 [Mouros](https://github.com/mitaro-cs/Mouros): my Python practice archive
 
-<a name="contact"></a>
-**Contact:** [Telegram](https://t.me/treadways) · [Email](mailto:miri.saro@bk.ru) · [Instagram](https://instagram.com/stere.os)
+## 🏅 Achievements
 
-**Other projects:** [VantaVault](https://github.com/mitaro-cs/VantaVault), a private vault for external drives · [AetherCloud](https://github.com/mitaro-cs/AetherCloud), your own disk as a private cloud · [Kworking](https://github.com/mitaro-cs/KworkingSystem), a booking panel for a campus coworking space · [Mouros](https://github.com/mitaro-cs/Mouros), my Python practice archive
+- 🚀 **Campus 1.0** shipped: a desktop host app for macOS and Windows, phones that work offline, passkeys and 2FA
+- 🔀 Campus runs CI on every pull request: Java tests, Playwright end-to-end tests and linters
+- 🔐 Encryption at rest with AES-256-GCM, passwords hashed with Argon2id, WebAuthn written without libraries
 
-<sub>The pages are built by a Python script in <code>/scripts</code> from the GitHub API and refreshed every six hours. The motion stops if your system asks for reduced motion.</sub>
+## 🛠️ Focus
+
+`Java` · `Spring Boot` · `Svelte` · `SQLite` · `Local-first` · `Security` · `Networking`
+
+## 📊 GitHub Stats:
+
+<picture><source media="(max-width: 600px)" srcset="assets/stats-mobile.svg"><img src="assets/stats.svg" width="100%" alt="Mitaro's GitHub stats: total stars, commits, pull requests, merged pull requests, issues and repositories contributed to in the last year, a rank ring, and the most used languages."></picture>
+
+<sub>Every picture here is drawn by a Python script in <code>/scripts</code> from the GitHub API and refreshed every six hours, in black and white like my avatar. The motion stops if your system asks for reduced motion.</sub>

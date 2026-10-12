@@ -8,7 +8,8 @@ on:
     branches: [miaro]
     paths:
       - "scripts/*.py"
-      - "scripts/metrics.json"
+      - "scripts/*.json"
+      - "scripts/land.txt"
 
 permissions:
   contents: write

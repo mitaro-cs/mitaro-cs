@@ -152,6 +152,11 @@
     "screens": 27,
     "versions": 31
   },
+  "activity": {
+    "prs": 27,
+    "merged": 25,
+    "issues": 0
+  },
   "commits": [
     {
       "repo": "Campus",
